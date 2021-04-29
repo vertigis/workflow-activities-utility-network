@@ -1,21 +1,32 @@
 import { ChannelProvider } from "@geocortex/workflow/runtime/activities/core/ChannelProvider";
 import { InitializeUtilityNetworkOutputs } from ".";
-import type { RunUtilityNetworkTraceInputs, RunUtilityNetworkTraceOutputs } from "./activities/RunUtilityNetworkTrace";
+import type {
+    RunUtilityNetworkTraceInputs,
+    RunUtilityNetworkTraceOutputs,
+} from "./activities/RunUtilityNetworkTrace";
 
 function getResponse<T>(channelProvider: ChannelProvider): T | undefined {
     // Get the content of the response
     // This includes a ".data" workaround for 4.x JSAPI responses
-    const responseData = channelProvider.response.payload && (channelProvider.getResponseData(channelProvider.response.payload) as any);
-    return responseData as T || responseData?.data as T;
+    const responseData =
+        channelProvider.response.payload &&
+        (channelProvider.getResponseData(
+            channelProvider.response.payload
+        ) as any);
+    return (responseData as T) || (responseData?.data as T);
 }
 
 interface FeatureServiceResponse {
     controllerDatasetLayers?: {
         utilityNetworkLayerId: number;
-    }
+    };
 }
 
-export async function getServiceInfo(channelProvider: ChannelProvider, url: string, cancellationToken: Promise<void>): Promise<FeatureServiceResponse> {
+export async function getServiceInfo(
+    channelProvider: ChannelProvider,
+    url: string,
+    cancellationToken: Promise<void>
+): Promise<FeatureServiceResponse> {
     const channel = channelProvider.new();
     channel.request.url = `${url}`;
     channel.request.method = "GET";
@@ -41,7 +52,12 @@ interface FeatureLayerResponse {
     systemLayers: InitializeUtilityNetworkOutputs["result"]["systemLayers"];
 }
 
-export async function getLayerInfo(channelProvider: ChannelProvider, url: string, utilityNetworkLayerId: number, cancellationToken: Promise<void>): Promise<FeatureLayerResponse> {
+export async function getLayerInfo(
+    channelProvider: ChannelProvider,
+    url: string,
+    utilityNetworkLayerId: number,
+    cancellationToken: Promise<void>
+): Promise<FeatureLayerResponse> {
     const channel = channelProvider.new();
     channel.request.url = `${url}/${utilityNetworkLayerId}`;
     channel.request.method = "GET";
@@ -69,7 +85,12 @@ interface QueryDataElementsResponse {
     }[];
 }
 
-export async function getDataElement(channelProvider: ChannelProvider, url: string, utilityNetworkLayerId: number, cancellationToken: Promise<void>): Promise<DataElement> {
+export async function getDataElement(
+    channelProvider: ChannelProvider,
+    url: string,
+    utilityNetworkLayerId: number,
+    cancellationToken: Promise<void>
+): Promise<DataElement> {
     const channel = channelProvider.new();
     channel.request.url = `${url}/queryDataElements`;
     channel.request.method = "GET";
@@ -101,7 +122,12 @@ interface TraceResponse extends RunUtilityNetworkTraceOutputs {
     };
 }
 
-export async function trace(channelProvider: ChannelProvider, url: string, options: Omit<RunUtilityNetworkTraceInputs,"test"| "serviceUrl">, cancellationToken: Promise<void>): Promise<TraceResponse> {
+export async function trace(
+    channelProvider: ChannelProvider,
+    url: string,
+    options: Omit<RunUtilityNetworkTraceInputs, "test" | "serviceUrl">,
+    cancellationToken: Promise<void>
+): Promise<TraceResponse> {
     const channel = channelProvider.new();
     channel.request.url = `${url}/trace`;
     channel.request.method = "POST";
@@ -113,7 +139,8 @@ export async function trace(channelProvider: ChannelProvider, url: string, optio
     cancellationToken.finally(function () {
         channel.cancel();
     });
-    const results = channel.response.payload &&
+    const results =
+        channel.response.payload &&
         (channel.getResponseData(channel.response.payload) as any);
 
     return results;

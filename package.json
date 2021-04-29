@@ -22,6 +22,7 @@
         "build": "vertigis-workflow-sdk build",
         "generate": "vertigis-workflow-sdk generate",
         "lint": "eslint -f codeframe --max-warnings 0 --ext .ts,.tsx src/",
+        "lint:fix": "eslint -f codeframe --max-warnings 0 --ext .ts,.tsx --fix src/",
         "start": "vertigis-workflow-sdk start",
         "test": "jest",
         "test:watch": "jest --watch"
@@ -32,7 +33,9 @@
         "@types/jest": "^26.0.23",
         "@vertigis/workflow-sdk": "1.0.2",
         "conventional-changelog-conventionalcommits": "^4.5.0",
+        "eslint-plugin-prettier": "^3.4.0",
         "jest": "^26.6.3",
+        "prettier": "^2.2.1",
         "ts-jest": "^26.5.5",
         "typescript": "^4.2.4"
     },

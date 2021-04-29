@@ -14,7 +14,16 @@ export interface RunUtilityNetworkTraceInputs {
      * @required
      */
     serviceUrl: string;
-    traceType: "connected" | "subnetwork" | "subnetworkController" | "upstream" | "downstream" | "loops" | "shortestPath" | "isolation" | string;
+    traceType:
+        | "connected"
+        | "subnetwork"
+        | "subnetworkController"
+        | "upstream"
+        | "downstream"
+        | "loops"
+        | "shortestPath"
+        | "isolation"
+        | string;
     traceLocations: {
         globalId: string;
         isFilterBarrier?: boolean; // Introduced at 10.8.1
@@ -46,7 +55,7 @@ export interface RunUtilityNetworkTraceInputs {
             value: number;
             combineUsingOr: boolean;
             isSpecificValue: boolean;
-        }[]
+        }[];
         functionBarriers?: [];
         arcadeExpressionBarrier: string;
         filterBarriers?: [];
@@ -57,13 +66,13 @@ export interface RunUtilityNetworkTraceInputs {
             count: number;
             costNetworkAttributeName: string;
             nearestCategories: [];
-            nearestAssets: []
-        },
+            nearestAssets: [];
+        };
         outputFilterCategories?: [];
         outputFilters?: [];
         outputConditions?: [];
         propagators?: [];
-    }
+    };
     gdbVersion?: string; // The default is DEFAULT
     sessionID?: string;
     moment?: Date;
@@ -87,19 +96,19 @@ export interface RunUtilityNetworkTraceOutputs {
                 positionFrom?: number;
                 positionTo?: number;
             }
-        ],
+        ];
         aggregatedGeometry: {
             point: any;
-            line: any
+            line: any;
             polygon: any;
-        },
+        };
         globalFunctionResults: [
             {
                 functionType: string;
                 Name: string;
                 result: number;
             }
-        ],
+        ];
         isConsistent: boolean;
         kFeaturesForKNNFound: boolean;
         startingPointsIgnored: boolean;
@@ -116,9 +125,11 @@ export interface RunUtilityNetworkTraceOutputs {
  */
 @activate(ChannelProvider)
 export class RunUtilityNetworkTrace implements IActivityHandler {
-    async execute(inputs: RunUtilityNetworkTraceInputs,
+    async execute(
+        inputs: RunUtilityNetworkTraceInputs,
         context: IActivityContext,
-        type: typeof ChannelProvider): Promise<RunUtilityNetworkTraceOutputs> {
+        type: typeof ChannelProvider
+    ): Promise<RunUtilityNetworkTraceOutputs> {
         const { serviceUrl, traceType, ...other } = inputs;
         if (!serviceUrl) {
             throw new Error("serviceUrl is required");
@@ -132,10 +143,15 @@ export class RunUtilityNetworkTrace implements IActivityHandler {
 
         const channel = type.create(undefined, "arcgis");
 
-        const response = await trace(channel, normalizedUrl, {
-            traceType,
-            ...other,
-        }, context.cancellationToken);
+        const response = await trace(
+            channel,
+            normalizedUrl,
+            {
+                traceType,
+                ...other,
+            },
+            context.cancellationToken
+        );
 
         if (response.error) {
             console.log("Trace operation failed", response.error);
@@ -144,6 +160,6 @@ export class RunUtilityNetworkTrace implements IActivityHandler {
 
         return {
             traceResults: response.traceResults,
-        }
+        };
     }
 }

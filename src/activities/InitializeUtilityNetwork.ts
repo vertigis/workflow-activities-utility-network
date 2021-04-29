@@ -1,4 +1,7 @@
-import type { IActivityContext, IActivityHandler, } from "@geocortex/workflow/runtime/IActivityHandler";
+import type {
+    IActivityContext,
+    IActivityHandler,
+} from "@geocortex/workflow/runtime/IActivityHandler";
 import { ChannelProvider } from "@geocortex/workflow/runtime/activities/core/ChannelProvider";
 import { activate } from "@geocortex/workflow/runtime/Hooks";
 import { getDataElement, getLayerInfo, getServiceInfo } from "../request";
@@ -75,7 +78,7 @@ export interface InitializeUtilityNetworkOutputs {
         };
         utilityNetworkLayerId: number;
         utilityNetworkUrl: string;
-    }
+    };
 }
 
 /**
@@ -87,9 +90,11 @@ export interface InitializeUtilityNetworkOutputs {
  */
 @activate(ChannelProvider)
 export class InitializeUtilityNetwork implements IActivityHandler {
-    async execute(inputs: InitializeUtilityNetworkInputs,
+    async execute(
+        inputs: InitializeUtilityNetworkInputs,
         context: IActivityContext,
-        type: typeof ChannelProvider): Promise<InitializeUtilityNetworkOutputs> {
+        type: typeof ChannelProvider
+    ): Promise<InitializeUtilityNetworkOutputs> {
         const { serviceUrl } = inputs;
         if (!serviceUrl) {
             throw new Error("serviceUrl is required");
@@ -101,21 +106,41 @@ export class InitializeUtilityNetwork implements IActivityHandler {
         const channel = type.create(undefined, "arcgis");
 
         // Get the service metadata
-        const serviceInfo = await getServiceInfo(channel.new(), featureServiceUrl, context.cancellationToken);
+        const serviceInfo = await getServiceInfo(
+            channel.new(),
+            featureServiceUrl,
+            context.cancellationToken
+        );
 
         // Get the utilityNetworkLayerId from the response
-        const utilityNetworkLayerId = serviceInfo?.controllerDatasetLayers?.utilityNetworkLayerId;
+        const utilityNetworkLayerId =
+            serviceInfo?.controllerDatasetLayers?.utilityNetworkLayerId;
         if (typeof utilityNetworkLayerId !== "number") {
-            throw new Error(`Utility Network not found in feature service ${featureServiceUrl}`);
+            throw new Error(
+                `Utility Network not found in feature service ${featureServiceUrl}`
+            );
         }
 
-        const utilityNetworkUrl = featureServiceUrl.replace(/\/FeatureServer$/, "/UtilityNetworkServer");
+        const utilityNetworkUrl = featureServiceUrl.replace(
+            /\/FeatureServer$/,
+            "/UtilityNetworkServer"
+        );
 
         // Get the data element that describes the utility network
-        const dataElement = await getDataElement(channel.new(), featureServiceUrl, utilityNetworkLayerId, context.cancellationToken);
+        const dataElement = await getDataElement(
+            channel.new(),
+            featureServiceUrl,
+            utilityNetworkLayerId,
+            context.cancellationToken
+        );
 
         // Get the layer metadata of the utility network layer
-        const layerInfo = await getLayerInfo(channel.new(), featureServiceUrl, utilityNetworkLayerId, context.cancellationToken);
+        const layerInfo = await getLayerInfo(
+            channel.new(),
+            featureServiceUrl,
+            utilityNetworkLayerId,
+            context.cancellationToken
+        );
 
         // Get the systemLayers from the response
         const systemLayers = layerInfo.systemLayers;
@@ -127,7 +152,7 @@ export class InitializeUtilityNetwork implements IActivityHandler {
                 systemLayers,
                 utilityNetworkLayerId,
                 utilityNetworkUrl,
-            }
+            },
         };
     }
 }
