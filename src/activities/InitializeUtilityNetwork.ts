@@ -4,7 +4,7 @@ import type {
 } from "@geocortex/workflow/runtime/IActivityHandler";
 import { ChannelProvider } from "@geocortex/workflow/runtime/activities/core/ChannelProvider";
 import { activate } from "@geocortex/workflow/runtime/Hooks";
-import { getDataElement, getLayerInfo, getServiceInfo } from "../request";
+import { queryDataElements, getLayerInfo, getServiceInfo } from "../request";
 
 /** An interface that defines the inputs of the activity. */
 export interface InitializeUtilityNetworkInputs {
@@ -121,18 +121,19 @@ export class InitializeUtilityNetwork implements IActivityHandler {
             );
         }
 
-        const utilityNetworkUrl = featureServiceUrl.replace(
-            /\/FeatureServer$/,
-            "/UtilityNetworkServer"
-        );
-
         // Get the data element that describes the utility network
-        const dataElement = await getDataElement(
+        const queryResponse = await queryDataElements(
             channel.new(),
             featureServiceUrl,
             utilityNetworkLayerId,
             context.cancellationToken
         );
+        const dataElement = queryResponse.layerDataElements?.[0]?.dataElement;
+        if (!dataElement) {
+            throw new Error(
+                `Utility Network dataElement not found in feature service ${featureServiceUrl}`
+            );
+        }
 
         // Get the layer metadata of the utility network layer
         const layerInfo = await getLayerInfo(
@@ -142,8 +143,19 @@ export class InitializeUtilityNetwork implements IActivityHandler {
             context.cancellationToken
         );
 
+        if (!layerInfo.systemLayers) {
+            throw new Error(
+                `Utility Network systemLayers not found in feature service ${featureServiceUrl}`
+            );
+        }
+
         // Get the systemLayers from the response
         const systemLayers = layerInfo.systemLayers;
+
+        const utilityNetworkUrl = featureServiceUrl.replace(
+            /\/FeatureServer$/,
+            "/UtilityNetworkServer"
+        );
 
         return {
             result: {

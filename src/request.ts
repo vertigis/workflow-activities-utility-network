@@ -7,7 +7,7 @@ import type {
 
 function getResponse<T>(channelProvider: ChannelProvider): T | undefined {
     // Get the content of the response
-    // This includes a ".data" workaround for 4.x JSAPI responses
+    // This includes a ".data" workaround for 4.x ArcGIS JavaScript API responses
     const responseData =
         channelProvider.response.payload &&
         (channelProvider.getResponseData(
@@ -16,6 +16,9 @@ function getResponse<T>(channelProvider: ChannelProvider): T | undefined {
     return (responseData as T) || (responseData?.data as T);
 }
 
+/**
+ * Minimal interface for the JSON response from a /FeatureServer endpoint.
+ */
 interface FeatureServiceResponse {
     controllerDatasetLayers?: {
         utilityNetworkLayerId: number;
@@ -27,6 +30,10 @@ export async function getServiceInfo(
     url: string,
     cancellationToken: Promise<void>
 ): Promise<FeatureServiceResponse> {
+    if (!url) {
+        throw new Error("url is required");
+    }
+
     const channel = channelProvider.new();
     channel.request.url = `${url}`;
     channel.request.method = "GET";
@@ -42,14 +49,17 @@ export async function getServiceInfo(
 
     const response = getResponse<FeatureServiceResponse>(channel);
     if (!response) {
-        throw new Error(`Unable to fetch service info`);
+        throw new Error("Unable to perform service info request");
     }
 
     return response;
 }
 
+/**
+ * Minimal interface for the JSON response from a /FeatureServer/<layerId> endpoint.
+ */
 interface FeatureLayerResponse {
-    systemLayers: InitializeUtilityNetworkOutputs["result"]["systemLayers"];
+    systemLayers?: InitializeUtilityNetworkOutputs["result"]["systemLayers"];
 }
 
 export async function getLayerInfo(
@@ -58,6 +68,10 @@ export async function getLayerInfo(
     utilityNetworkLayerId: number,
     cancellationToken: Promise<void>
 ): Promise<FeatureLayerResponse> {
+    if (!url) {
+        throw new Error("url is required");
+    }
+
     const channel = channelProvider.new();
     channel.request.url = `${url}/${utilityNetworkLayerId}`;
     channel.request.method = "GET";
@@ -71,7 +85,7 @@ export async function getLayerInfo(
 
     const response = getResponse<FeatureLayerResponse>(channel);
     if (!response) {
-        throw new Error(`Unable to fetch layer info`);
+        throw new Error("Unable to perform layer info request");
     }
 
     return response;
@@ -79,24 +93,31 @@ export async function getLayerInfo(
 
 type DataElement = InitializeUtilityNetworkOutputs["result"]["dataElement"];
 
+/**
+ * Minimal interface for the JSON response from a /FeatureServer/queryDataElements endpoint
+ */
 interface QueryDataElementsResponse {
-    layerDataElements: {
-        dataElement: DataElement;
+    layerDataElements?: {
+        dataElement?: DataElement;
     }[];
 }
 
-export async function getDataElement(
+export async function queryDataElements(
     channelProvider: ChannelProvider,
     url: string,
-    utilityNetworkLayerId: number,
+    layerId: number,
     cancellationToken: Promise<void>
-): Promise<DataElement> {
+): Promise<QueryDataElementsResponse> {
+    if (!url) {
+        throw new Error("url is required");
+    }
+
     const channel = channelProvider.new();
     channel.request.url = `${url}/queryDataElements`;
     channel.request.method = "GET";
     channel.request.json = {
         f: "json",
-        layers: `[${utilityNetworkLayerId}]`,
+        layers: `[${layerId}]`,
     };
     await channel.send();
     cancellationToken.finally(function () {
@@ -105,14 +126,15 @@ export async function getDataElement(
 
     const response = getResponse<QueryDataElementsResponse>(channel);
     if (!response) {
-        throw new Error(`Unable to fetch queryDataElements`);
+        throw new Error("Unable to perform queryDataElements request");
     }
 
-    const dataElement = response.layerDataElements?.[0]?.dataElement;
-
-    return dataElement;
+    return response;
 }
 
+/**
+ * Interface for the JSON response from a /UtilityNetworkServer/trace endpoint.
+ */
 interface TraceResponse extends RunUtilityNetworkTraceOutputs {
     success: boolean;
     error?: {
@@ -139,9 +161,11 @@ export async function trace(
     cancellationToken.finally(function () {
         channel.cancel();
     });
-    const results =
-        channel.response.payload &&
-        (channel.getResponseData(channel.response.payload) as any);
 
-    return results;
+    const response = getResponse<TraceResponse>(channel);
+    if (!response) {
+        throw new Error("Unable to perform trace request");
+    }
+
+    return response;
 }
