@@ -2,7 +2,9 @@ import type { ChannelProvider } from "@geocortex/workflow/runtime/activities/cor
 import { Activator } from "@geocortex/workflow/runtime/Activator";
 
 export class BaseMockChannelProvider {
-    static register(activator: Activator) { }
+    static register(activator: Activator): void {
+        // No op
+    }
     static type: "mock";
 }
 
@@ -18,15 +20,19 @@ export class DefaultMockChannelProvider extends BaseMockChannelProvider {
 
 export const DefaultMockChannelProviderType = DefaultMockChannelProvider as typeof ChannelProvider;
 
-export function mockChannel(getResponse: (channel: Partial<ChannelProvider>) => Record<string, any>): ChannelProvider {
+export function mockChannel(
+    getResponse: (channel: Partial<ChannelProvider>) => Record<string, any>
+): ChannelProvider {
     const channel: Partial<ChannelProvider> = {
-        cancel: () => { },
-        getResponseData: (payload: {}) => {
+        cancel: () => {
+            // No op
+        },
+        getResponseData: (payload: Record<string, unknown>) => {
             return payload;
         },
         request: {
-            headers: {}
-        }
+            headers: {},
+        },
     };
     channel.send = () => {
         channel.response = {
