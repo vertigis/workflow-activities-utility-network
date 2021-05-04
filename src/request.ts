@@ -155,7 +155,7 @@ export async function trace(
     channel.request.method = "POST";
     channel.request.json = {
         f: "json",
-        traceType: options.traceType,
+        ...options,
     };
     await channel.send();
     cancellationToken.finally(function () {
