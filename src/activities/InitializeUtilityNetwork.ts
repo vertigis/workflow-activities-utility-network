@@ -22,8 +22,14 @@ export interface InitializeUtilityNetworkOutputs {
      * @description The initialized Utility Network.
      */
     result: {
-        dataElement: {
+        definition: {
+            categories: {
+                name: string;
+            }[];
             domainNetworks: {
+                domainNetworkAliasName: string;
+                domainNetworkId: number;
+                domainNetworkName: string;
                 edgeSources: {
                     assetGroups: {
                         assetGroupCode: any;
@@ -40,6 +46,7 @@ export interface InitializeUtilityNetworkOutputs {
                     sourceId: number;
                     utilityNetworkFeatureClassUsageType: string;
                 }[];
+                isStructureNetwork: boolean;
                 junctionSources: {
                     assetGroups: {
                         assetGroupCode: any;
@@ -56,9 +63,26 @@ export interface InitializeUtilityNetworkOutputs {
                     sourceId: number;
                     utilityNetworkFeatureClassUsageType: string;
                 }[];
-                tiers: [];
+                subnetworkControllerType: string;
+                tiers: {
+                    name: string;
+                    rank: number;
+                }[];
             }[];
-            terminalConfigurations: [];
+            networkAttributes: {
+                isApportionable: boolean;
+                isSubstitution: boolean;
+                name: string;
+            }[];
+            terminalConfigurations: {
+                terminalConfigurationId: number;
+                terminalConfigurationName: string;
+                terminals: {
+                    terminalId: number;
+                    terminalName: string;
+                    isUpstreamTerminal: boolean;
+                }[];
+            }[];
         };
         featureServiceUrl: string;
         systemLayers: {
@@ -128,10 +152,10 @@ export class InitializeUtilityNetwork implements IActivityHandler {
             utilityNetworkLayerId,
             context.cancellationToken
         );
-        const dataElement = queryResponse.layerDataElements?.[0]?.dataElement;
-        if (!dataElement) {
+        const definition = queryResponse.layerDataElements?.[0]?.dataElement;
+        if (!definition) {
             throw new Error(
-                `Utility Network dataElement not found in feature service ${featureServiceUrl}`
+                `Utility Network definition dataElement not found in feature service ${featureServiceUrl}`
             );
         }
 
@@ -159,7 +183,7 @@ export class InitializeUtilityNetwork implements IActivityHandler {
 
         return {
             result: {
-                dataElement,
+                definition,
                 featureServiceUrl,
                 systemLayers,
                 utilityNetworkLayerId,

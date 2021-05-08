@@ -105,7 +105,7 @@ describe("InitializeUtilityNetwork", () => {
             );
             expect(result).toBeDefined();
             expect(result.result).toStrictEqual({
-                dataElement:
+                definition:
                     mockQueryDataElementsResponse.layerDataElements[0]
                         .dataElement,
                 featureServiceUrl: inputs.serviceUrl,
@@ -201,7 +201,7 @@ describe("InitializeUtilityNetwork", () => {
                     MockChannelProvider as typeof ChannelProvider
                 )
             ).rejects.toThrow(
-                `Utility Network dataElement not found in feature service ${inputs.serviceUrl}`
+                `Utility Network definition dataElement not found in feature service ${inputs.serviceUrl}`
             );
         });
         it("fails if the service does not provide systemLayers", async () => {

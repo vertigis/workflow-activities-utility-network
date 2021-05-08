@@ -91,7 +91,7 @@ export async function getLayerInfo(
     return response;
 }
 
-type DataElement = InitializeUtilityNetworkOutputs["result"]["dataElement"];
+type DataElement = InitializeUtilityNetworkOutputs["result"]["definition"];
 
 /**
  * Minimal interface for the JSON response from a /FeatureServer/queryDataElements endpoint
