@@ -34,5 +34,18 @@ export interface IUtilityNetworkDefinition {
         }[];
         tiers: [];
     }[];
-    terminalConfigurations: [];
+    terminalConfigurations: {
+        terminalConfigurationId: number;
+        terminalConfigurationName: string;
+        traversabilityModel: string;
+        terminals: [
+            {
+                terminalId: number;
+                terminalName: string;
+                isUpstreamTerminal: boolean;
+            }
+        ];
+        validConfigurationPaths: string[];
+        defaultConfiguration: string;
+    }[];
 }
