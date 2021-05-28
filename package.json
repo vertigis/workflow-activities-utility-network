@@ -27,11 +27,10 @@
         "test": "jest",
         "test:watch": "jest --watch"
     },
-    "dependencies": {
-        "@types/arcgis-js-api": "^4.19.0"
-    },
+    "dependencies": {},
     "devDependencies": {
         "@geocortex/workflow": "5.20.1",
+        "@types/arcgis-js-api": "^4.19.0",
         "@types/jest": "^26.0.23",
         "@vertigis/workflow-sdk": "1.0.2",
         "conventional-changelog-conventionalcommits": "^4.5.0",
