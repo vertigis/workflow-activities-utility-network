@@ -1,4 +1,5 @@
 import { ChannelProvider } from "@geocortex/workflow/runtime/activities/core/ChannelProvider";
+import { IUtilityNetworkDefinition } from "../../interface/IUtilityNetworkDefinition";
 import { UtilityNetwork } from "../../model/UtilityNetwork";
 import { mockActivityContext } from "../../__mocks__/ActivityContext";
 import {
@@ -60,6 +61,8 @@ describe("InitializeUtilityNetwork", () => {
                         dataElement: {
                             edgeSources: [],
                             junctionSources: [],
+                            domainNetworks: [],
+                            terminalConfigurations: [],
                         },
                     },
                 ],
