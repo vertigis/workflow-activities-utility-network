@@ -3,6 +3,8 @@ import { IUtilityNetwork } from "../interface/IUtilityNetwork";
 import Point from "esri/geometry/Point";
 import Polyline from "esri/geometry/Polyline";
 import Graphic from "esri/Graphic";
+import { IUtilityNetworkDefinition } from "../interface/IUtilityNetworkDefinition";
+import { ISystemLayers } from "../interface/ISystemLayers";
 export class UtilityNetwork implements IUtilityNetwork {
     definition: any;
     featureServiceUrl: string;
@@ -11,9 +13,9 @@ export class UtilityNetwork implements IUtilityNetwork {
     utilityNetworkUrl: string;
 
     constructor(
-        definition: any,
+        definition: IUtilityNetworkDefinition,
         featureServiceUrl: string,
-        systemLayers: any,
+        systemLayers: ISystemLayers,
         utilityNetworkLayerId: number,
         utilityNetworkUrl: string
     ) {
