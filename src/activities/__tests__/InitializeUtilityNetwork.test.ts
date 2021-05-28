@@ -1,4 +1,5 @@
 import { ChannelProvider } from "@geocortex/workflow/runtime/activities/core/ChannelProvider";
+import { UtilityNetwork } from "../../model/UtilityNetwork";
 import { mockActivityContext } from "../../__mocks__/ActivityContext";
 import {
     BaseMockChannelProvider,
@@ -63,6 +64,7 @@ describe("InitializeUtilityNetwork", () => {
                     },
                 ],
             };
+
             class MockChannelProvider extends BaseMockChannelProvider {
                 static create(
                     channel?: ChannelProvider,
@@ -103,16 +105,15 @@ describe("InitializeUtilityNetwork", () => {
                 mockActivityContext(),
                 MockChannelProvider as typeof ChannelProvider
             );
+            const mockUtiltyNetwork = new UtilityNetwork(
+                mockQueryDataElementsResponse.layerDataElements[0].dataElement,
+                inputs.serviceUrl,
+                mockLayerResponse.systemLayers,
+                0,
+                dummyUtilityNetworkServiceUrl
+            );
             expect(result).toBeDefined();
-            expect(result.result).toStrictEqual({
-                definition:
-                    mockQueryDataElementsResponse.layerDataElements[0]
-                        .dataElement,
-                featureServiceUrl: inputs.serviceUrl,
-                systemLayers: mockLayerResponse.systemLayers,
-                utilityNetworkLayerId: 0,
-                utilityNetworkUrl: dummyUtilityNetworkServiceUrl,
-            });
+            expect(result.result).toStrictEqual(mockUtiltyNetwork);
         });
 
         it("fails if the service does not provide a utilityNetworkLayerId", async () => {
@@ -136,7 +137,6 @@ describe("InitializeUtilityNetwork", () => {
             const inputs: InitializeUtilityNetworkInputs = {
                 serviceUrl: dummyFeatureServiceUrl,
             };
-
             await expect(() =>
                 activity.execute(
                     inputs,
@@ -193,7 +193,6 @@ describe("InitializeUtilityNetwork", () => {
             const inputs: InitializeUtilityNetworkInputs = {
                 serviceUrl: dummyFeatureServiceUrl,
             };
-
             await expect(() =>
                 activity.execute(
                     inputs,

@@ -5,6 +5,7 @@ import type {
 import { ChannelProvider } from "@geocortex/workflow/runtime/activities/core/ChannelProvider";
 import { activate } from "@geocortex/workflow/runtime/Hooks";
 import { queryDataElements, getLayerInfo, getServiceInfo } from "../request";
+import { UtilityNetwork } from "../model/UtilityNetwork";
 
 /** An interface that defines the inputs of the activity. */
 export interface InitializeUtilityNetworkInputs {
@@ -21,88 +22,7 @@ export interface InitializeUtilityNetworkOutputs {
     /**
      * @description The initialized Utility Network.
      */
-    result: {
-        definition: {
-            categories: {
-                name: string;
-            }[];
-            domainNetworks: {
-                domainNetworkAliasName: string;
-                domainNetworkId: number;
-                domainNetworkName: string;
-                edgeSources: {
-                    assetGroups: {
-                        assetGroupCode: any;
-                        assetGroupName: string;
-                        assetTypes: {
-                            assetTypeCode: any;
-                            assetTypeName: string;
-                            isTerminalConfigurationSupported?: boolean;
-                            terminalConfigurationId?: number;
-                        }[];
-                    }[];
-                    layerId: number;
-                    shapeType: any;
-                    sourceId: number;
-                    utilityNetworkFeatureClassUsageType: string;
-                }[];
-                isStructureNetwork: boolean;
-                junctionSources: {
-                    assetGroups: {
-                        assetGroupCode: any;
-                        assetGroupName: string;
-                        assetTypes: {
-                            assetTypeCode: any;
-                            assetTypeName: string;
-                            isTerminalConfigurationSupported?: boolean;
-                            terminalConfigurationId?: number;
-                        }[];
-                    }[];
-                    layerId: number;
-                    shapeType: any;
-                    sourceId: number;
-                    utilityNetworkFeatureClassUsageType: string;
-                }[];
-                subnetworkControllerType: string;
-                tiers: {
-                    name: string;
-                    rank: number;
-                }[];
-            }[];
-            networkAttributes: {
-                isApportionable: boolean;
-                isSubstitution: boolean;
-                name: string;
-            }[];
-            terminalConfigurations: {
-                terminalConfigurationId: number;
-                terminalConfigurationName: string;
-                terminals: {
-                    terminalId: number;
-                    terminalName: string;
-                    isUpstreamTerminal: boolean;
-                }[];
-            }[];
-        };
-        featureServiceUrl: string;
-        systemLayers: {
-            dirtyAreasLayerId: number;
-            lineErrorsLayerId: number;
-            pointErrorsLayerId: number;
-            polygonErrorsLayerId: number;
-            associationsTableId: number;
-            subnetworksTableId: number;
-            rulesTableId: number;
-            diagramEdgeLayerId: number;
-            diagramJunctionLayerId: number;
-            diagramContainerLayerId: number;
-            temporaryDiagramEdgeLayerId: number;
-            temporaryDiagramJunctionLayerId: number;
-            temporaryDiagramContainerLayerId: number;
-        };
-        utilityNetworkLayerId: number;
-        utilityNetworkUrl: string;
-    };
+    result: UtilityNetwork;
 }
 
 /**
@@ -181,14 +101,16 @@ export class InitializeUtilityNetwork implements IActivityHandler {
             "/UtilityNetworkServer"
         );
 
+        const utilityNetwork = new UtilityNetwork(
+            definition,
+            featureServiceUrl,
+            systemLayers,
+            utilityNetworkLayerId,
+            utilityNetworkUrl
+        );
+
         return {
-            result: {
-                definition,
-                featureServiceUrl,
-                systemLayers,
-                utilityNetworkLayerId,
-                utilityNetworkUrl,
-            },
+            result: utilityNetwork,
         };
     }
 }
