@@ -11,7 +11,7 @@ export interface IUtilityNetwork {
         locateFeature: Graphic,
         traceLocationType: "startingPoint" | "barrier",
         pointNearLine: Point,
-        layerId: string,
+        layerId: number,
         assetGroupField: string,
         assetTypeField: string,
         globalIdField: string

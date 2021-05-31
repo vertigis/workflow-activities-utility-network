@@ -61,7 +61,7 @@ export class UtilityNetwork implements IUtilityNetwork {
         locateFeature: Graphic,
         traceLocationType: "startingPoint" | "barrier",
         tracePoint: Point,
-        layerId: string,
+        layerId: number,
         assetGroupField: string,
         assetTypeField: string,
         globalIdField: string
@@ -72,7 +72,10 @@ export class UtilityNetwork implements IUtilityNetwork {
             locateFeature.attributes[assetTypeField]
         );
         const traceLocation: any = {};
-        if (locateFeature.geometry.type === "polyline") {
+        if (
+            locateFeature.geometry &&
+            locateFeature.geometry.type === "polyline"
+        ) {
             traceLocation.traceLocationType = traceLocationType;
             traceLocation.globalId = locateFeature.attributes[globalIdField];
             traceLocation.layerId = layerId;
@@ -124,7 +127,7 @@ export class UtilityNetwork implements IUtilityNetwork {
     }
 
     private getAssetType(
-        layerId: string,
+        layerId: number,
         assetGroupCode: string,
         assetTypeCode: string
     ): any {
