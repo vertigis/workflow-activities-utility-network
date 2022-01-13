@@ -1,272 +1,87 @@
-import { ChannelProvider } from "@geocortex/workflow/runtime/activities/core/ChannelProvider";
-import { mockActivityContext } from "../../__mocks__/ActivityContext";
-import {
-    BaseMockChannelProvider,
-    DefaultMockChannelProviderType,
-    mockChannel,
-} from "../../__mocks__/ChannelProvider";
 import {
     InitializeUtilityNetwork,
     InitializeUtilityNetworkInputs,
 } from "../InitializeUtilityNetwork";
+import UtilityNetwork from "@arcgis/core/networks/UtilityNetwork";
+import WebMap from "@arcgis/core/WebMap";
+import Collection from "@arcgis/core/core/Collection";
 
-const dummyFeatureServiceUrl =
-    "https://server/arcgis/rest/services/myService/FeatureServer";
-const dummyUtilityNetworkServiceUrl =
-    "https://server/arcgis/rest/services/myService/UtilityNetworkServer";
+jest.mock("@arcgis/core/networks/UtilityNetwork", () => {
+    return function () {
+        return {
+            load: () => {
+                // no op
+            },
+        };
+    };
+});
+const mockUn = new UtilityNetwork();
+
+jest.mock("@arcgis/core/core/Collection", () => {
+    return function () {
+        return {
+            push: (utilityNetwork: UtilityNetwork) => {
+                //no op
+            },
+            getItemAt: (i: number) => {
+                return mockUn;
+            },
+        };
+    };
+});
+
+const mockColl = new Collection();
+mockColl.push(mockUn);
+
+jest.mock("@arcgis/core/WebMap", () => {
+    return function (params: any) {
+        return {
+            portalItem: params.portalItem,
+            utilityNetworks: mockColl,
+            load: () => {
+                //no op
+            },
+        };
+    };
+});
+
+beforeEach(() => {
+    jest.clearAllMocks();
+});
 
 describe("InitializeUtilityNetwork", () => {
     describe("execute", () => {
-        it("requires serviceUrl input", async () => {
-            const activity = new InitializeUtilityNetwork();
-            await expect(() =>
-                activity.execute(
-                    { serviceUrl: undefined! },
-                    mockActivityContext(),
-                    DefaultMockChannelProviderType
-                )
-            ).rejects.toThrow("serviceUrl is required");
-            await expect(() =>
-                activity.execute(
-                    { serviceUrl: null! },
-                    mockActivityContext(),
-                    DefaultMockChannelProviderType
-                )
-            ).rejects.toThrow("serviceUrl is required");
-            await expect(() =>
-                activity.execute(
-                    { serviceUrl: "" },
-                    mockActivityContext(),
-                    DefaultMockChannelProviderType
-                )
-            ).rejects.toThrow("serviceUrl is required");
+        const un = new UtilityNetwork();
+        const uns = new Collection<UtilityNetwork>();
+        uns.push(un);
+        const mockedMap = new WebMap({
+            portalItem: {
+                id: "abc",
+                portal: { url: "edf" },
+            },
+            utilityNetworks: uns,
         });
 
-        it("initializes the service", async () => {
-            const mockServiceResponse = {
-                controllerDatasetLayers: {
-                    utilityNetworkLayerId: 0,
-                },
-            };
-            const mockLayerResponse = {
-                systemLayers: {
-                    subnetworksTableId: 0,
-                },
-            };
-            const mockQueryDataElementsResponse = {
-                layerDataElements: [
-                    {
-                        dataElement: {
-                            edgeSources: [],
-                            junctionSources: [],
-                        },
-                    },
-                ],
-            };
-            class MockChannelProvider extends BaseMockChannelProvider {
-                static create(
-                    channel?: ChannelProvider,
-                    name?: string
-                ): ChannelProvider {
-                    return mockChannel((c) => {
-                        const url = c.request?.url;
-                        if (!url) {
-                            throw new Error(
-                                `Invalid request. URL not specified`
-                            );
-                        }
-                        if (url.endsWith("/FeatureServer")) {
-                            return mockServiceResponse;
-                        } else if (url.endsWith("/FeatureServer/0")) {
-                            return mockLayerResponse;
-                        } else if (
-                            url.endsWith("/FeatureServer/queryDataElements")
-                        ) {
-                            return mockQueryDataElementsResponse;
-                        }
-                        throw new Error(`Request not mocked ${url}`);
-                    });
-                }
-                constructor(type: typeof ChannelProvider, name?: string) {
-                    super();
-                    return MockChannelProvider.create();
-                }
-            }
-
+        it("requires map", async () => {
             const activity = new InitializeUtilityNetwork();
             const inputs: InitializeUtilityNetworkInputs = {
-                serviceUrl: dummyFeatureServiceUrl,
+                map: undefined,
             };
 
-            const result = await activity.execute(
-                inputs,
-                mockActivityContext(),
-                MockChannelProvider as typeof ChannelProvider
+            await expect(() => activity.execute(inputs)).rejects.toThrow(
+                "map is required"
             );
-            expect(result).toBeDefined();
-            expect(result.result).toStrictEqual({
-                dataElement:
-                    mockQueryDataElementsResponse.layerDataElements[0]
-                        .dataElement,
-                featureServiceUrl: inputs.serviceUrl,
-                systemLayers: mockLayerResponse.systemLayers,
-                utilityNetworkLayerId: 0,
-                utilityNetworkUrl: dummyUtilityNetworkServiceUrl,
+        });
+
+        it("gets first UtilityNetwork from the WebMap's utilityNetworks collection", async () => {
+            const activity = new InitializeUtilityNetwork();
+            const inputs: InitializeUtilityNetworkInputs = {
+                map: mockedMap,
+            };
+            const result = await activity.execute(inputs);
+            expect(result).toStrictEqual({
+                result: mockUn,
             });
-        });
-
-        it("fails if the service does not provide a utilityNetworkLayerId", async () => {
-            const mockServiceResponse = {
-                foo: "bar",
-            };
-            class MockChannelProvider extends BaseMockChannelProvider {
-                static create(
-                    channel?: ChannelProvider,
-                    name?: string
-                ): ChannelProvider {
-                    return mockChannel((c) => mockServiceResponse);
-                }
-                constructor(type: typeof ChannelProvider, name?: string) {
-                    super();
-                    return MockChannelProvider.create();
-                }
-            }
-
-            const activity = new InitializeUtilityNetwork();
-            const inputs: InitializeUtilityNetworkInputs = {
-                serviceUrl: dummyFeatureServiceUrl,
-            };
-
-            await expect(() =>
-                activity.execute(
-                    inputs,
-                    mockActivityContext(),
-                    MockChannelProvider as typeof ChannelProvider
-                )
-            ).rejects.toThrow(
-                `Utility Network not found in feature service ${inputs.serviceUrl}`
-            );
-        });
-
-        it("fails if the service does not provide a dataElement", async () => {
-            const mockServiceResponse = {
-                controllerDatasetLayers: {
-                    utilityNetworkLayerId: 0,
-                },
-            };
-            const mockQueryDataElementsResponse = {
-                layerDataElements: [
-                    {
-                        foo: "bar",
-                    },
-                ],
-            };
-            class MockChannelProvider extends BaseMockChannelProvider {
-                static create(
-                    channel?: ChannelProvider,
-                    name?: string
-                ): ChannelProvider {
-                    return mockChannel((c) => {
-                        const url = c.request?.url;
-                        if (!url) {
-                            throw new Error(
-                                `Invalid request. URL not specified`
-                            );
-                        }
-                        if (url.endsWith("/FeatureServer")) {
-                            return mockServiceResponse;
-                        } else if (
-                            url.endsWith("/FeatureServer/queryDataElements")
-                        ) {
-                            return mockQueryDataElementsResponse;
-                        }
-                        throw new Error(`Request not mocked ${url}`);
-                    });
-                }
-                constructor(type: typeof ChannelProvider, name?: string) {
-                    super();
-                    return MockChannelProvider.create();
-                }
-            }
-
-            const activity = new InitializeUtilityNetwork();
-            const inputs: InitializeUtilityNetworkInputs = {
-                serviceUrl: dummyFeatureServiceUrl,
-            };
-
-            await expect(() =>
-                activity.execute(
-                    inputs,
-                    mockActivityContext(),
-                    MockChannelProvider as typeof ChannelProvider
-                )
-            ).rejects.toThrow(
-                `Utility Network dataElement not found in feature service ${inputs.serviceUrl}`
-            );
-        });
-        it("fails if the service does not provide systemLayers", async () => {
-            const mockServiceResponse = {
-                controllerDatasetLayers: {
-                    utilityNetworkLayerId: 0,
-                },
-            };
-            const mockLayerResponse = {
-                foo: "bar",
-            };
-            const mockQueryDataElementsResponse = {
-                layerDataElements: [
-                    {
-                        dataElement: {
-                            edgeSources: [],
-                            junctionSources: [],
-                        },
-                    },
-                ],
-            };
-            class MockChannelProvider extends BaseMockChannelProvider {
-                static create(
-                    channel?: ChannelProvider,
-                    name?: string
-                ): ChannelProvider {
-                    return mockChannel((c) => {
-                        const url = c.request?.url;
-                        if (!url) {
-                            throw new Error(
-                                `Invalid request. URL not specified`
-                            );
-                        }
-                        if (url.endsWith("/FeatureServer")) {
-                            return mockServiceResponse;
-                        } else if (url.endsWith("/FeatureServer/0")) {
-                            return mockLayerResponse;
-                        } else if (
-                            url.endsWith("/FeatureServer/queryDataElements")
-                        ) {
-                            return mockQueryDataElementsResponse;
-                        }
-                        throw new Error(`Request not mocked ${url}`);
-                    });
-                }
-                constructor(type: typeof ChannelProvider, name?: string) {
-                    super();
-                    return MockChannelProvider.create();
-                }
-            }
-
-            const activity = new InitializeUtilityNetwork();
-            const inputs: InitializeUtilityNetworkInputs = {
-                serviceUrl: dummyFeatureServiceUrl,
-            };
-
-            await expect(() =>
-                activity.execute(
-                    inputs,
-                    mockActivityContext(),
-                    MockChannelProvider as typeof ChannelProvider
-                )
-            ).rejects.toThrow(
-                `Utility Network systemLayers not found in feature service ${inputs.serviceUrl}`
-            );
         });
     });
 });

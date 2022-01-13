@@ -1,103 +1,153 @@
-import { ChannelProvider } from "@geocortex/workflow/runtime/activities/core/ChannelProvider";
-import { mockActivityContext } from "../../__mocks__/ActivityContext";
-import {
-    BaseMockChannelProvider,
-    DefaultMockChannelProviderType,
-    mockChannel,
-} from "../../__mocks__/ChannelProvider";
 import {
     RunUtilityNetworkTrace,
     RunUtilityNetworkTraceInputs,
 } from "../RunUtilityNetworkTrace";
+import TraceLocation from "@arcgis/core/rest/networks/support/TraceLocation";
+import WebMap from "@arcgis/core/WebMap";
+import TraceResult from "@arcgis/core/rest/networks/support/TraceResult";
 
-const dummyServiceUrl =
-    "https://server/arcgis/rest/services/myService/UtilityNetworkServer";
+const mockTraceLocation = {
+    globalId: "abc",
+    type: "starting-point",
+    isFilterBarrier: true,
+    percentAlong: 0,
+    terminalId: 123,
+};
+
+const mockTraceParameters = {
+    traceLocations: [],
+    traceConfiguration: {},
+    traceType: "isolation",
+    resultTypes: [],
+};
+
+const mockTraceConfiguration = {};
+
+jest.mock("@arcgis/core/rest/networks/support/TraceParameters", () => {
+    return function () {
+        return mockTraceParameters;
+    };
+});
+jest.mock("@arcgis/core/rest/networks/support/TraceLocation", () => {
+    return function () {
+        return mockTraceLocation;
+    };
+});
+jest.mock("@arcgis/core/networks/support/TraceConfiguration", () => {
+    return function () {
+        return mockTraceConfiguration;
+    };
+});
+jest.mock("@arcgis/core/WebMap", () => {
+    return function () {
+        return {
+            portalItem: { portal: { credential: { token: {} } } },
+        };
+    };
+});
+
+jest.mock("@arcgis/core/rest/networks/support/TraceLocation", () => {
+    return function () {
+        return mockTraceLocation;
+    };
+});
+
+jest.mock("@arcgis/core/rest/networks/trace", () => ({
+    trace: () => {
+        return {};
+    },
+}));
+jest.mock("@arcgis/core/rest/networks/support/TraceResult", () => {
+    return function () {
+        return {};
+    };
+});
+
+beforeEach(() => {
+    jest.clearAllMocks();
+});
 
 describe("RunUtilityNetworkTrace", () => {
     describe("execute", () => {
-        it("requires serviceUrl input", async () => {
+        it("requires utilityNetwork input", async () => {
             const activity = new RunUtilityNetworkTrace();
-
-            await expect(() =>
-                activity.execute(
-                    {
-                        serviceUrl: undefined!,
-                        traceType: "connected",
-                        traceLocations: [],
-                    },
-                    mockActivityContext(),
-                    DefaultMockChannelProviderType
-                )
-            ).rejects.toThrow("serviceUrl is required");
-            await expect(() =>
-                activity.execute(
-                    {
-                        serviceUrl: null!,
-                        traceType: "connected",
-                        traceLocations: [],
-                    },
-                    mockActivityContext(),
-                    DefaultMockChannelProviderType
-                )
-            ).rejects.toThrow("serviceUrl is required");
-            await expect(() =>
-                activity.execute(
-                    {
-                        serviceUrl: "",
-                        traceType: "connected",
-                        traceLocations: [],
-                    },
-                    mockActivityContext(),
-                    DefaultMockChannelProviderType
-                )
-            ).rejects.toThrow("serviceUrl is required");
+            await expect(async () => {
+                await activity.execute({
+                    utilityNetwork: undefined as any,
+                    traceType: "isolation",
+                    traceLocations: [],
+                    traceConfiguration: {} as any,
+                    resultTypes: [],
+                    map: {} as any,
+                });
+            }).rejects.toThrow("utilityNetwork is required");
         });
         it("requires traceType input", async () => {
             const activity = new RunUtilityNetworkTrace();
-            const inputs: RunUtilityNetworkTraceInputs = {
-                serviceUrl: dummyServiceUrl,
-                traceType: "",
-                traceLocations: [],
-            };
-
-            await expect(() =>
-                activity.execute(
-                    inputs,
-                    mockActivityContext(),
-                    DefaultMockChannelProviderType
-                )
-            ).rejects.toThrow("traceType is required");
+            await expect(async () => {
+                await activity.execute({
+                    utilityNetwork: {} as any,
+                    traceType: undefined as any,
+                    traceLocations: [],
+                    traceConfiguration: {} as any,
+                    resultTypes: [],
+                    map: {} as any,
+                });
+            }).rejects.toThrow("traceType is required");
         });
-        it("performs the trace request", async () => {
-            const response = { traceResults: [], success: true };
-            class MockChannelProvider extends BaseMockChannelProvider {
-                static create(
-                    channel?: ChannelProvider,
-                    name?: string
-                ): ChannelProvider {
-                    return mockChannel(() => response);
-                }
-                constructor(type: typeof ChannelProvider, name?: string) {
-                    super();
-                    return MockChannelProvider.create();
-                }
-            }
-
+        it("requires traceLocations input", async () => {
             const activity = new RunUtilityNetworkTrace();
+            await expect(async () => {
+                await activity.execute({
+                    utilityNetwork: {} as any,
+                    traceType: "isolation",
+                    traceLocations: undefined as any,
+                    traceConfiguration: {} as any,
+                    resultTypes: [],
+                    map: {} as any,
+                });
+            }).rejects.toThrow("traceLocations is required");
+        });
+        it("requires traceConfiguration input", async () => {
+            const activity = new RunUtilityNetworkTrace();
+            await expect(async () => {
+                await activity.execute({
+                    utilityNetwork: {} as any,
+                    traceType: "isolation",
+                    traceLocations: [],
+                    traceConfiguration: undefined as any,
+                    resultTypes: [],
+                    map: {} as any,
+                });
+            }).rejects.toThrow("traceConfiguration is required");
+        });
+        it("requires map input", async () => {
+            const activity = new RunUtilityNetworkTrace();
+            await expect(async () => {
+                await activity.execute({
+                    utilityNetwork: {} as any,
+                    traceType: "isolation",
+                    traceLocations: [],
+                    traceConfiguration: {} as any,
+                    resultTypes: [],
+                    map: undefined as any,
+                });
+            }).rejects.toThrow("map is required");
+        });
+        it("creates a TraceLocation", async () => {
             const inputs: RunUtilityNetworkTraceInputs = {
-                serviceUrl: dummyServiceUrl,
-                traceType: "connected",
+                utilityNetwork: {} as any,
+                traceType: "isolation",
                 traceLocations: [],
+                traceConfiguration: {} as any,
+                resultTypes: [],
+                map: new WebMap(),
             };
-
-            const result = await activity.execute(
-                inputs,
-                mockActivityContext(),
-                MockChannelProvider as typeof ChannelProvider
-            );
-            expect(result).toStrictEqual({
-                traceResults: response.traceResults,
-            });
+            const traceLocation = new TraceLocation();
+            const activity = new RunUtilityNetworkTrace();
+            const result = await activity.execute(inputs);
+            expect(result).toBeDefined();
+            expect(result).toStrictEqual({ traceResult: new TraceResult() });
         });
     });
 });
