@@ -1,165 +1,136 @@
-import type {
-    IActivityContext,
-    IActivityHandler,
-} from "@geocortex/workflow/runtime/IActivityHandler";
-import { ChannelProvider } from "@geocortex/workflow/runtime/activities/core/ChannelProvider";
-import { activate } from "@geocortex/workflow/runtime/Hooks";
-import { trace } from "../request";
+import type { IActivityHandler } from "@geocortex/workflow/runtime/IActivityHandler";
+import Network from "@arcgis/core/networks/Network";
+import TraceConfiguration from "@arcgis/core/networks/support/TraceConfiguration";
+import * as trace from "@arcgis/core/rest/networks/trace";
+import TraceParameters from "@arcgis/core/rest/networks/support/TraceParameters";
+import TraceLocation from "@arcgis/core/rest/networks/support/TraceLocation";
+import TraceResult from "@arcgis/core/rest/networks/support/TraceResult";
+import WebMap from "@arcgis/core/WebMap";
 
 /** An interface that defines the inputs of the activity. */
 export interface RunUtilityNetworkTraceInputs {
     /**
-     * @displayName Service URL
-     * @description The URL to the Utility Network Service.
+     * @displayName Utility Network
+     * @description The Utility Network object for the target service.
      * @required
      */
-    serviceUrl: string;
+    utilityNetwork: Network;
+    /**
+     * @displayName Trace Type
+     * @description The trace type defined in this trace configuration.
+     * @required
+     */
     traceType:
         | "connected"
         | "subnetwork"
-        | "subnetworkController"
         | "upstream"
         | "downstream"
         | "loops"
-        | "shortestPath"
         | "isolation"
-        | string;
-    traceLocations: {
-        globalId: string;
-        isFilterBarrier?: boolean; // Introduced at 10.8.1
-        percentAlong?: number; // required for edge features
-        terminalId?: number; // required for junction features
-        traceLocationType: "startingPoint" | "barrier" | string;
-    }[];
-    traceConfiguration?: {
-        includeContainers?: boolean;
-        includeContent?: boolean;
-        includeStructures?: boolean;
-        includeBarriers?: boolean;
-        validateConsistency?: boolean;
-        includeIsolated?: boolean;
-        ignoreBarriersAtStartingPoints?: boolean;
-        includeUpToFirstSpatialContainer?: boolean;
-        domainNetworkName: string;
-        tierName: string;
-        targetTierName?: string;
-        subnetworkName?: string;
-        diagramTemplateName: string;
-        shortestPathNetworkAttributeName?: string; // Required for a shortest path trace
-        filterBitsetNetworkAttributeName?: string;
-        traversabilityScope?: string;
-        conditionBarriers?: {
-            name: string;
-            type: string;
-            operator: string;
-            value: number;
-            combineUsingOr: boolean;
-            isSpecificValue: boolean;
-        }[];
-        functionBarriers?: [];
-        arcadeExpressionBarrier: string;
-        filterBarriers?: [];
-        filterFunctionBarriers?: [];
-        filterScope?: "junctions" | "edges" | "junctionsAndEdges" | string;
-        functions?: [];
-        nearestNeighbor?: {
-            count: number;
-            costNetworkAttributeName: string;
-            nearestCategories: [];
-            nearestAssets: [];
-        };
-        outputFilterCategories?: [];
-        outputFilters?: [];
-        outputConditions?: [];
-        propagators?: [];
-    };
-    gdbVersion?: string; // The default is DEFAULT
-    sessionID?: string;
-    moment?: Date;
+        | "shortest-path"
+        | "subnetwork-controllers";
+    /**
+     * @displayName Trace Locations
+     * @description The list of starting points and barriers that will define where the trace starts and stops.
+     * @required
+     */
+    traceLocations: TraceLocation[];
+    /**
+     * @displayName Trace Configuration
+     * @description Defines the properties of a trace.
+     * @required
+     */
+    traceConfiguration: TraceConfiguration;
+    /**
+     * @displayName Result Types
+     * @description The list of types that will be returned by the trace.
+     */
+    resultTypes?: ResultType[];
+
+    /**
+     * @displayName Web Map
+     * @description The WebMap containing the Utility Network.
+     * @required
+     */
+    map: WebMap;
 }
 
+export type ResultType = any;
 /** An interface that defines the outputs of the activity. */
 export interface RunUtilityNetworkTraceOutputs {
     /**
      * @description The trace results.
      */
-    traceResults: {
-        elements: [
-            {
-                networkSourceId: number;
-                globalId: string;
-                objectId: number;
-                terminalId?: number;
-                networkAttributes?: [];
-                assetGroup?: number;
-                assetType?: number;
-                positionFrom?: number;
-                positionTo?: number;
-            }
-        ];
-        aggregatedGeometry: {
-            point: any;
-            line: any;
-            polygon: any;
-        };
-        globalFunctionResults: [
-            {
-                functionType: string;
-                Name: string;
-                result: number;
-            }
-        ];
-        isConsistent: boolean;
-        kFeaturesForKNNFound: boolean;
-        startingPointsIgnored: boolean;
-        warnings: string[];
-    };
+    traceResult: TraceResult;
 }
 
 /**
  * @category Utility Network
  * @description Perform a Utility Network trace operation.
- * @helpUrl https://developers.arcgis.com/rest/services-reference/trace-utility-network-server-.htm
+ * @helpUrl https://developers.arcgis.com/javascript/latest/api-reference/esri-rest-networks-trace.html
  * @clientOnly
  * @unsupportedApps GMV
  */
-@activate(ChannelProvider)
 export class RunUtilityNetworkTrace implements IActivityHandler {
     async execute(
-        inputs: RunUtilityNetworkTraceInputs,
-        context: IActivityContext,
-        type: typeof ChannelProvider
+        inputs: RunUtilityNetworkTraceInputs
     ): Promise<RunUtilityNetworkTraceOutputs> {
-        const { serviceUrl, traceType, ...other } = inputs;
-        if (!serviceUrl) {
-            throw new Error("serviceUrl is required");
+        const {
+            utilityNetwork,
+            traceType,
+            traceLocations,
+            traceConfiguration,
+            resultTypes,
+            map,
+        } = inputs;
+        if (!utilityNetwork) {
+            throw new Error("utilityNetwork is required");
         }
         if (!traceType) {
             throw new Error("traceType is required");
         }
-
-        // Remove trailing slashes
-        const normalizedUrl = serviceUrl.replace(/\/*$/, "");
-
-        const channel = type.create(undefined, "arcgis");
-
-        const response = await trace(
-            channel,
-            normalizedUrl,
-            {
-                traceType,
-                ...other,
-            },
-            context.cancellationToken
-        );
-
-        if (response.error) {
-            console.log("Trace operation failed", response.error);
-            throw new Error("Trace operation failed");
+        if (!traceLocations) {
+            throw new Error("traceLocations is required");
+        }
+        if (!traceConfiguration) {
+            throw new Error("traceConfiguration is required");
+        }
+        if (!map) {
+            throw new Error("map is required");
+        }
+        let resultTypesInternal: any[] = [];
+        if (resultTypes) {
+            resultTypesInternal = resultTypes;
+        }
+        if (!resultTypesInternal.find((r) => r.type === "aggregatedGeometry")) {
+            resultTypesInternal.push({
+                type: "aggregatedGeometry",
+                includeGeometry: true,
+                includePropagatedValues: true,
+                networkAttributeNames: [],
+                diagramTemplateName: "",
+                resultTypeFields: [],
+            });
         }
 
+        const traceParams = new TraceParameters();
+        traceParams.traceLocations = traceLocations;
+        traceParams.traceConfiguration = traceConfiguration;
+        traceParams.traceType = traceType;
+        traceParams.resultTypes = resultTypesInternal;
+
+        const traceResult = await trace.trace(
+            utilityNetwork.networkServiceUrl,
+            traceParams,
+            {
+                authMode: "no-prompt",
+                query: {
+                    token: (map.portalItem.portal as any).credential.token,
+                },
+            }
+        );
         return {
-            traceResults: response.traceResults,
+            traceResult: traceResult,
         };
     }
 }
