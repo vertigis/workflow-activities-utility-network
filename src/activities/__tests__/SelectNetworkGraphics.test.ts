@@ -2,10 +2,7 @@ import {
     SelectNetworkGraphics,
     SelectNetworkGraphicsInputs,
 } from "../SelectNetworkGraphics";
-import type { IActivityHandler } from "@geocortex/workflow/runtime/IActivityHandler";
-import MapView from "@arcgis/core/views/MapView";
 import Point from "@arcgis/core/geometry/Point";
-import WebMap from "@arcgis/core/WebMap";
 import { mockMapView } from "../__mocks__/MapView";
 import { mockWebMap } from "../__mocks__/WebMap";
 
