@@ -1,11 +1,11 @@
 import type { IActivityHandler } from "@geocortex/workflow/runtime/IActivityHandler";
+import { MapInfo } from "@geocortex/workflow/runtime/activities/arcgis/MapProvider";
 import Network from "@arcgis/core/networks/Network";
-import TraceConfiguration from "@arcgis/core/networks/support/TraceConfiguration";
+import UNTraceConfiguration from "@arcgis/core/networks/support/UNTraceConfiguration";
 import * as trace from "@arcgis/core/rest/networks/trace";
 import TraceParameters from "@arcgis/core/rest/networks/support/TraceParameters";
 import TraceLocation from "@arcgis/core/rest/networks/support/TraceLocation";
 import TraceResult from "@arcgis/core/rest/networks/support/TraceResult";
-import WebMap from "@arcgis/core/WebMap";
 
 /** An interface that defines the inputs of the activity. */
 export interface RunUtilityNetworkTraceInputs {
@@ -40,19 +40,18 @@ export interface RunUtilityNetworkTraceInputs {
      * @description Defines the properties of a trace.
      * @required
      */
-    traceConfiguration: TraceConfiguration;
+    traceConfiguration: UNTraceConfiguration;
     /**
      * @displayName Result Types
      * @description The list of types that will be returned by the trace.
      */
     resultTypes?: ResultType[];
-
     /**
-     * @displayName Web Map
-     * @description The WebMap containing the Utility Network.
+     * @displayName Map
+     * @description The Web Map containing the Utility Network.
      * @required
      */
-    map: WebMap;
+    map: MapInfo;
 }
 
 export type ResultType = any;
@@ -118,14 +117,14 @@ export class RunUtilityNetworkTrace implements IActivityHandler {
         traceParams.traceConfiguration = traceConfiguration;
         traceParams.traceType = traceType;
         traceParams.resultTypes = resultTypesInternal;
-
         const traceResult = await trace.trace(
             utilityNetwork.networkServiceUrl,
             traceParams,
             {
                 authMode: "no-prompt",
                 query: {
-                    token: (map.portalItem.portal as any).credential.token,
+                    token: (inputs.map as any).map.portalItem.portal.credential
+                        .token,
                 },
             }
         );

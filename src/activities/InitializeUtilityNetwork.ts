@@ -2,22 +2,12 @@ import type { IActivityHandler } from "@geocortex/workflow/runtime/IActivityHand
 import UtilityNetwork from "@arcgis/core/networks/UtilityNetwork";
 import WebMap from "@arcgis/core/WebMap";
 
-/** An interface that defines the inputs of the activity. */
-export interface InitializeUtilityNetworkInputs {
-    /**
-     * @displayName Map
-     * @description A WebMap containing one or more Utility Networks.
-     ** @required
-     */
-    map: any;
-}
-
 /** An interface that defines the outputs of the activity. */
 export interface InitializeUtilityNetworkOutputs {
     /**
      * @description The initialized Utility Network.
      */
-    result: any;
+    result: UtilityNetwork;
 }
 
 /**
@@ -29,10 +19,8 @@ export interface InitializeUtilityNetworkOutputs {
  */
 
 export class InitializeUtilityNetwork implements IActivityHandler {
-    async execute(
-        inputs: InitializeUtilityNetworkInputs
-    ): Promise<InitializeUtilityNetworkOutputs> {
-        const map = inputs.map;
+    async execute(context: any): Promise<InitializeUtilityNetworkOutputs> {
+        const map = context.map;
         if (!map) {
             throw new Error("map is required");
         }

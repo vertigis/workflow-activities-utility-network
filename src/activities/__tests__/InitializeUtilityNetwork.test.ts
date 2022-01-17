@@ -1,7 +1,4 @@
-import {
-    InitializeUtilityNetwork,
-    InitializeUtilityNetworkInputs,
-} from "../InitializeUtilityNetwork";
+import { InitializeUtilityNetwork } from "../InitializeUtilityNetwork";
 import UtilityNetwork from "@arcgis/core/networks/UtilityNetwork";
 import WebMap from "@arcgis/core/WebMap";
 import Collection from "@arcgis/core/core/Collection";
@@ -54,6 +51,7 @@ describe("InitializeUtilityNetwork", () => {
         const un = new UtilityNetwork();
         const uns = new Collection<UtilityNetwork>();
         uns.push(un);
+        const context = jest.fn();
         const mockedMap = new WebMap({
             portalItem: {
                 id: "abc",
@@ -61,24 +59,11 @@ describe("InitializeUtilityNetwork", () => {
             },
             utilityNetworks: uns,
         });
-
-        it("requires map", async () => {
-            const activity = new InitializeUtilityNetwork();
-            const inputs: InitializeUtilityNetworkInputs = {
-                map: undefined,
-            };
-
-            await expect(() => activity.execute(inputs)).rejects.toThrow(
-                "map is required"
-            );
-        });
+        (context as any).map = mockedMap;
 
         it("gets first UtilityNetwork from the WebMap's utilityNetworks collection", async () => {
             const activity = new InitializeUtilityNetwork();
-            const inputs: InitializeUtilityNetworkInputs = {
-                map: mockedMap,
-            };
-            const result = await activity.execute(inputs);
+            const result = await activity.execute(context);
             expect(result).toStrictEqual({
                 result: mockUn,
             });

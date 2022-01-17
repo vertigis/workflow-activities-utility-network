@@ -1,6 +1,7 @@
 import Collection from "@arcgis/core/core/Collection";
 import WebMap from "@arcgis/core/WebMap";
 import Layer from "@arcgis/core/layers/Layer";
+import PortalItem from "@arcgis/core/portal/PortalItem";
 
 jest.mock("@arcgis/core/core/Collection", () => {
     return function () {
@@ -16,6 +17,11 @@ export function mockWebMap(): WebMap {
             return Promise.resolve({} as WebMap);
         },
         allLayers: new Collection<Layer>(),
+        portalItem: {
+            portal: {
+                credential: {},
+            },
+        } as any,
     };
 
     return webMap as WebMap;

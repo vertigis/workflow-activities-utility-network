@@ -5,6 +5,7 @@ import {
 import TraceLocation from "@arcgis/core/rest/networks/support/TraceLocation";
 import WebMap from "@arcgis/core/WebMap";
 import TraceResult from "@arcgis/core/rest/networks/support/TraceResult";
+import { mockWebMap } from "../__mocks__/WebMap";
 
 const mockTraceLocation = {
     globalId: "abc",
@@ -45,6 +46,7 @@ jest.mock("@arcgis/core/WebMap", () => {
         };
     };
 });
+jest.mock("@geocortex/workflow/runtime/activities/arcgis/MapProvider");
 
 jest.mock("@arcgis/core/rest/networks/support/TraceLocation", () => {
     return function () {
@@ -121,19 +123,6 @@ describe("RunUtilityNetworkTrace", () => {
                 });
             }).rejects.toThrow("traceConfiguration is required");
         });
-        it("requires map input", async () => {
-            const activity = new RunUtilityNetworkTrace();
-            await expect(async () => {
-                await activity.execute({
-                    utilityNetwork: {} as any,
-                    traceType: "isolation",
-                    traceLocations: [],
-                    traceConfiguration: {} as any,
-                    resultTypes: [],
-                    map: undefined as any,
-                });
-            }).rejects.toThrow("map is required");
-        });
         it("creates a TraceLocation", async () => {
             const inputs: RunUtilityNetworkTraceInputs = {
                 utilityNetwork: {} as any,
@@ -141,9 +130,10 @@ describe("RunUtilityNetworkTrace", () => {
                 traceLocations: [],
                 traceConfiguration: {} as any,
                 resultTypes: [],
-                map: new WebMap(),
+                map: jest.fn() as any,
             };
-            const traceLocation = new TraceLocation();
+            (inputs.map as any).map = mockWebMap();
+            console.log((inputs.map as any).map);
             const activity = new RunUtilityNetworkTrace();
             const result = await activity.execute(inputs);
             expect(result).toBeDefined();

@@ -5,6 +5,7 @@ import {
 import Point from "@arcgis/core/geometry/Point";
 import { mockMapView } from "../__mocks__/MapView";
 import { mockWebMap } from "../__mocks__/WebMap";
+import { map } from "esri/widgets/TableList/TableListViewModel";
 
 jest.mock("../utils", () => {
     return {
@@ -38,17 +39,17 @@ describe("SelectNetworkGraphics", () => {
             const activity = new SelectNetworkGraphics();
             await expect(async () => {
                 await activity.execute({
-                    mapView: undefined as any,
+                    map: undefined as any,
                     point: {} as Point,
                     locationType: "barrier",
                 });
-            }).rejects.toThrow("mapView is required");
+            }).rejects.toThrow("map is required");
         });
         it("requires point input", async () => {
             const activity = new SelectNetworkGraphics();
             await expect(async () => {
                 await activity.execute({
-                    mapView: {} as any,
+                    map: {} as any,
                     point: undefined as any,
                     locationType: "barrier",
                 });
@@ -58,7 +59,7 @@ describe("SelectNetworkGraphics", () => {
             const activity = new SelectNetworkGraphics();
             await expect(async () => {
                 await activity.execute({
-                    mapView: {} as any,
+                    map: {} as any,
                     point: {} as Point,
                     locationType: undefined as any,
                 });
@@ -67,11 +68,12 @@ describe("SelectNetworkGraphics", () => {
 
         it("Creates an array of LocationGraphics", async () => {
             const inputs: SelectNetworkGraphicsInputs = {
-                mapView: mockMapView(),
+                map: jest.fn() as any,
                 point: new Point(),
                 locationType: "barrier",
             };
-            inputs.mapView.map = mockWebMap();
+            (inputs.map as any).map = mockWebMap();
+            (inputs.map as any).view = mockMapView();
             const activity = new SelectNetworkGraphics();
             const result = await activity.execute(inputs);
             expect(result).toBeDefined();

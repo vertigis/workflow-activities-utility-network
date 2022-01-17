@@ -12,15 +12,16 @@ import {
 import WebMap from "@arcgis/core/WebMap";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import Graphic from "@arcgis/core/Graphic";
+import { MapInfo } from "@geocortex/workflow/runtime/activities/arcgis/MapProvider";
 
 /** An interface that defines the inputs of the activity. */
 export interface SelectNetworkGraphicsInputs {
     /**
-     * @displayName Map View
-     * @description A Web Map View.
+     * @displayName Map
+     * @description The map containing the Utility Network.
      ** @required
      */
-    mapView: MapView;
+    map: MapInfo;
 
     /**
      * @displayName Point
@@ -77,9 +78,9 @@ export class SelectNetworkGraphics implements IActivityHandler {
     async execute(
         inputs: SelectNetworkGraphicsInputs
     ): Promise<SelectNetworkGraphicsOutputs> {
-        const { mapView, point, supportedLayerNames, locationType } = inputs;
-        if (!mapView) {
-            throw new Error("mapView is required");
+        const { map, point, supportedLayerNames, locationType } = inputs;
+        if (!map) {
+            throw new Error("map is required");
         }
         if (!point) {
             throw new Error("point is required");
@@ -98,8 +99,12 @@ export class SelectNetworkGraphics implements IActivityHandler {
             ? inputs.selectionSize
             : SELECTION_SIZE;
 
-        await (mapView.map as WebMap).load().then(() => {
-            (mapView.map as WebMap).allLayers.forEach( (layer) => {
+        const view = (map as any).view as MapView;
+        const webMap = view.map as WebMap
+        const queriedGraphics: Graphic[] = [];
+
+        await webMap.load().then(() => {
+            webMap.allLayers.forEach( (layer) => {
                 if (layer.type == "feature") {
                     const f = layer as FeatureLayer;
                     
@@ -112,10 +117,10 @@ export class SelectNetworkGraphics implements IActivityHandler {
                 }
             });
         });
-        await mapView.when();
+        await view.when();
         
         for (let i = 0; i < supportedLayers.length; i++) {
-            const l = mapView.map.allLayers.find(
+            const l = webMap.allLayers.find(
                 (x) => x.title == supportedLayers[i]
             );
             if (l != undefined && !l.initialized) {
@@ -123,21 +128,12 @@ export class SelectNetworkGraphics implements IActivityHandler {
             }
         }
 
-        const screenPoint = mapView.toScreen(point);
-        const hitResult = await mapView.hitTest(screenPoint);
-
+        const screenPoint = view.toScreen(point);
+        const hitResult = await view.hitTest(screenPoint);
         const hitGraphics = hitResult.results
-            .filter((g) => g.graphic)
-            .filter((g) => g.graphic.attributes)
-            .filter(
-                (g) => getValue(g.graphic.attributes, "globalid") != undefined
-            )
-            .filter((g) =>
-                supportedLayers.find((s) => s === g.graphic.layer.title)
-            );
-      
-        const queriedGraphics: Graphic[] = [];
-
+        .filter((g) => g.graphic)
+        .filter((g) => g.graphic.attributes);
+        
         for (let i = 0; i < hitGraphics.length; i++) {
             const x = hitGraphics[i];
             const result = await (x.graphic
@@ -147,8 +143,12 @@ export class SelectNetworkGraphics implements IActivityHandler {
                 outFields: ["*"],
                 outSpatialReference: { wkid: point.spatialReference.wkid },
             });
-            queriedGraphics.push(result.features[0]);
-        }
+            if(result.features.length > 0 && getValue(result.features[0].attributes, "globalid") != undefined){
+                queriedGraphics.push(result.features[0]);
+            }
+
+        };
+
 
         const graphics = queriedGraphics.map((g) => {
             const percAlong = getPercentageAlong(g.geometry, point);
