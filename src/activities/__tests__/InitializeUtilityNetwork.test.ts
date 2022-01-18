@@ -2,6 +2,8 @@ import { InitializeUtilityNetwork } from "../InitializeUtilityNetwork";
 import UtilityNetwork from "@arcgis/core/networks/UtilityNetwork";
 import WebMap from "@arcgis/core/WebMap";
 import Collection from "@arcgis/core/core/Collection";
+import { IActivityContext } from "@geocortex/workflow/runtime/IActivityHandler";
+import { mockActivityContext } from "../__mocks__/ActivityContext";
 
 jest.mock("@arcgis/core/networks/UtilityNetwork", () => {
     return function () {
@@ -51,7 +53,7 @@ describe("InitializeUtilityNetwork", () => {
         const un = new UtilityNetwork();
         const uns = new Collection<UtilityNetwork>();
         uns.push(un);
-        const context = jest.fn();
+        const context = mockActivityContext();
         const mockedMap = new WebMap({
             portalItem: {
                 id: "abc",

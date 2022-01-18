@@ -173,8 +173,6 @@ describe("RunSynthesizeAssociationGeometries", () => {
                 maxGeometryCount: 1,
             };
             const result = await activity.execute(inputs);
-
-            console.log(result);
             expect(result).toStrictEqual({ associations: expectedResult });
         });
     });

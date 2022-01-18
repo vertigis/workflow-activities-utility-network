@@ -133,7 +133,6 @@ describe("RunUtilityNetworkTrace", () => {
                 map: jest.fn() as any,
             };
             (inputs.map as any).map = mockWebMap();
-            console.log((inputs.map as any).map);
             const activity = new RunUtilityNetworkTrace();
             const result = await activity.execute(inputs);
             expect(result).toBeDefined();

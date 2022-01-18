@@ -5,7 +5,7 @@ import {
 import Point from "@arcgis/core/geometry/Point";
 import { mockMapView } from "../__mocks__/MapView";
 import { mockWebMap } from "../__mocks__/WebMap";
-import { map } from "esri/widgets/TableList/TableListViewModel";
+import WebMap from "@arcgis/core/WebMap";
 
 jest.mock("../utils", () => {
     return {
@@ -24,10 +24,6 @@ jest.mock("@arcgis/core/geometry/Point", () => {
         };
     };
 });
-
-jest.mock("@arcgis/core/WebMap");
-
-jest.mock("@arcgis/core/views/MapView");
 
 beforeEach(() => {
     jest.clearAllMocks();
@@ -72,8 +68,8 @@ describe("SelectNetworkGraphics", () => {
                 point: new Point(),
                 locationType: "barrier",
             };
-            (inputs.map as any).map = mockWebMap();
             (inputs.map as any).view = mockMapView();
+            (inputs.map as any).view.map = mockWebMap();
             const activity = new SelectNetworkGraphics();
             const result = await activity.execute(inputs);
             expect(result).toBeDefined();

@@ -102,7 +102,6 @@ export class SelectNetworkGraphics implements IActivityHandler {
         const view = (map as any).view as MapView;
         const webMap = view.map as WebMap
         const queriedGraphics: Graphic[] = [];
-
         await webMap.load().then(() => {
             webMap.allLayers.forEach( (layer) => {
                 if (layer.type == "feature") {
