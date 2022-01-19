@@ -2,8 +2,13 @@ import { InitializeUtilityNetwork } from "../InitializeUtilityNetwork";
 import UtilityNetwork from "@arcgis/core/networks/UtilityNetwork";
 import WebMap from "@arcgis/core/WebMap";
 import Collection from "@arcgis/core/core/Collection";
-import { IActivityContext } from "@geocortex/workflow/runtime/IActivityHandler";
 import { mockActivityContext } from "../__mocks__/ActivityContext";
+
+jest.mock("@arcgis/core/identity/IdentityManager", () => {
+    return function () {
+        // no op
+    };
+});
 
 jest.mock("@arcgis/core/networks/UtilityNetwork", () => {
     return function () {
