@@ -35,7 +35,7 @@ export interface GetTraceConfigurationOutputs {
  * @clientOnly
  * @unsupportedApps GMV, GVH
  */
-export class GetTraceConfigurations implements IActivityHandler {
+export class GetTraceConfiguration implements IActivityHandler {
     execute(inputs: GetTraceConfigurationInputs): GetTraceConfigurationOutputs {
         const { utilityNetwork, traceId } = inputs;
         if (!utilityNetwork) {
