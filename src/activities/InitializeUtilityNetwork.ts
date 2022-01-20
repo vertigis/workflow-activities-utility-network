@@ -34,8 +34,8 @@ export class InitializeUtilityNetwork implements IActivityHandler {
         if (map.utilityNetworks) {
             utilityNetwork = map.utilityNetworks.getItemAt(0);
         } else {
-            const token = this.getOauthInfo();
-            IdentityManager.registerToken(token);
+            const portalOathInfo = this.getOauthInfo(map.portalItem.portal.credential);
+            IdentityManager.registerToken(portalOathInfo);
             const webmap = new WebMap({
                 portalItem: {
                     id: map.portalItem.id,
@@ -50,14 +50,8 @@ export class InitializeUtilityNetwork implements IActivityHandler {
                 webmap.utilityNetworks.length > 0
             ) {
                 utilityNetwork = webmap.utilityNetworks.getItemAt(0);
-                const uToken = {
-                    expires: token.expires,
-                    server: (utilityNetwork as any).layerUrl,
-                    ssl: token.ssl,
-                    token: token.token,
-                    userId: token.userId,
-                };
-                IdentityManager.registerToken(uToken);
+                const agsOathInfo =  this.getOauthInfo(map.portalItem.portal.credential, (utilityNetwork as any).networkServiceUrl);
+                IdentityManager.registerToken(agsOathInfo);
                 await utilityNetwork.load();
             } else {
                 throw new Error("Utility network not found.");
@@ -67,16 +61,16 @@ export class InitializeUtilityNetwork implements IActivityHandler {
             result: utilityNetwork,
         };
     }
-    getOauthInfo(): any {
+    getOauthInfo(credential: any, server?:string): any {
         let token;
         try {
-            const userInfo = this.getUserInfo();
+            
             token = {
-                expires: userInfo.credentials.expiration,
-                server: userInfo.credentials.url,
+                expires: credential.expiration,
+                server: server?server:credential.server,
                 ssl: true,
-                token: userInfo.credentials.token,
-                userId: userInfo.identity.username,
+                token: credential.token,
+                userId: credential.userInfo,
             };
         } catch (e) {
             throw new Error("Unable to access user info.");
@@ -84,19 +78,5 @@ export class InitializeUtilityNetwork implements IActivityHandler {
         return token;
     }
 
-    getUserInfo(): any {
-        try {
-            for (const itemKey in localStorage) {
-                // Looking for something like {GUID}:oauth-result
-                if (
-                    itemKey ===
-                    "EDD74EC3-3013-45CB-9935-EB9117BB7979:oauth-result"
-                ) {
-                    return JSON.parse(localStorage[itemKey]);
-                }
-            }
-        } catch (e) {
-            throw new Error("Unable to locate token for user.");
-        }
-    }
+  
 }
