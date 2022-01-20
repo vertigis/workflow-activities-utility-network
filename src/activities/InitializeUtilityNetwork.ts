@@ -34,7 +34,9 @@ export class InitializeUtilityNetwork implements IActivityHandler {
         if (map.utilityNetworks) {
             utilityNetwork = map.utilityNetworks.getItemAt(0);
         } else {
-            const portalOathInfo = this.getOauthInfo(map.portalItem.portal.credential);
+            const portalOathInfo = this.getOauthInfo(
+                map.portalItem.portal.credential
+            );
             IdentityManager.registerToken(portalOathInfo);
             const webmap = new WebMap({
                 portalItem: {
@@ -50,7 +52,10 @@ export class InitializeUtilityNetwork implements IActivityHandler {
                 webmap.utilityNetworks.length > 0
             ) {
                 utilityNetwork = webmap.utilityNetworks.getItemAt(0);
-                const agsOathInfo =  this.getOauthInfo(map.portalItem.portal.credential, (utilityNetwork as any).networkServiceUrl);
+                const agsOathInfo = this.getOauthInfo(
+                    map.portalItem.portal.credential,
+                    (utilityNetwork as any).networkServiceUrl
+                );
                 IdentityManager.registerToken(agsOathInfo);
                 await utilityNetwork.load();
             } else {
@@ -61,13 +66,12 @@ export class InitializeUtilityNetwork implements IActivityHandler {
             result: utilityNetwork,
         };
     }
-    getOauthInfo(credential: any, server?:string): any {
+    getOauthInfo(credential: any, server?: string): any {
         let token;
         try {
-            
             token = {
                 expires: credential.expiration,
-                server: server?server:credential.server,
+                server: server ? server : credential.server,
                 ssl: true,
                 token: credential.token,
                 userId: credential.userInfo,
@@ -77,6 +81,4 @@ export class InitializeUtilityNetwork implements IActivityHandler {
         }
         return token;
     }
-
-  
 }
