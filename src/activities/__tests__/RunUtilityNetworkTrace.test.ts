@@ -136,7 +136,10 @@ describe("RunUtilityNetworkTrace", () => {
             const activity = new RunUtilityNetworkTrace();
             const result = await activity.execute(inputs);
             expect(result).toBeDefined();
-            expect(result).toStrictEqual({ traceResult: new TraceResult() });
+            expect(result).toStrictEqual({
+                traceResult: new TraceResult(),
+                error: undefined,
+            });
         });
     });
 });
