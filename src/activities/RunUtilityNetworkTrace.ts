@@ -60,7 +60,8 @@ export interface RunUtilityNetworkTraceOutputs {
     /**
      * @description The trace results.
      */
-    traceResult: TraceResult;
+    traceResult: TraceResult | undefined;
+    error: any | undefined;
 }
 
 /**
@@ -117,19 +118,28 @@ export class RunUtilityNetworkTrace implements IActivityHandler {
         traceParams.traceConfiguration = traceConfiguration;
         traceParams.traceType = traceType;
         traceParams.resultTypes = resultTypesInternal;
-        const traceResult = await trace.trace(
-            utilityNetwork.networkServiceUrl,
-            traceParams,
-            {
-                authMode: "no-prompt",
-                query: {
-                    token: (inputs.map as any).map.portalItem.portal.credential
-                        .token,
-                },
-            }
-        );
-        return {
-            traceResult: traceResult,
-        };
+        let traceResult;
+        try {
+            traceResult = await trace.trace(
+                utilityNetwork.networkServiceUrl,
+                traceParams,
+                {
+                    authMode: "no-prompt",
+                    query: {
+                        token: (inputs.map as any).map.portalItem.portal
+                            .credential.token,
+                    },
+                }
+            );
+            return {
+                traceResult: traceResult,
+                error: undefined,
+            };
+        } catch (e) {
+            return {
+                traceResult: undefined,
+                error: e,
+            };
+        }
     }
 }

@@ -129,14 +129,10 @@ export function getPercentageAlong(
         })
     ) as Polyline;
 
-    const nearestCoord = GeometryEngine.nearestCoordinate(
-        projectedLine,
-        flagGeom
-    );
-    const padFlagXMin = nearestCoord.coordinate.x - 50;
-    const padFlagXMax = nearestCoord.coordinate.x + 50;
-    const padFlagYMin = nearestCoord.coordinate.y - 50;
-    const padFlagYMax = nearestCoord.coordinate.y + 50;
+    const padFlagXMin = flagGeom.x - 50;
+    const padFlagXMax = flagGeom.x + 50;
+    const padFlagYMin = flagGeom.y - 50;
+    const padFlagYMax = flagGeom.y + 50;
 
     const newCoordsForLine = [
         [
@@ -151,7 +147,13 @@ export function getPercentageAlong(
     const newGeom = GeometryEngine.cut(projectedLine, flagLine);
     if (newGeom.length > 0) {
         const sourceLength = GeometryEngine.planarLength(sourceLine, "feet");
-        const piece1Length = GeometryEngine.planarLength(newGeom[0], "feet");
+        const lineGeom = newGeom as Polyline[];
+        let piece1Length;
+        if (lineGeom[0].paths[0][0][0] == sourceLine.paths[0][0][0] && lineGeom[0].paths[0][0][1] == sourceLine.paths[0][0][1]) {
+            piece1Length = GeometryEngine.planarLength(newGeom[0], "feet");
+        } else { 
+            piece1Length = GeometryEngine.planarLength(newGeom[1], "feet");
+        }
         const percentage = piece1Length / sourceLength;
         return percentage;
     } else {
