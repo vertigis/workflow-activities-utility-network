@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import type { IActivityHandler } from "@geocortex/workflow/runtime/IActivityHandler";
+import type { IActivityHandler, IActivityContext } from "@geocortex/workflow/runtime/IActivityHandler";
 import MapView from "@arcgis/core/views/MapView";
 import Point from "@arcgis/core/geometry/Point";
 import {
@@ -12,17 +12,11 @@ import {
 import WebMap from "@arcgis/core/WebMap";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import Graphic from "@arcgis/core/Graphic";
-import { MapInfo } from "@geocortex/workflow/runtime/activities/arcgis/MapProvider";
+import { MapProvider } from "@geocortex/workflow/runtime/activities/arcgis/MapProvider";
 
+import { activate } from "@geocortex/workflow/runtime/Hooks";
 /** An interface that defines the inputs of the activity. */
 export interface SelectNetworkGraphicsInputs {
-    /**
-     * @displayName Map
-     * @description The map containing the Utility Network.
-     ** @required
-     */
-    map: MapInfo;
-
     /**
      * @displayName Point
      * @description The point on the map to search.
@@ -72,22 +66,29 @@ const SELECTION_SIZE = 10;
  * @description Select the Utility Network Graphics to be used as a starting point or barrier from a map.
  * @helpUrl https://developers.arcgis.com/javascript/latest/api-reference/esri-networks-support-TraceConfiguration.html
  * @clientOnly
- * @unsupportedApps GMV
+ * @unsupportedApps GMV, GVH, WAB
  */
+@activate(MapProvider)
 export class SelectNetworkGraphics implements IActivityHandler {
     async execute(
-        inputs: SelectNetworkGraphicsInputs
+        inputs: SelectNetworkGraphicsInputs,
+        context: IActivityContext,
+        type: typeof MapProvider
     ): Promise<SelectNetworkGraphicsOutputs> {
-        const { map, point, supportedLayerNames, locationType } = inputs;
-        if (!map) {
-            throw new Error("map is required");
-        }
+        const { point, supportedLayerNames, locationType } = inputs;
+
         if (!point) {
             throw new Error("point is required");
         }
         if (!locationType) {
             throw new Error("locationType is required");
         }
+
+        const mapProvider = type.create();
+        await mapProvider.load();
+
+        const webMap = mapProvider.map as WebMap;
+        const view = mapProvider.view as MapView;
         const supportedLayers = !supportedLayerNames
             ? []
             : supportedLayerNames;
@@ -99,8 +100,7 @@ export class SelectNetworkGraphics implements IActivityHandler {
             ? inputs.selectionSize
             : SELECTION_SIZE;
 
-        const view = (map as any).view as MapView;
-        const webMap = view.map as WebMap
+
         const queriedGraphics: Graphic[] = [];
         await webMap.load().then(() => {
             webMap.allLayers.forEach( (layer) => {

@@ -66,7 +66,7 @@ export interface RunSynthesizeAssociationGeometriesOutputs {
  * @description The utility network associations model connectivity, containment, and structure relations between assets. Associations do not have a spatial presence, so this function synthesizes the assocaitions by providing an extent, and returning all associations within the extent.
  * @helpUrl https://developers.arcgis.com/javascript/latest/api-reference/esri-rest-networks-synthesizeAssociationGeometries.html
  * @clientOnly
- * @unsupportedApps GMV
+ * @unsupportedApps GMV, GVH, WAB
  */
 export class RunSynthesizeAssociationGeometries implements IActivityHandler {
     async execute(

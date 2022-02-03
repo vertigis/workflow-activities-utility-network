@@ -2,10 +2,7 @@ import {
     RunUtilityNetworkTrace,
     RunUtilityNetworkTraceInputs,
 } from "../RunUtilityNetworkTrace";
-import TraceLocation from "@arcgis/core/rest/networks/support/TraceLocation";
-import WebMap from "@arcgis/core/WebMap";
 import TraceResult from "@arcgis/core/rest/networks/support/TraceResult";
-import { mockWebMap } from "../__mocks__/WebMap";
 
 const mockTraceLocation = {
     globalId: "abc",
@@ -80,7 +77,6 @@ describe("RunUtilityNetworkTrace", () => {
                     traceLocations: [],
                     traceConfiguration: {} as any,
                     resultTypes: [],
-                    map: {} as any,
                 });
             }).rejects.toThrow("utilityNetwork is required");
         });
@@ -93,7 +89,6 @@ describe("RunUtilityNetworkTrace", () => {
                     traceLocations: [],
                     traceConfiguration: {} as any,
                     resultTypes: [],
-                    map: {} as any,
                 });
             }).rejects.toThrow("traceType is required");
         });
@@ -106,7 +101,6 @@ describe("RunUtilityNetworkTrace", () => {
                     traceLocations: undefined as any,
                     traceConfiguration: {} as any,
                     resultTypes: [],
-                    map: {} as any,
                 });
             }).rejects.toThrow("traceLocations is required");
         });
@@ -119,7 +113,6 @@ describe("RunUtilityNetworkTrace", () => {
                     traceLocations: [],
                     traceConfiguration: undefined as any,
                     resultTypes: [],
-                    map: {} as any,
                 });
             }).rejects.toThrow("traceConfiguration is required");
         });
@@ -130,15 +123,12 @@ describe("RunUtilityNetworkTrace", () => {
                 traceLocations: [],
                 traceConfiguration: {} as any,
                 resultTypes: [],
-                map: jest.fn() as any,
             };
-            (inputs.map as any).map = mockWebMap();
             const activity = new RunUtilityNetworkTrace();
             const result = await activity.execute(inputs);
             expect(result).toBeDefined();
             expect(result).toStrictEqual({
                 traceResult: new TraceResult(),
-                error: undefined,
             });
         });
     });

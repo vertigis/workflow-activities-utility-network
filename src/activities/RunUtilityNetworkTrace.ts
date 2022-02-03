@@ -1,7 +1,5 @@
 import type { IActivityHandler } from "@geocortex/workflow/runtime/IActivityHandler";
-import { MapInfo } from "@geocortex/workflow/runtime/activities/arcgis/MapProvider";
 import Network from "@arcgis/core/networks/Network";
-import UNTraceConfiguration from "@arcgis/core/networks/support/UNTraceConfiguration";
 import * as trace from "@arcgis/core/rest/networks/trace";
 import TraceParameters from "@arcgis/core/rest/networks/support/TraceParameters";
 import TraceLocation from "@arcgis/core/rest/networks/support/TraceLocation";
@@ -40,18 +38,12 @@ export interface RunUtilityNetworkTraceInputs {
      * @description Defines the properties of a trace.
      * @required
      */
-    traceConfiguration: UNTraceConfiguration;
+    traceConfiguration: any;
     /**
      * @displayName Result Types
      * @description The list of types that will be returned by the trace.
      */
     resultTypes?: ResultType[];
-    /**
-     * @displayName Map
-     * @description The Web Map containing the Utility Network.
-     * @required
-     */
-    map: MapInfo;
 }
 
 export type ResultType = any;
@@ -61,7 +53,6 @@ export interface RunUtilityNetworkTraceOutputs {
      * @description The trace results.
      */
     traceResult: TraceResult | undefined;
-    error: any | undefined;
 }
 
 /**
@@ -69,7 +60,7 @@ export interface RunUtilityNetworkTraceOutputs {
  * @description Perform a Utility Network trace operation.
  * @helpUrl https://developers.arcgis.com/javascript/latest/api-reference/esri-rest-networks-trace.html
  * @clientOnly
- * @unsupportedApps GMV
+ * @unsupportedApps GMV, GVH, WAB
  */
 export class RunUtilityNetworkTrace implements IActivityHandler {
     async execute(
@@ -81,7 +72,6 @@ export class RunUtilityNetworkTrace implements IActivityHandler {
             traceLocations,
             traceConfiguration,
             resultTypes,
-            map,
         } = inputs;
         if (!utilityNetwork) {
             throw new Error("utilityNetwork is required");
@@ -95,9 +85,7 @@ export class RunUtilityNetworkTrace implements IActivityHandler {
         if (!traceConfiguration) {
             throw new Error("traceConfiguration is required");
         }
-        if (!map) {
-            throw new Error("map is required");
-        }
+
         let resultTypesInternal: any[] = [];
         if (resultTypes) {
             resultTypesInternal = resultTypes;
@@ -118,28 +106,12 @@ export class RunUtilityNetworkTrace implements IActivityHandler {
         traceParams.traceConfiguration = traceConfiguration;
         traceParams.traceType = traceType;
         traceParams.resultTypes = resultTypesInternal;
-        let traceResult;
-        try {
-            traceResult = await trace.trace(
-                utilityNetwork.networkServiceUrl,
-                traceParams,
-                {
-                    authMode: "no-prompt",
-                    query: {
-                        token: (inputs.map as any).map.portalItem.portal
-                            .credential.token,
-                    },
-                }
-            );
-            return {
-                traceResult: traceResult,
-                error: undefined,
-            };
-        } catch (e) {
-            return {
-                traceResult: undefined,
-                error: e,
-            };
-        }
+        const traceResult = await trace.trace(
+            utilityNetwork.networkServiceUrl,
+            traceParams
+        );
+        return {
+            traceResult: traceResult,
+        };
     }
 }
