@@ -135,17 +135,18 @@ export class SelectNetworkGraphics implements IActivityHandler {
         
         for (let i = 0; i < hitGraphics.length; i++) {
             const x = hitGraphics[i];
-            const result = await (x.graphic
-                .layer as FeatureLayer).queryFeatures({
-                objectIds: [x.graphic.getObjectId()],
-                returnGeometry: true,
-                outFields: ["*"],
-                outSpatialReference: { wkid: point.spatialReference.wkid },
-            });
-            if(result.features.length > 0 && getValue(result.features[0].attributes, "globalid") != undefined){
-                queriedGraphics.push(result.features[0]);
+            if(x.graphic.layer.type == "feature"){
+                const result = await (x.graphic
+                    .layer as FeatureLayer).queryFeatures({
+                    objectIds: [x.graphic.getObjectId()],
+                    returnGeometry: true,
+                    outFields: ["*"],
+                    outSpatialReference: { wkid: point.spatialReference.wkid },
+                });
+                if(result.features.length > 0 && getValue(result.features[0].attributes, "globalid") != undefined){
+                    queriedGraphics.push(result.features[0]);
+                }
             }
-
         };
 
 
