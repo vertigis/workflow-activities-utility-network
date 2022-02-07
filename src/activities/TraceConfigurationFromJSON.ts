@@ -21,13 +21,12 @@ export interface TraceConfigurationFromJSONOutputs {
 
 /**
  * @category Utility Network
- * @description Create a trace location for a given location along the network.
+ * @description Create a trace configuration from JSON.
  * @helpUrl https://developers.arcgis.com/javascript/latest/api-reference/esri-networks-support-TraceConfiguration.html
  * @clientOnly
  * @unsupportedApps GMV, GVH, WAB
  */
 export class TraceConfigurationFromJSON implements IActivityHandler {
-    /** Perform the execution logic of the activity. */
     execute(
         inputs: TraceConfigurationFromJSONInputs
     ): TraceConfigurationFromJSONOutputs {
@@ -35,9 +34,11 @@ export class TraceConfigurationFromJSON implements IActivityHandler {
         if (!json) {
             throw new Error("json is required");
         }
-        const traceConfig = new UNTraceConfiguration(json);
+
+        const traceConfiguration = new UNTraceConfiguration(json);
+        
         return {
-            traceConfiguration: traceConfig,
+            traceConfiguration,
         };
     }
 }

@@ -13,7 +13,7 @@ export interface GetTraceConfigurationInputs {
     utilityNetwork: UtilityNetwork;
 
     /**
-     * @displayName Trace Configuration Id
+     * @displayName Trace Configuration ID
      * @description The GUID or Title that uniquely identifies the shared trace configuration to be loaded.
      * @required
      */
@@ -44,23 +44,20 @@ export class GetTraceConfiguration implements IActivityHandler {
         if (!traceId) {
             throw new Error("traceId is required");
         }
-        let traceConfiguration: NamedTraceConfiguration;
+        let traceConfiguration: NamedTraceConfiguration | undefined;
 
         const namedTraceConfiguration = utilityNetwork.sharedNamedTraceConfigurations.find(
             (x) => x.title === traceId || x.globalId === traceId
         );
 
-        if (namedTraceConfiguration != undefined) {
+        if (namedTraceConfiguration) {
             traceConfiguration = new UNTraceConfiguration(
                 namedTraceConfiguration.traceConfiguration.toJSON()
             );
-            return {
-                traceConfiguration: traceConfiguration,
-            };
         }
 
         return {
-            traceConfiguration: null,
+            traceConfiguration,
         };
     }
 }

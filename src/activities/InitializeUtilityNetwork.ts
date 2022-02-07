@@ -6,6 +6,7 @@ import UtilityNetwork from "@arcgis/core/networks/UtilityNetwork";
 import WebMap from "@arcgis/core/WebMap";
 import IdentityManager from "@arcgis/core/identity/IdentityManager";
 import Credential from "@arcgis/core/identity/Credential";
+import Network from "@arcgis/core/networks/Network";
 import { MapProvider } from "@geocortex/workflow/runtime/activities/arcgis/MapProvider";
 
 import { activate } from "@geocortex/workflow/runtime/Hooks";
@@ -38,7 +39,7 @@ export class InitializeUtilityNetwork implements IActivityHandler {
             throw new Error("map is required");
         }
         const map = mapProvider.map as WebMap;
-        let utilityNetwork!: UtilityNetwork;
+        let utilityNetwork: UtilityNetwork;
         const portalItem = map.portalItem as any;
         if (map.utilityNetworks) {
             utilityNetwork = map.utilityNetworks.getItemAt(0);
@@ -55,15 +56,11 @@ export class InitializeUtilityNetwork implements IActivityHandler {
             });
 
             await webmap.load();
-            if (
-                webmap.utilityNetworks &&
-                webmap.utilityNetworks != null &&
-                webmap.utilityNetworks.length > 0
-            ) {
+            if (webmap.utilityNetworks?.length > 0) {
                 utilityNetwork = webmap.utilityNetworks.getItemAt(0);
                 const agsOauthInfo = this.getOauthInfo(
                     portalItem.portal.credential,
-                    (utilityNetwork as any).networkServiceUrl
+                    (utilityNetwork as unknown as Network).networkServiceUrl
                 );
                 IdentityManager.registerToken(agsOauthInfo);
                 await utilityNetwork.load();

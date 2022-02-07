@@ -1,6 +1,6 @@
 import type { IActivityHandler } from "@geocortex/workflow/runtime/IActivityHandler";
 import Network from "@arcgis/core/networks/Network";
-import * as trace from "@arcgis/core/rest/networks/trace";
+import { trace } from "@arcgis/core/rest/networks/trace";
 import TraceParameters from "@arcgis/core/rest/networks/support/TraceParameters";
 import TraceLocation from "@arcgis/core/rest/networks/support/TraceLocation";
 import TraceResult from "@arcgis/core/rest/networks/support/TraceResult";
@@ -101,17 +101,19 @@ export class RunUtilityNetworkTrace implements IActivityHandler {
             });
         }
 
-        const traceParams = new TraceParameters();
-        traceParams.traceLocations = traceLocations;
-        traceParams.traceConfiguration = traceConfiguration;
-        traceParams.traceType = traceType;
-        traceParams.resultTypes = resultTypesInternal;
-        const traceResult = await trace.trace(
+        const traceParams = new TraceParameters({
+            traceLocations,
+            traceConfiguration,
+            traceType,
+            resultTypes: resultTypesInternal,
+        });
+        const traceResult = await trace(
             utilityNetwork.networkServiceUrl,
             traceParams
         );
+        
         return {
-            traceResult: traceResult,
+            traceResult,
         };
     }
 }

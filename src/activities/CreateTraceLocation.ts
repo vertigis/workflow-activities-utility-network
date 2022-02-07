@@ -51,12 +51,6 @@ export interface CreateTraceLocationOutputs {
  */
 export class CreateTraceLocation implements IActivityHandler {
     execute(inputs: CreateTraceLocationInputs): CreateTraceLocationOutputs {
-        if (!inputs.globalId) {
-            throw new Error("globalId is required");
-        }
-        if (!inputs.type) {
-            throw new Error("type is required");
-        }
         const {
             globalId,
             isFilterBarrier,
@@ -64,15 +58,23 @@ export class CreateTraceLocation implements IActivityHandler {
             type,
             terminalId,
         } = inputs;
+        if (!globalId) {
+            throw new Error("globalId is required");
+        }
+        if (!type) {
+            throw new Error("type is required");
+        }
 
         const traceLocation = new TraceLocation({
-            globalId: globalId,
-            isFilterBarrier: isFilterBarrier,
-            percentAlong: percentAlong,
-            type: type,
-            terminalId: terminalId,
+            globalId,
+            isFilterBarrier,
+            percentAlong,
+            type,
+            terminalId,
         });
 
-        return { traceLocation: traceLocation };
+        return {
+            traceLocation
+        };
     }
 }

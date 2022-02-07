@@ -4,7 +4,7 @@ import SynthesizeAssociationGeometriesParameters from "@arcgis/core/rest/network
 import Extent from "@arcgis/core/geometry/Extent";
 import SpatialReference from "@arcgis/core/geometry/SpatialReference";
 import AssociationGeometriesResult from "@arcgis/core/rest/networks/support/AssociationGeometriesResult";
-import * as SynthesizeAssociationGeometries from "@arcgis/core/rest/networks/synthesizeAssociationGeometries";
+import { synthesizeAssociationGeometries } from "@arcgis/core/rest/networks/synthesizeAssociationGeometries";
 
 /** An interface that defines the inputs of the activity. */
 export interface RunSynthesizeAssociationGeometriesInputs {
@@ -22,7 +22,7 @@ export interface RunSynthesizeAssociationGeometriesInputs {
     extent: Extent;
     /**
      * @displayName Return Attachment Associations
-     * @description Indicates whether to synthesize and return structual attachment associations.
+     * @description Indicates whether to synthesize and return structural attachment associations.
      * @required
      */
     returnAttachmentAssociations: boolean;
@@ -33,7 +33,7 @@ export interface RunSynthesizeAssociationGeometriesInputs {
      */
     returnConnectivityAssociations: boolean;
     /**
-     * @displayName Return Containe Associations
+     * @displayName Return Container Associations
      * @description Indicates whether to synthesize and return c containment associations.
      * @required
      */
@@ -56,7 +56,7 @@ export interface RunSynthesizeAssociationGeometriesInputs {
 /** An interface that defines the outputs of the activity. */
 export interface RunSynthesizeAssociationGeometriesOutputs {
     /**
-     * @description The assocation geometries result.
+     * @description The association geometries result.
      */
     associations: AssociationGeometriesResult;
 }
@@ -81,7 +81,7 @@ export class RunSynthesizeAssociationGeometries implements IActivityHandler {
             outSR,
             maxGeometryCount,
         } = inputs;
-        if (!inputs.utilityNetwork) {
+        if (!utilityNetwork) {
             throw new Error("utilityNetwork is required");
         }
         if (!extent) {
@@ -102,21 +102,23 @@ export class RunSynthesizeAssociationGeometries implements IActivityHandler {
         if (!outSR) {
             throw new Error("outSR is required");
         }
+        
         const params = new SynthesizeAssociationGeometriesParameters({
-            extent: extent,
-            returnAttachmentAssociations: returnAttachmentAssociations,
-            returnConnectivityAssociations: returnConnectivityAssociations,
-            returnContainerAssociations: returnContainerAssociations,
+            extent,
+            returnAttachmentAssociations,
+            returnConnectivityAssociations,
+            returnContainerAssociations,
             outSpatialReference: outSR,
-            maxGeometryCount: maxGeometryCount,
+            maxGeometryCount,
         });
 
-        const result = await SynthesizeAssociationGeometries.synthesizeAssociationGeometries(
+        const associations = await synthesizeAssociationGeometries(
             utilityNetwork.networkServiceUrl,
             params
         );
+        
         return {
-            associations: result,
+            associations,
         };
     }
 }
