@@ -74,7 +74,7 @@ export class CreateTraceLocation implements IActivityHandler {
         });
 
         return {
-            traceLocation
+            traceLocation,
         };
     }
 }

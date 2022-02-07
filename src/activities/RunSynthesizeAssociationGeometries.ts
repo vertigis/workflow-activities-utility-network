@@ -102,7 +102,7 @@ export class RunSynthesizeAssociationGeometries implements IActivityHandler {
         if (!outSR) {
             throw new Error("outSR is required");
         }
-        
+
         const params = new SynthesizeAssociationGeometriesParameters({
             extent,
             returnAttachmentAssociations,
@@ -116,7 +116,7 @@ export class RunSynthesizeAssociationGeometries implements IActivityHandler {
             utilityNetwork.networkServiceUrl,
             params
         );
-        
+
         return {
             associations,
         };

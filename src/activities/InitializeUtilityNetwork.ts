@@ -60,7 +60,7 @@ export class InitializeUtilityNetwork implements IActivityHandler {
                 utilityNetwork = webmap.utilityNetworks.getItemAt(0);
                 const agsOauthInfo = this.getOauthInfo(
                     portalItem.portal.credential,
-                    (utilityNetwork as unknown as Network).networkServiceUrl
+                    ((utilityNetwork as unknown) as Network).networkServiceUrl
                 );
                 IdentityManager.registerToken(agsOauthInfo);
                 await utilityNetwork.load();

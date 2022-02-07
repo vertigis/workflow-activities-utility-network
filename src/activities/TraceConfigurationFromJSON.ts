@@ -36,7 +36,7 @@ export class TraceConfigurationFromJSON implements IActivityHandler {
         }
 
         const traceConfiguration = new UNTraceConfiguration(json);
-        
+
         return {
             traceConfiguration,
         };
