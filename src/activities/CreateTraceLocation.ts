@@ -47,7 +47,7 @@ export interface CreateTraceLocationOutputs {
  * @description Create a trace location for a given location along the network.
  * @helpUrl https://developers.arcgis.com/javascript/latest/api-reference/esri-rest-networks-support-TraceLocation.html
  * @clientOnly
- * @unsupportedApps GMV
+ * @unsupportedApps GMV, GVH, WAB
  */
 export class CreateTraceLocation implements IActivityHandler {
     execute(inputs: CreateTraceLocationInputs): CreateTraceLocationOutputs {
