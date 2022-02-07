@@ -111,7 +111,7 @@ export class RunUtilityNetworkTrace implements IActivityHandler {
             utilityNetwork.networkServiceUrl,
             traceParams
         );
-        
+
         return {
             traceResult,
         };
