@@ -64,9 +64,6 @@ describe("RunSynthesizeAssociationGeometries", () => {
                 activity.execute({
                     utilityNetwork: undefined as any,
                     extent: {} as any,
-                    returnAttachmentAssociations: true,
-                    returnConnectivityAssociations: true,
-                    returnContainerAssociations: true,
                     outSR: {} as any,
                     maxGeometryCount: 1,
                 })
@@ -78,67 +75,18 @@ describe("RunSynthesizeAssociationGeometries", () => {
                 activity.execute({
                     utilityNetwork: {} as any,
                     extent: undefined as any,
-                    returnAttachmentAssociations: true,
-                    returnConnectivityAssociations: true,
-                    returnContainerAssociations: true,
                     outSR: {} as any,
                     maxGeometryCount: 1,
                 })
             ).rejects.toThrow("extent is required");
         });
 
-        it("requires returnAttachmentAssociations input", async () => {
-            const activity = new RunSynthesizeAssociationGeometries();
-            await expect(
-                activity.execute({
-                    utilityNetwork: {} as any,
-                    extent: {} as any,
-                    returnAttachmentAssociations: undefined as any,
-                    returnConnectivityAssociations: true,
-                    returnContainerAssociations: true,
-                    outSR: {} as any,
-                    maxGeometryCount: 1,
-                })
-            ).rejects.toThrow("returnAttachmentAssociations is required");
-        });
-
-        it("requires returnConnectivityAssociations input", async () => {
-            const activity = new RunSynthesizeAssociationGeometries();
-            await expect(
-                activity.execute({
-                    utilityNetwork: {} as any,
-                    extent: {} as any,
-                    returnAttachmentAssociations: true,
-                    returnConnectivityAssociations: undefined as any,
-                    returnContainerAssociations: true,
-                    outSR: {} as any,
-                    maxGeometryCount: 1,
-                })
-            ).rejects.toThrow("returnConnectivityAssociations is required");
-        });
-        it("requires returnContainerAssociations input", async () => {
-            const activity = new RunSynthesizeAssociationGeometries();
-            await expect(
-                activity.execute({
-                    utilityNetwork: {} as any,
-                    extent: {} as any,
-                    returnAttachmentAssociations: true,
-                    returnConnectivityAssociations: true,
-                    returnContainerAssociations: undefined as any,
-                    outSR: {} as any,
-                    maxGeometryCount: 1,
-                })
-            ).rejects.toThrow("returnContainerAssociations is required");
-        });
         it("requires maxGeometryCount input", async () => {
             const activity = new RunSynthesizeAssociationGeometries();
             await expect(
                 activity.execute({
                     utilityNetwork: {} as any,
                     extent: {} as any,
-                    returnAttachmentAssociations: true,
-                    returnConnectivityAssociations: true,
-                    returnContainerAssociations: true,
                     outSR: {} as any,
                     maxGeometryCount: undefined as any,
                 })
@@ -151,9 +99,6 @@ describe("RunSynthesizeAssociationGeometries", () => {
                 activity.execute({
                     utilityNetwork: {} as any,
                     extent: {} as any,
-                    returnAttachmentAssociations: true,
-                    returnConnectivityAssociations: true,
-                    returnContainerAssociations: true,
                     outSR: undefined as any,
                     maxGeometryCount: 1,
                 })
