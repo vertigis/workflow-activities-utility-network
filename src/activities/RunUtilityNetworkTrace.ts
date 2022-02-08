@@ -1,9 +1,12 @@
 import type { IActivityHandler } from "@geocortex/workflow/runtime/IActivityHandler";
 import Network from "@arcgis/core/networks/Network";
+import UtilityNetwork from "@arcgis/core/networks/UtilityNetwork";
 import { trace } from "@arcgis/core/rest/networks/trace";
 import TraceParameters from "@arcgis/core/rest/networks/support/TraceParameters";
 import TraceLocation from "@arcgis/core/rest/networks/support/TraceLocation";
 import TraceResult from "@arcgis/core/rest/networks/support/TraceResult";
+
+type TraceConfiguration = TraceParameters["traceConfiguration"];
 
 /** An interface that defines the inputs of the activity. */
 export interface RunUtilityNetworkTraceInputs {
@@ -12,7 +15,7 @@ export interface RunUtilityNetworkTraceInputs {
      * @description The Utility Network object for the target service.
      * @required
      */
-    utilityNetwork: Network;
+    utilityNetwork: Network & UtilityNetwork;
     /**
      * @displayName Trace Type
      * @description The trace type defined in this trace configuration.
@@ -35,24 +38,35 @@ export interface RunUtilityNetworkTraceInputs {
     traceLocations: TraceLocation[];
     /**
      * @displayName Trace Configuration
-     * @description Defines the properties of a trace.
+     * @description The global ID or title of a named trace configuration, or an object that defines the properties of a trace configuration.
      * @required
      */
-    traceConfiguration: any;
+    traceConfiguration: string | TraceConfiguration;
     /**
      * @displayName Result Types
      * @description The list of types that will be returned by the trace.
      */
-    resultTypes?: ResultType[];
+    resultTypes?: {
+        type: string;
+        includeGeometry: boolean;
+        includePropagatedValues: boolean;
+        networkAttributeNames: string[];
+        diagramTemplateName: string;
+        resultTypeFields: any[];
+    }[];
+    /**
+     * @displayName Geodatabase Version
+     * @description The geodatabase version on which the operation will be performed.
+     */
+    gdbVersion?: string;
 }
 
-export type ResultType = any;
 /** An interface that defines the outputs of the activity. */
 export interface RunUtilityNetworkTraceOutputs {
     /**
      * @description The trace results.
      */
-    traceResult: TraceResult | undefined;
+    traceResult?: TraceResult;
 }
 
 /**
@@ -67,11 +81,12 @@ export class RunUtilityNetworkTrace implements IActivityHandler {
         inputs: RunUtilityNetworkTraceInputs
     ): Promise<RunUtilityNetworkTraceOutputs> {
         const {
+            gdbVersion,
             utilityNetwork,
             traceType,
             traceLocations,
             traceConfiguration,
-            resultTypes,
+            resultTypes = [],
         } = inputs;
         if (!utilityNetwork) {
             throw new Error("utilityNetwork is required");
@@ -86,10 +101,20 @@ export class RunUtilityNetworkTrace implements IActivityHandler {
             throw new Error("traceConfiguration is required");
         }
 
-        let resultTypesInternal: any[] = [];
-        if (resultTypes) {
-            resultTypesInternal = resultTypes;
+        // Find named trace config
+        let namedTraceConfigurationGlobalId: string | undefined;
+        if (typeof traceConfiguration === "string") {
+            namedTraceConfigurationGlobalId =
+                utilityNetwork.sharedNamedTraceConfigurations.find(
+                    (x) =>
+                        x.title === traceConfiguration ||
+                        x.globalId === traceConfiguration
+                )?.globalId || namedTraceConfigurationGlobalId;
         }
+
+        const resultTypesInternal: RunUtilityNetworkTraceInputs["resultTypes"] = [
+            ...resultTypes,
+        ];
         if (!resultTypesInternal.find((r) => r.type === "aggregatedGeometry")) {
             resultTypesInternal.push({
                 type: "aggregatedGeometry",
@@ -102,10 +127,14 @@ export class RunUtilityNetworkTrace implements IActivityHandler {
         }
 
         const traceParams = new TraceParameters({
-            traceLocations,
-            traceConfiguration,
-            traceType,
+            gdbVersion,
+            namedTraceConfigurationGlobalId,
             resultTypes: resultTypesInternal,
+            ...(typeof traceConfiguration !== "string"
+                ? { traceConfiguration }
+                : undefined),
+            traceLocations,
+            traceType,
         });
         const traceResult = await trace(
             utilityNetwork.networkServiceUrl,

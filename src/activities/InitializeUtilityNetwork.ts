@@ -21,6 +21,7 @@ export interface InitializeUtilityNetworkOutputs {
 
 /**
  * @category Utility Network
+ * @defaultName initUtilityNetwork
  * @description Initializes the Utility Network from the given web map.
  * @helpUrl https://developers.arcgis.com/javascript/latest/api-reference/esri-networks-UtilityNetwork.html
  * @clientOnly

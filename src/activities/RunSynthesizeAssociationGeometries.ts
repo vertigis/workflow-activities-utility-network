@@ -21,36 +21,36 @@ export interface RunSynthesizeAssociationGeometriesInputs {
      */
     extent: Extent;
     /**
-     * @displayName Return Attachment Associations
-     * @description Indicates whether to synthesize and return structural attachment associations.
-     * @required
-     */
-    returnAttachmentAssociations: boolean;
-    /**
-     * @displayName Return Connectivity Associations
-     * @description Indicates whether to synthesize and return connectivity associations.
-     * @required
-     */
-    returnConnectivityAssociations: boolean;
-    /**
-     * @displayName Return Container Associations
-     * @description Indicates whether to synthesize and return c containment associations.
-     * @required
-     */
-    returnContainerAssociations: boolean;
-
-    /**
-     * @displayName Spatial Reference
-     * @description The spatial reference that should be used to project the synthesized geometries.
-     * @required
-     */
-    outSR: SpatialReference;
-    /**
      * @displayName Max Geometry Count
      * @description A number that indicates the maximum associations that should be synthesized after which the operation should immediately return.
      * @required
      */
     maxGeometryCount: number;
+    /**
+     * @displayName Output Spatial Reference
+     * @description The spatial reference that should be used to project the synthesized geometries.
+     */
+    outSR?: SpatialReference;
+    /**
+     * @displayName Return Attachment Associations
+     * @description Indicates whether to synthesize and return structural attachment associations.
+     */
+    returnAttachmentAssociations?: boolean;
+    /**
+     * @displayName Return Connectivity Associations
+     * @description Indicates whether to synthesize and return connectivity associations.
+     */
+    returnConnectivityAssociations?: boolean;
+    /**
+     * @displayName Return Container Associations
+     * @description Indicates whether to synthesize and return c containment associations.
+     */
+    returnContainerAssociations?: boolean;
+    /**
+     * @displayName Geodatabase Version
+     * @description The geodatabase version on which the operation will be performed.
+     */
+    gdbVersion?: string;
 }
 
 /** An interface that defines the outputs of the activity. */
@@ -73,28 +73,20 @@ export class RunSynthesizeAssociationGeometries implements IActivityHandler {
         inputs: RunSynthesizeAssociationGeometriesInputs
     ): Promise<RunSynthesizeAssociationGeometriesOutputs> {
         const {
-            utilityNetwork,
             extent,
+            gdbVersion,
+            maxGeometryCount,
+            outSR,
             returnAttachmentAssociations,
             returnConnectivityAssociations,
             returnContainerAssociations,
-            outSR,
-            maxGeometryCount,
+            utilityNetwork,
         } = inputs;
         if (!utilityNetwork) {
             throw new Error("utilityNetwork is required");
         }
         if (!extent) {
             throw new Error("extent is required");
-        }
-        if (!returnAttachmentAssociations) {
-            throw new Error("returnAttachmentAssociations is required");
-        }
-        if (!returnConnectivityAssociations) {
-            throw new Error("returnConnectivityAssociations is required");
-        }
-        if (!returnContainerAssociations) {
-            throw new Error("returnContainerAssociations is required");
         }
         if (!maxGeometryCount) {
             throw new Error("maxGeometryCount is required");
@@ -105,11 +97,12 @@ export class RunSynthesizeAssociationGeometries implements IActivityHandler {
 
         const params = new SynthesizeAssociationGeometriesParameters({
             extent,
+            gdbVersion,
+            maxGeometryCount,
+            outSpatialReference: outSR,
             returnAttachmentAssociations,
             returnConnectivityAssociations,
             returnContainerAssociations,
-            outSpatialReference: outSR,
-            maxGeometryCount,
         });
 
         const associations = await synthesizeAssociationGeometries(

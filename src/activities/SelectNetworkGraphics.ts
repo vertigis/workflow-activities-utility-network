@@ -130,8 +130,7 @@ export class SelectNetworkGraphics implements IActivityHandler {
         const screenPoint = view.toScreen(point);
         const hitResult = await view.hitTest(screenPoint);
         const hitGraphics = hitResult.results
-        .filter((g) => g.graphic)
-        .filter((g) => g.graphic.attributes);
+        .filter((g) => g.graphic?.attributes);
         
         for (let i = 0; i < hitGraphics.length; i++) {
             const x = hitGraphics[i];
