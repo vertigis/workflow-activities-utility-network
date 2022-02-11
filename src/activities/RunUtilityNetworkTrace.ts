@@ -59,6 +59,12 @@ export interface RunUtilityNetworkTraceInputs {
      * @description The geodatabase version on which the operation will be performed.
      */
     gdbVersion?: string;
+
+    /**
+     * @displayName Moment
+     * @description The date/timestamp (in UTC) to execute the trace at a given time.
+     */
+    moment?: number;
 }
 
 /** An interface that defines the outputs of the activity. */
@@ -82,6 +88,7 @@ export class RunUtilityNetworkTrace implements IActivityHandler {
     ): Promise<RunUtilityNetworkTraceOutputs> {
         const {
             gdbVersion,
+            moment,
             utilityNetwork,
             traceType,
             traceLocations,
@@ -128,6 +135,7 @@ export class RunUtilityNetworkTrace implements IActivityHandler {
 
         const traceParams = new TraceParameters({
             gdbVersion,
+            moment,
             namedTraceConfigurationGlobalId,
             resultTypes: resultTypesInternal,
             ...(typeof traceConfiguration !== "string"
