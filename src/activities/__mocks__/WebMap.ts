@@ -10,6 +10,7 @@ jest.mock("@arcgis/core/core/Collection", () => {
             getItemAt: (index: number) => {
                 return new UtilityNetwork();
             },
+            find: jest.fn(),
         };
     };
 });

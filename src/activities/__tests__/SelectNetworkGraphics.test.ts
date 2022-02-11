@@ -27,9 +27,11 @@ const context = mockActivityContext();
 
 jest.mock("../utils", () => {
     return {
-        getTraceGraphic: jest.fn(),
-        createSymbol: jest.fn(),
+        getNetworkGraphic: jest.fn(),
         getPercentageAlong: jest.fn(),
+        getNetworkLayerIds: (ids) => {
+            return [1, 2, 3];
+        },
     };
 });
 jest.mock("@arcgis/core/geometry/Point", () => {
@@ -56,6 +58,7 @@ describe("SelectNetworkGraphics", () => {
                     {
                         point: undefined as any,
                         locationType: "barrier",
+                        utilityNetwork: {} as any,
                     },
                     context,
                     mockProvider as any
@@ -69,6 +72,7 @@ describe("SelectNetworkGraphics", () => {
                     {
                         point: {} as Point,
                         locationType: undefined as any,
+                        utilityNetwork: {} as any,
                     },
                     context,
                     mockProvider as any
@@ -80,6 +84,7 @@ describe("SelectNetworkGraphics", () => {
             const inputs: SelectNetworkGraphicsInputs = {
                 point: new Point(),
                 locationType: "barrier",
+                utilityNetwork: {} as any,
             };
             const activity = new SelectNetworkGraphics();
             const result = await activity.execute(
@@ -89,7 +94,7 @@ describe("SelectNetworkGraphics", () => {
             );
             expect(result).toBeDefined();
             expect(result).toEqual({
-                locationGraphics: [],
+                networkGraphics: [],
             });
         });
     });
