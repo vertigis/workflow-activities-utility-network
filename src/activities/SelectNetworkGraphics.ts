@@ -3,18 +3,21 @@ import type { IActivityHandler, IActivityContext } from "@geocortex/workflow/run
 import MapView from "@arcgis/core/views/MapView";
 import Point from "@arcgis/core/geometry/Point";
 import {
-    TraceGraphic,
+    NetworkGraphic,
     getPercentageAlong,
     getValue,
-    getTraceGraphic,
-    createSymbol,
+    createNetworkGraphic,
+    getNetworkLayerIds,
 } from "./utils";
 import WebMap from "@arcgis/core/WebMap";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import Graphic from "@arcgis/core/Graphic";
 import { MapProvider } from "@geocortex/workflow/runtime/activities/arcgis/MapProvider";
-
 import { activate } from "@geocortex/workflow/runtime/Hooks";
+import UtilityNetwork from "esri/networks/UtilityNetwork";
+import Network from "@arcgis/core/networks/Network";
+import Layer from "@arcgis/core/layers/Layer";
+
 /** An interface that defines the inputs of the activity. */
 export interface SelectNetworkGraphicsInputs {
     /**
@@ -32,22 +35,23 @@ export interface SelectNetworkGraphicsInputs {
     locationType: "starting-point" | "barrier";
 
     /**
-     * @displayName Selection Color
-     * @description The [RGBA] code for the color for the selected features.
+     * @displayName Utility Network
+     * @description The Utility Network object for the target service.
+     * @required
      */
-    selectionColor?: number[];
+         utilityNetwork: Network & UtilityNetwork;
 
     /**
-     * @displayName Selection Size
-     * @description The size of the symbol for the selected features.
+     * @displayName Is Filter Barrier
+     * @description This indicates whether this barrier starting location should be skipped (filtered) when a trace attempts to find upstream controllers.
      */
-    selectionSize?: number;
+     isFilterBarrier?: boolean;
 
     /**
-     * @displayName Supported Layer Names
-     * @description The names of layers that are supported by the target trace.
-     */
-    supportedLayerNames?: string[];
+      * @displayName Terminal Id
+      * @description The terminal Id to place the starting location at. Applicable for junction/device sources only.
+      */
+     terminalId?: number;
 }
 
 /** An interface that defines the outputs of the activity. */
@@ -55,11 +59,9 @@ export interface SelectNetworkGraphicsOutputs {
     /**
      * @description The trace configurations associated with the Utility Network results.
      */
-    locationGraphics: TraceGraphic[];
-}
+     networkGraphics?: NetworkGraphic[];
 
-const SELECTION_COLOR = [27, 227, 251, 0.4];
-const SELECTION_SIZE = 10;
+}
 
 /**
  * @category Utility Network
@@ -75,7 +77,7 @@ export class SelectNetworkGraphics implements IActivityHandler {
         context: IActivityContext,
         type: typeof MapProvider
     ): Promise<SelectNetworkGraphicsOutputs> {
-        const { point, supportedLayerNames, locationType } = inputs;
+        const { point, utilityNetwork, locationType, isFilterBarrier, terminalId } = inputs;
 
         if (!point) {
             throw new Error("point is required");
@@ -83,49 +85,31 @@ export class SelectNetworkGraphics implements IActivityHandler {
         if (!locationType) {
             throw new Error("locationType is required");
         }
-
+        if (!utilityNetwork) {
+            throw new Error("utilityNetwork is required");
+        }
         const mapProvider = type.create();
         await mapProvider.load();
 
         const webMap = mapProvider.map as WebMap;
         const view = mapProvider.view as MapView;
-        const supportedLayers = !supportedLayerNames
-            ? []
-            : supportedLayerNames;
-
-        const selectionColor = inputs.selectionColor
-            ? inputs.selectionColor
-            : SELECTION_COLOR;
-        const selectionSize = inputs.selectionSize
-            ? inputs.selectionSize
-            : SELECTION_SIZE;
-
-
+        const supportedLayerIds = getNetworkLayerIds(utilityNetwork);
+        const supportedLayers: Layer[] = [];
         const queriedGraphics: Graphic[] = [];
-        await webMap.load().then(() => {
-            webMap.allLayers.forEach( (layer) => {
-                if (layer.type == "feature") {
-                    const f = layer as FeatureLayer;
-                    
-                    f.outFields = ["*"];
-                    if (f.fields.find(x=> x.name.toLowerCase() === "assetgroup") && f.fields.find(x=> x.name.toLowerCase() === "globalid")) {
-                        
-                        supportedLayers.push(layer.title);
-                   
-                    }
-                }
-            });
-        });
-        await view.when();
-        
-        for (let i = 0; i < supportedLayers.length; i++) {
+        for (let i = 0; i < supportedLayerIds.length; i++) {
             const l = webMap.allLayers.find(
-                (x) => x.title == supportedLayers[i]
+                (x) => x.type === "feature" && (x as any).source?.layer?.layerId == supportedLayerIds[i]
             );
-            if (l != undefined && !l.initialized) {
-                await l.load();
+            if (l != undefined ) {
+                supportedLayers.push(l);
+                if(!l.initialized) {
+                    await l.load();
+                }
             }
+            
         }
+        await view.when();
+
 
         const screenPoint = view.toScreen(point);
         const hitResult = await view.hitTest(screenPoint);
@@ -134,7 +118,8 @@ export class SelectNetworkGraphics implements IActivityHandler {
         
         for (let i = 0; i < hitGraphics.length; i++) {
             const x = hitGraphics[i];
-            if(x.graphic.layer.type == "feature"){
+            if(x.graphic.layer.type == "feature"  
+                && supportedLayers.findIndex(l=> (l as FeatureLayer).layerId == (x.graphic.layer as FeatureLayer).layerId) != -1) {
                 const result = await (x.graphic
                     .layer as FeatureLayer).queryFeatures({
                     objectIds: [x.graphic.getObjectId()],
@@ -142,32 +127,36 @@ export class SelectNetworkGraphics implements IActivityHandler {
                     outFields: ["*"],
                     outSpatialReference: { wkid: point.spatialReference.wkid },
                 });
-                if(result.features.length > 0 && getValue(result.features[0].attributes, "globalid") != undefined){
+                if(result.features.length > 0 && getValue(result.features[0].attributes, "globalid") != undefined &&
+                getValue(result.features[0].attributes, "assettype") != undefined ){
+                    result.features[0].layer = x.graphic.layer;
                     queriedGraphics.push(result.features[0]);
                 }
             }
         };
+        const networkGraphics: NetworkGraphic[] = [];
 
-
-        const graphics = queriedGraphics.map((g) => {
-            const percAlong = getPercentageAlong(g.geometry, point);
-            g.attributes.percentageAlong = percAlong;
-            const symbol = createSymbol("point", selectionColor, selectionSize);
-            const result = getTraceGraphic(
+        for(const queriedGraphic of queriedGraphics){
+            const percAlong = await getPercentageAlong(queriedGraphic.geometry, point);
+            const networkGraphic = createNetworkGraphic(
                 point,
-                symbol,
-                g.attributes,
-                ((g.layer as FeatureLayer).source as any).layer.layerId,
+                queriedGraphic.attributes,
+                queriedGraphic.layer as FeatureLayer,
+                percAlong,
                 locationType,
-                percAlong
-            );
-            return result;
-        });
+                isFilterBarrier,
+                terminalId,
 
-        const graphicResults = await Promise.all(graphics);
+            );
+            networkGraphics.push(networkGraphic);
+
+        }
+
+
+        const graphicResults = await Promise.all(networkGraphics);
 
         return {
-            locationGraphics: graphicResults,
+            networkGraphics: graphicResults,
         };
     }
 }

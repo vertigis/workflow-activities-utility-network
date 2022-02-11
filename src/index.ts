@@ -6,5 +6,4 @@ export * from "./activities/CreateTraceLocation";
 export * from "./activities/RunSynthesizeAssociationGeometries";
 export * from "./activities/GetTraceConfiguration";
 export * from "./activities/SelectNetworkGraphics";
-
 export * from "./activities/TraceConfigurationFromJSON";
