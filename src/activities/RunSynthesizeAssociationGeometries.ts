@@ -4,7 +4,7 @@ import SynthesizeAssociationGeometriesParameters from "@arcgis/core/rest/network
 import Extent from "@arcgis/core/geometry/Extent";
 import SpatialReference from "@arcgis/core/geometry/SpatialReference";
 import AssociationGeometriesResult from "@arcgis/core/rest/networks/support/AssociationGeometriesResult";
-import { synthesizeAssociationGeometries } from "@arcgis/core/rest/networks/synthesizeAssociationGeometries";
+import * as SynthesizeAssociationGeometries from "@arcgis/core/rest/networks/synthesizeAssociationGeometries";
 
 /** An interface that defines the inputs of the activity. */
 export interface RunSynthesizeAssociationGeometriesInputs {
@@ -58,7 +58,7 @@ export interface RunSynthesizeAssociationGeometriesOutputs {
     /**
      * @description The association geometries result.
      */
-    associations: AssociationGeometriesResult;
+    result: AssociationGeometriesResult;
 }
 
 /**
@@ -105,13 +105,13 @@ export class RunSynthesizeAssociationGeometries implements IActivityHandler {
             returnContainerAssociations,
         });
 
-        const associations = await synthesizeAssociationGeometries(
+        const result = await SynthesizeAssociationGeometries.synthesizeAssociationGeometries(
             utilityNetwork.networkServiceUrl,
             params
         );
 
         return {
-            associations,
+            result,
         };
     }
 }

@@ -118,7 +118,7 @@ describe("RunSynthesizeAssociationGeometries", () => {
                 maxGeometryCount: 1,
             };
             const result = await activity.execute(inputs);
-            expect(result).toStrictEqual({ associations: expectedResult });
+            expect(result).toStrictEqual({ result: expectedResult });
         });
     });
 });

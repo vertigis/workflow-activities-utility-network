@@ -151,12 +151,8 @@ export class SelectNetworkGraphics implements IActivityHandler {
             networkGraphics.push(networkGraphic);
 
         }
-
-
-        const graphicResults = await Promise.all(networkGraphics);
-
         return {
-            networkGraphics: graphicResults,
+            networkGraphics: networkGraphics,
         };
     }
 }

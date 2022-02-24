@@ -66,7 +66,7 @@ export function createNetworkGraphic(
     let assetCodedDomainValue = "N/A";
     if (domain) {
         const value = getCodedDomainValue(domain, attributes[assetTypeField]);
-        if (value) {
+        if (value !== undefined && value !== null) {
             assetCodedDomainValue = value;
         }
     }
@@ -117,9 +117,7 @@ export async function getPercentageAlong(
 
     const projectedLine = Projection.project(
         sourceLine,
-        SpatialReference.fromJSON({
-            wkid: flagGeom.spatialReference.wkid,
-        })
+        flagGeom.spatialReference
     ) as Polyline;
     const buffer = await geodesicBuffer(flagGeom, 10, "feet") as Polygon;
     const intersection = await intersect(projectedLine, buffer);
@@ -150,9 +148,7 @@ export function createPolyline(
         hasZ: false,
         hasM: false,
         paths: paths,
-        spatialReference: SpatialReference.fromJSON({
-            wkid: inSR.wkid,
-        }),
+        spatialReference: inSR.clone(),
     });
     return newLine;
 }

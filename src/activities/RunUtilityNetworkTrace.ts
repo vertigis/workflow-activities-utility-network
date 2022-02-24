@@ -119,25 +119,11 @@ export class RunUtilityNetworkTrace implements IActivityHandler {
                 )?.globalId || namedTraceConfigurationGlobalId;
         }
 
-        const resultTypesInternal: RunUtilityNetworkTraceInputs["resultTypes"] = [
-            ...resultTypes,
-        ];
-        if (!resultTypesInternal.find((r) => r.type === "aggregatedGeometry")) {
-            resultTypesInternal.push({
-                type: "aggregatedGeometry",
-                includeGeometry: true,
-                includePropagatedValues: true,
-                networkAttributeNames: [],
-                diagramTemplateName: "",
-                resultTypeFields: [],
-            });
-        }
-
         const traceParams = new TraceParameters({
             gdbVersion,
             moment,
             namedTraceConfigurationGlobalId,
-            resultTypes: resultTypesInternal,
+            resultTypes: resultTypes,
             ...(typeof traceConfiguration !== "string"
                 ? { traceConfiguration }
                 : undefined),
