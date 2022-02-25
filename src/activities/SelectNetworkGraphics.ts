@@ -135,8 +135,9 @@ export class SelectNetworkGraphics implements IActivityHandler {
                         (x.graphic.layer as FeatureLayer).layerId
                 ) != -1
             ) {
-                const result = await (x.graphic
-                    .layer as FeatureLayer).queryFeatures({
+                const result = await (
+                    x.graphic.layer as FeatureLayer
+                ).queryFeatures({
                     objectIds: [x.graphic.getObjectId()],
                     returnGeometry: true,
                     outFields: ["*"],
