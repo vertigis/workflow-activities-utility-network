@@ -1,5 +1,5 @@
 import {
-    GetTraceConfigurations,
+    GetTraceConfiguration,
     GetTraceConfigurationInputs,
 } from "../GetTraceConfiguration";
 import UtilityNetwork from "@arcgis/core/networks/UtilityNetwork";
@@ -55,7 +55,7 @@ beforeEach(() => {
 describe("GetTraceConfiguration", () => {
     describe("execute", () => {
         it("requires utilityNetwork input", () => {
-            const activity = new GetTraceConfigurations();
+            const activity = new GetTraceConfiguration();
             expect(() => {
                 activity.execute({
                     utilityNetwork: undefined as any,
@@ -64,7 +64,7 @@ describe("GetTraceConfiguration", () => {
             }).toThrow("utilityNetwork is required");
         });
         it("requires traceId input", () => {
-            const activity = new GetTraceConfigurations();
+            const activity = new GetTraceConfiguration();
             expect(() => {
                 activity.execute({
                     utilityNetwork: dummyUn,
@@ -77,7 +77,7 @@ describe("GetTraceConfiguration", () => {
                 traceId: "abc",
                 utilityNetwork: dummyUn,
             };
-            const activity = new GetTraceConfigurations();
+            const activity = new GetTraceConfiguration();
             const result = activity.execute(inputs);
             expect(result).toBeDefined();
 

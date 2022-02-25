@@ -4,7 +4,7 @@ import SynthesizeAssociationGeometriesParameters from "@arcgis/core/rest/network
 import Extent from "@arcgis/core/geometry/Extent";
 import SpatialReference from "@arcgis/core/geometry/SpatialReference";
 import AssociationGeometriesResult from "@arcgis/core/rest/networks/support/AssociationGeometriesResult";
-import * as SynthesizeAssociationGeometries from "@arcgis/core/rest/networks/synthesizeAssociationGeometries";
+import { synthesizeAssociationGeometries } from "@arcgis/core/rest/networks/synthesizeAssociationGeometries";
 
 /** An interface that defines the inputs of the activity. */
 export interface RunSynthesizeAssociationGeometriesInputs {
@@ -21,44 +21,44 @@ export interface RunSynthesizeAssociationGeometriesInputs {
      */
     extent: Extent;
     /**
-     * @displayName Return Attachment Associations
-     * @description Indicates whether to synthesize and return structual attachment associations.
-     * @required
-     */
-    returnAttachmentAssociations: boolean;
-    /**
-     * @displayName Return Connectivity Associations
-     * @description Indicates whether to synthesize and return connectivity associations.
-     * @required
-     */
-    returnConnectivityAssociations: boolean;
-    /**
-     * @displayName Return Containe Associations
-     * @description Indicates whether to synthesize and return c containment associations.
-     * @required
-     */
-    returnContainerAssociations: boolean;
-
-    /**
-     * @displayName Spatial Reference
-     * @description The spatial reference that should be used to project the synthesized geometries.
-     * @required
-     */
-    outSR: SpatialReference;
-    /**
      * @displayName Max Geometry Count
      * @description A number that indicates the maximum associations that should be synthesized after which the operation should immediately return.
      * @required
      */
     maxGeometryCount: number;
+    /**
+     * @displayName Output Spatial Reference
+     * @description The spatial reference that should be used to project the synthesized geometries.
+     */
+    outSR?: SpatialReference;
+    /**
+     * @displayName Return Attachment Associations
+     * @description Indicates whether to synthesize and return structural attachment associations.
+     */
+    returnAttachmentAssociations?: boolean;
+    /**
+     * @displayName Return Connectivity Associations
+     * @description Indicates whether to synthesize and return connectivity associations.
+     */
+    returnConnectivityAssociations?: boolean;
+    /**
+     * @displayName Return Container Associations
+     * @description Indicates whether to synthesize and return c containment associations.
+     */
+    returnContainerAssociations?: boolean;
+    /**
+     * @displayName Geodatabase Version
+     * @description The geodatabase version on which the operation will be performed.
+     */
+    gdbVersion?: string;
 }
 
 /** An interface that defines the outputs of the activity. */
 export interface RunSynthesizeAssociationGeometriesOutputs {
     /**
-     * @description The assocation geometries result.
+     * @description The association geometries result.
      */
-    associations: AssociationGeometriesResult;
+    result: AssociationGeometriesResult;
 }
 
 /**
@@ -66,35 +66,27 @@ export interface RunSynthesizeAssociationGeometriesOutputs {
  * @description The utility network associations model connectivity, containment, and structure relations between assets. Associations do not have a spatial presence, so this function synthesizes the assocaitions by providing an extent, and returning all associations within the extent.
  * @helpUrl https://developers.arcgis.com/javascript/latest/api-reference/esri-rest-networks-synthesizeAssociationGeometries.html
  * @clientOnly
- * @unsupportedApps GMV
+ * @unsupportedApps GMV, GVH, WAB
  */
 export class RunSynthesizeAssociationGeometries implements IActivityHandler {
     async execute(
         inputs: RunSynthesizeAssociationGeometriesInputs
     ): Promise<RunSynthesizeAssociationGeometriesOutputs> {
         const {
-            utilityNetwork,
             extent,
+            gdbVersion,
+            maxGeometryCount,
+            outSR,
             returnAttachmentAssociations,
             returnConnectivityAssociations,
             returnContainerAssociations,
-            outSR,
-            maxGeometryCount,
+            utilityNetwork,
         } = inputs;
-        if (!inputs.utilityNetwork) {
+        if (!utilityNetwork) {
             throw new Error("utilityNetwork is required");
         }
         if (!extent) {
             throw new Error("extent is required");
-        }
-        if (!returnAttachmentAssociations) {
-            throw new Error("returnAttachmentAssociations is required");
-        }
-        if (!returnConnectivityAssociations) {
-            throw new Error("returnConnectivityAssociations is required");
-        }
-        if (!returnContainerAssociations) {
-            throw new Error("returnContainerAssociations is required");
         }
         if (!maxGeometryCount) {
             throw new Error("maxGeometryCount is required");
@@ -102,21 +94,24 @@ export class RunSynthesizeAssociationGeometries implements IActivityHandler {
         if (!outSR) {
             throw new Error("outSR is required");
         }
+
         const params = new SynthesizeAssociationGeometriesParameters({
-            extent: extent,
-            returnAttachmentAssociations: returnAttachmentAssociations,
-            returnConnectivityAssociations: returnConnectivityAssociations,
-            returnContainerAssociations: returnContainerAssociations,
+            extent,
+            gdbVersion,
+            maxGeometryCount,
             outSpatialReference: outSR,
-            maxGeometryCount: maxGeometryCount,
+            returnAttachmentAssociations,
+            returnConnectivityAssociations,
+            returnContainerAssociations,
         });
 
-        const result = await SynthesizeAssociationGeometries.synthesizeAssociationGeometries(
+        const result = await synthesizeAssociationGeometries(
             utilityNetwork.networkServiceUrl,
             params
         );
+
         return {
-            associations: result,
+            result,
         };
     }
 }

@@ -1,18 +1,35 @@
-import {
-    InitializeUtilityNetwork,
-    InitializeUtilityNetworkInputs,
-} from "../InitializeUtilityNetwork";
+import { InitializeUtilityNetwork } from "../InitializeUtilityNetwork";
 import UtilityNetwork from "@arcgis/core/networks/UtilityNetwork";
-import WebMap from "@arcgis/core/WebMap";
 import Collection from "@arcgis/core/core/Collection";
+import { mockActivityContext } from "../__mocks__/ActivityContext";
+import { mockWebMap } from "../__mocks__/WebMap";
+import { mockMapView } from "../__mocks__/MapView";
+
+const mockMapProvider = jest.fn();
+
+jest.mock("@arcgis/core/identity/IdentityManager", () => ({
+    registerToken: jest.fn(),
+}));
+
+jest.mock("@geocortex/workflow/runtime/activities/arcgis/MapProvider", () => {
+    return function () {
+        // no op
+    };
+});
+
+const mockProvider = {
+    create: () => {
+        return {
+            load: jest.fn(),
+            map: mockWebMap(),
+            view: mockMapView(),
+        };
+    },
+};
 
 jest.mock("@arcgis/core/networks/UtilityNetwork", () => {
     return function () {
-        return {
-            load: () => {
-                // no op
-            },
-        };
+        // no op
     };
 });
 const mockUn = new UtilityNetwork();
@@ -54,31 +71,14 @@ describe("InitializeUtilityNetwork", () => {
         const un = new UtilityNetwork();
         const uns = new Collection<UtilityNetwork>();
         uns.push(un);
-        const mockedMap = new WebMap({
-            portalItem: {
-                id: "abc",
-                portal: { url: "edf" },
-            },
-            utilityNetworks: uns,
-        });
-
-        it("requires map", async () => {
-            const activity = new InitializeUtilityNetwork();
-            const inputs: InitializeUtilityNetworkInputs = {
-                map: undefined,
-            };
-
-            await expect(() => activity.execute(inputs)).rejects.toThrow(
-                "map is required"
-            );
-        });
-
+        const context = mockActivityContext();
         it("gets first UtilityNetwork from the WebMap's utilityNetworks collection", async () => {
             const activity = new InitializeUtilityNetwork();
-            const inputs: InitializeUtilityNetworkInputs = {
-                map: mockedMap,
-            };
-            const result = await activity.execute(inputs);
+            const result = await activity.execute(
+                {},
+                context,
+                mockProvider as any
+            );
             expect(result).toStrictEqual({
                 result: mockUn,
             });
