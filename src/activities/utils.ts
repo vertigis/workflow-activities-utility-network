@@ -131,7 +131,8 @@ export async function getPercentageAlong(
             if (lineGeom[0].paths[0][0][0] == sourceLine.paths[0][0][0] && lineGeom[0].paths[0][0][1] == sourceLine.paths[0][0][1]) {
                 pieceLength = await planarLength(newGeom[0], "feet");
             } else {
-                pieceLength            }
+                pieceLength = await planarLength(newGeom[1], "feet");
+            }
             percentage = pieceLength / sourceLength;
             
         }
