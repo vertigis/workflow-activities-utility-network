@@ -23,29 +23,29 @@ jest.mock("@arcgis/core/networks/support/NamedTraceConfiguration", () => {
         return {
             globalId: params.globalId,
             title: params.title,
-            traceConfiguration: params.traceConfiguration as UNTraceConfiguration,
+            traceConfiguration:
+                params.traceConfiguration as UNTraceConfiguration,
         };
     };
 });
-const dummyNamedTroceConfig: NamedTraceConfiguration = new NamedTraceConfiguration(
-    {
+const dummyNamedTraceConfig: NamedTraceConfiguration =
+    new NamedTraceConfiguration({
         globalId: "abc",
         title: "xyz",
         traceConfiguration: dummyTraceConfig,
-    }
-);
+    });
 
 jest.mock("@arcgis/core/networks/UtilityNetwork", () => {
     return function (params: any) {
         return {
-            sharedNamedTraceConfigurations: [dummyNamedTroceConfig],
+            sharedNamedTraceConfigurations: [dummyNamedTraceConfig],
         };
     };
 });
 
 const dummyUn = new UtilityNetwork({
     globalId: "abc",
-    sharedNamedTraceConfigurations: [dummyNamedTroceConfig],
+    sharedNamedTraceConfigurations: [dummyNamedTraceConfig],
 });
 
 beforeEach(() => {
