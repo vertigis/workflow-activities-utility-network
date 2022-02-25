@@ -1,5 +1,5 @@
 [![CI/CD](https://github.com/geocortex/workflow-activities-utility-network/workflows/CI/CD/badge.svg)](https://github.com/geocortex/workflow-activities-utility-network/actions)
-[![npm](https://img.shields.io/npm/v/@geocortex/workflow-activities-utility-network)](https://www.npmjs.com/package/@geocortex/workflow-activities-utility-network)
+[![npm](https://img.shields.io/npm/v/@vertigis/workflow-activities-utility-network)](https://www.npmjs.com/package/@vertigis/workflow-activities-utility-network)
 
 This project contains activities for interacting with the [ArcGIS Utility Network REST API](https://developers.arcgis.com/rest/services-reference/utility-network-service.htm) in a [VertiGIS Studio Workflow](https://www.geocortex.com/products/geocortex-workflow/).
 
@@ -7,7 +7,11 @@ This project contains activities for interacting with the [ArcGIS Utility Networ
 
 ### VertiGIS Studio Workflow Versions
 
-The Utility Network activities are designed to work with VertiGIS Studio Workflow versions `5.20` and above.
+The Utility Network activities are designed to work with VertiGIS Studio Workflow versions `5.25.2` and above.
+
+### ArcGIS JavaScript API Versions
+
+The Utility Network activities depend on the ArcGIS JavaScript API version `4.21` or above to be present in the host application.
 
 ## Usage
 To use the Utility Network activities in [VertiGIS Studio Workflow Designer](https://apps.vertigisstudio.com/workflow/designer/) you need to register an activity pack and then add the activities to a workflow.
@@ -21,8 +25,8 @@ To use the Utility Network activities in [VertiGIS Studio Workflow Designer](htt
     - Purpose: `Ready To Use`
     - API: `JavaScript`
     - URL: The URL to this activity pack manifest
-        - Use https://unpkg.com/@geocortex/workflow-activities-utility-network/activitypack.json for the latest version
-        - Use https://unpkg.com/@geocortex/workflow-activities-utility-network@0.1.0/activitypack.json for a specific version
+        - Use https://unpkg.com/@vertigis/workflow-activities-utility-network/activitypack.json for the latest version
+        - Use https://unpkg.com/@vertigis/workflow-activities-utility-network@1.0.0/activitypack.json for a specific version
     - Title: Your desired title
     - Tags: Must include `geocortex-workflow-activity-pack`
 1. Reload [VertiGIS Studio Workflow Designer](https://apps.vertigisstudio.com/workflow/designer/)
