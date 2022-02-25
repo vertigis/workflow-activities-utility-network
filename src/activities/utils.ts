@@ -5,7 +5,13 @@ import Point from "@arcgis/core/geometry/Point";
 import Polyline from "@arcgis/core/geometry/Polyline";
 import Graphic from "@arcgis/core/Graphic";
 import CodedValueDomain from "@arcgis/core/layers/support/CodedValueDomain";
-import { geodesicBuffer, intersect, rotate, cut, planarLength } from "esri/geometry/geometryEngineAsync";
+import {
+    geodesicBuffer,
+    intersect,
+    rotate,
+    cut,
+    planarLength,
+} from "esri/geometry/geometryEngineAsync";
 import * as Projection from "@arcgis/core/geometry/projection";
 import UtilityNetwork from "@arcgis/core/networks/UtilityNetwork";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
@@ -26,9 +32,8 @@ export function createNetworkGraphic(
     percentAlong: number,
     type: "starting-point" | "barrier",
     isFilterBarrier?: boolean,
-    terminalId?: number | undefined,
+    terminalId?: number | undefined
 ): NetworkGraphic {
-
     //Esri geodatabase fields have inconsistant case.  Find the name of the global id field regardless of case.
     const globalIdKey = getKey(attributes, "globalid");
 
@@ -59,7 +64,6 @@ export function createNetworkGraphic(
         geometry: flagPoint,
         attributes: attributes,
         layer: layer,
-
     });
 
     const domain = getCodedDomain(layer, assetTypeField);
@@ -85,7 +89,7 @@ export function createNetworkGraphic(
         graphic: graphic,
         layerId: layer.layerId,
         traceLocation: traceLocation,
-        label
+        label,
     } as NetworkGraphic;
 }
 
@@ -119,7 +123,7 @@ export async function getPercentageAlong(
         sourceLine,
         flagGeom.spatialReference
     ) as Polyline;
-    const buffer = await geodesicBuffer(flagGeom, 10, "feet") as Polygon;
+    const buffer = (await geodesicBuffer(flagGeom, 10, "feet")) as Polygon;
     const intersection = await intersect(projectedLine, buffer);
     if (intersection) {
         const rotated = await rotate(intersection, 90);
@@ -128,15 +132,17 @@ export async function getPercentageAlong(
             const sourceLength = await planarLength(sourceLine, "feet");
             const lineGeom = newGeom as Polyline[];
             let pieceLength;
-            if (lineGeom[0].paths[0][0][0] == sourceLine.paths[0][0][0] && lineGeom[0].paths[0][0][1] == sourceLine.paths[0][0][1]) {
+            if (
+                lineGeom[0].paths[0][0][0] == sourceLine.paths[0][0][0] &&
+                lineGeom[0].paths[0][0][1] == sourceLine.paths[0][0][1]
+            ) {
                 pieceLength = await planarLength(newGeom[0], "feet");
             } else {
                 pieceLength = await planarLength(newGeom[1], "feet");
             }
             percentage = pieceLength / sourceLength;
-            
         }
-    } 
+    }
     return percentage;
 }
 
@@ -155,13 +161,16 @@ export function createPolyline(
 }
 
 export function getNetworkLayerIds(utilityNetwork: UtilityNetwork): any[] {
-
-    const edgeIds = (utilityNetwork as any).dataElement.domainNetworks.map((dn) => {
-        return dn.edgeSources.map(js => js.layerId);
-    });
-    const junctionIds = (utilityNetwork as any).dataElement.domainNetworks.map((dn) => {
-        return dn.junctionSources.map(js => js.layerId);
-    });
+    const edgeIds = (utilityNetwork as any).dataElement.domainNetworks.map(
+        (dn) => {
+            return dn.edgeSources.map((js) => js.layerId);
+        }
+    );
+    const junctionIds = (utilityNetwork as any).dataElement.domainNetworks.map(
+        (dn) => {
+            return dn.junctionSources.map((js) => js.layerId);
+        }
+    );
     const flatEdgeIds = flattenArrays(edgeIds);
     const flatJunctionIds = flattenArrays(junctionIds);
     return flatJunctionIds.concat(flatEdgeIds);
@@ -169,12 +178,16 @@ export function getNetworkLayerIds(utilityNetwork: UtilityNetwork): any[] {
 
 export function flattenArrays(arr: any[]): any[] {
     return arr.reduce(function (flat, toFlatten) {
-        return flat.concat(Array.isArray(toFlatten) ? flattenArrays(toFlatten) : toFlatten);
+        return flat.concat(
+            Array.isArray(toFlatten) ? flattenArrays(toFlatten) : toFlatten
+        );
     }, []);
 }
 
-
-export function getCodedDomainValue(domains: CodedValueDomain[], code: string | number): any {
+export function getCodedDomainValue(
+    domains: CodedValueDomain[],
+    code: string | number
+): any {
     const codedValueDomain = domains.find((domain) => {
         return domain.codedValues.find((cv) => {
             return cv.code == code;
@@ -187,13 +200,18 @@ export function getCodedDomainValue(domains: CodedValueDomain[], code: string | 
     return codedValue?.name;
 }
 
-export function getCodedDomain(layer: FeatureLayer, field: string): CodedValueDomain[] {
-    const domains = (layer.types).map((type) => {
+export function getCodedDomain(
+    layer: FeatureLayer,
+    field: string
+): CodedValueDomain[] {
+    const domains = layer.types.map((type) => {
         return type.domains[field];
     });
     return domains as CodedValueDomain[];
 }
 
 export function getKey(object: Record<string, unknown>, key: string): any {
-    return Object.keys(object).find(k => k.toLowerCase() === key.toLowerCase());
+    return Object.keys(object).find(
+        (k) => k.toLowerCase() === key.toLowerCase()
+    );
 }

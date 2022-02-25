@@ -23,6 +23,7 @@
         "generate": "vertigis-workflow-sdk generate",
         "lint": "eslint -f codeframe --max-warnings 0 --ext .ts,.tsx src/",
         "lint:fix": "eslint -f codeframe --max-warnings 0 --ext .ts,.tsx --fix src/",
+        "prettier": "prettier --write ./src",
         "start": "vertigis-workflow-sdk start",
         "test": "jest",
         "test:watch": "jest --watch"
