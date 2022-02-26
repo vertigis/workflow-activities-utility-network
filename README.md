@@ -1,7 +1,7 @@
 [![CI/CD](https://github.com/geocortex/workflow-activities-utility-network/workflows/CI/CD/badge.svg)](https://github.com/geocortex/workflow-activities-utility-network/actions)
 [![npm](https://img.shields.io/npm/v/@vertigis/workflow-activities-utility-network)](https://www.npmjs.com/package/@vertigis/workflow-activities-utility-network)
 
-This project contains activities for interacting with the [ArcGIS Utility Network REST API](https://developers.arcgis.com/rest/services-reference/utility-network-service.htm) in a [VertiGIS Studio Workflow](https://www.geocortex.com/products/geocortex-workflow/).
+This project contains activities for interacting with the [ArcGIS Utility Network REST API](https://developers.arcgis.com/rest/services-reference/utility-network-service.htm) in a [VertiGIS Studio Workflow](https://vertigisstudio.com/products/vertigis-studio-workflow/).
 
 ## Requirements
 
