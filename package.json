@@ -1,6 +1,5 @@
 {
     "name": "@vertigis/workflow-activities-utility-network",
-    "private": true,
     "version": "0.0.0-semantically-released",
     "description": "ArcGIS Utility Network activities for VertiGIS Studio Workflow",
     "repository": {
