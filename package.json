@@ -1,5 +1,5 @@
 {
-    "name": "@geocortex/workflow-activities-utility-network",
+    "name": "@vertigis/workflow-activities-utility-network",
     "private": true,
     "version": "0.0.0-semantically-released",
     "description": "ArcGIS Utility Network activities for VertiGIS Studio Workflow",
@@ -23,6 +23,7 @@
         "generate": "vertigis-workflow-sdk generate",
         "lint": "eslint -f codeframe --max-warnings 0 --ext .ts,.tsx src/",
         "lint:fix": "eslint -f codeframe --max-warnings 0 --ext .ts,.tsx --fix src/",
+        "prettier": "prettier --write ./src",
         "start": "vertigis-workflow-sdk start",
         "test": "jest",
         "test:watch": "jest --watch"
@@ -32,14 +33,14 @@
         "@types/arcgis-js-api": "^4.22.0"
     },
     "devDependencies": {
-        "@geocortex/workflow": "5.20.1",
+        "@geocortex/workflow": "5.25.2",
         "@types/jest": "^26.0.23",
-        "@vertigis/workflow-sdk": "1.0.2",
-        "conventional-changelog-conventionalcommits": "^4.5.0",
+        "@vertigis/workflow-sdk": "2.0.2",
+        "conventional-changelog-conventionalcommits": "^4.6.3",
         "eslint-plugin-prettier": "^3.4.0",
         "jest": "^26.6.3",
-        "prettier": "^2.2.1",
-        "ts-jest": "^26.5.5",
+        "prettier": "^2.5.1",
+        "ts-jest": "^26.5.6",
         "typescript": "^4.2.4"
     },
     "jest": {
