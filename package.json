@@ -34,7 +34,7 @@
     "devDependencies": {
         "@geocortex/workflow": "5.25.2",
         "@types/jest": "^26.0.23",
-        "@vertigis/workflow-sdk": "2.0.2",
+        "@vertigis/workflow-sdk": "2.0.3",
         "conventional-changelog-conventionalcommits": "^4.6.3",
         "eslint-plugin-prettier": "^3.4.0",
         "jest": "^26.6.3",

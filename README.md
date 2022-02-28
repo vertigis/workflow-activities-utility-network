@@ -26,7 +26,7 @@ To use the Utility Network activities in [VertiGIS Studio Workflow Designer](htt
     - API: `JavaScript`
     - URL: The URL to this activity pack manifest
         - Use https://unpkg.com/@vertigis/workflow-activities-utility-network/activitypack.json for the latest version
-        - Use https://unpkg.com/@vertigis/workflow-activities-utility-network@1.0.0/activitypack.json for a specific version
+        - Use https://unpkg.com/@vertigis/workflow-activities-utility-network@1.0.3/activitypack.json for a specific version
     - Title: Your desired title
     - Tags: Must include `geocortex-workflow-activity-pack`
 1. Reload [VertiGIS Studio Workflow Designer](https://apps.vertigisstudio.com/workflow/designer/)
