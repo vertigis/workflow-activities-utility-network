@@ -1,5 +1,5 @@
 import type { IActivityHandler } from "@geocortex/workflow/runtime/IActivityHandler";
-import UNTraceConfiguration from "@arcgis/core/networks/support/UNTraceConfiguration";
+import TraceConfiguration from "@arcgis/core/networks/support/TraceConfiguration";
 
 /** An interface that defines the inputs of the activity. */
 export interface TraceConfigurationFromJSONInputs {
@@ -16,7 +16,7 @@ export interface TraceConfigurationFromJSONOutputs {
     /**
      * @description The result of the activity.
      */
-    traceConfiguration: UNTraceConfiguration;
+    traceConfiguration: TraceConfiguration;
 }
 
 /**
@@ -35,7 +35,7 @@ export class TraceConfigurationFromJSON implements IActivityHandler {
             throw new Error("json is required");
         }
 
-        const traceConfiguration = new UNTraceConfiguration(json);
+        const traceConfiguration = new TraceConfiguration(json);
 
         return {
             traceConfiguration,

@@ -119,14 +119,25 @@ export class RunUtilityNetworkTrace implements IActivityHandler {
                 )?.globalId || namedTraceConfigurationGlobalId;
         }
 
+        let unTraceConfiguration;
+
+        if (typeof traceConfiguration !== "string") {
+            unTraceConfiguration = {
+                toJSON: () => {
+                    const temp = {};
+                    for (const key in traceConfiguration) {
+                        temp[key] = traceConfiguration[key];
+                    }
+                    return temp;
+                },
+            };
+        }
         const traceParams = new TraceParameters({
             gdbVersion,
             moment,
             namedTraceConfigurationGlobalId,
             resultTypes: resultTypes,
-            ...(typeof traceConfiguration !== "string"
-                ? { traceConfiguration }
-                : undefined),
+            traceConfiguration: unTraceConfiguration,
             traceLocations,
             traceType,
         });
