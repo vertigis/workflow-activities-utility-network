@@ -80,7 +80,9 @@ describe("GetTraceConfiguration", () => {
             const result = activity.execute(inputs);
             expect(result).toBeDefined();
             if (result.traceConfiguration) {
-                expect(JSON.stringify(result.traceConfiguration)).toEqual(JSON.stringify(dummyTraceConfig));
+                expect(JSON.stringify(result.traceConfiguration)).toEqual(
+                    JSON.stringify(dummyTraceConfig)
+                );
             }
         });
     });
