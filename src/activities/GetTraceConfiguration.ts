@@ -45,9 +45,10 @@ export class GetTraceConfiguration implements IActivityHandler {
         }
         let traceConfiguration: TraceConfiguration | undefined;
 
-        const namedTraceConfiguration = utilityNetwork.sharedNamedTraceConfigurations.find(
-            (x) => x.title === traceId || x.globalId === traceId
-        );
+        const namedTraceConfiguration =
+            utilityNetwork.sharedNamedTraceConfigurations.find(
+                (x) => x.title === traceId || x.globalId === traceId
+            );
 
         if (namedTraceConfiguration) {
             traceConfiguration = new TraceConfiguration(

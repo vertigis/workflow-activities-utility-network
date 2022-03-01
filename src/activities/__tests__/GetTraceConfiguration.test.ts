@@ -27,13 +27,12 @@ jest.mock("@arcgis/core/networks/support/NamedTraceConfiguration", () => {
         };
     };
 });
-const dummyNamedTraceConfig: NamedTraceConfiguration = new NamedTraceConfiguration(
-    {
+const dummyNamedTraceConfig: NamedTraceConfiguration =
+    new NamedTraceConfiguration({
         globalId: "abc",
         title: "xyz",
         traceConfiguration: dummyTraceConfig,
-    }
-);
+    });
 
 jest.mock("@arcgis/core/networks/UtilityNetwork", () => {
     return function (params: any) {
