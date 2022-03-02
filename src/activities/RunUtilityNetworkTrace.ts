@@ -119,14 +119,25 @@ export class RunUtilityNetworkTrace implements IActivityHandler {
                 )?.globalId || namedTraceConfigurationGlobalId;
         }
 
+        let unTraceConfiguration;
+
+        if (traceConfiguration && typeof traceConfiguration !== "string") {
+            unTraceConfiguration = {
+                // A Utlity Network Trace requires a UNTraceConfiguration (if it is defined),
+                // however, the arcgis/core package doesn't expose this module. We use
+                // TraceConfiguration instead but TraceConfiguration.toJSON discards
+                // UNTraceConfiguration properties so we need to create a shallow clone and override it.
+                toJSON: () => {
+                    return { ...traceConfiguration };
+                },
+            };
+        }
         const traceParams = new TraceParameters({
             gdbVersion,
             moment,
             namedTraceConfigurationGlobalId,
             resultTypes: resultTypes,
-            ...(typeof traceConfiguration !== "string"
-                ? { traceConfiguration }
-                : undefined),
+            traceConfiguration: unTraceConfiguration,
             traceLocations,
             traceType,
         });

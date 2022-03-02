@@ -3,12 +3,10 @@ import {
     GetTraceConfigurationInputs,
 } from "../GetTraceConfiguration";
 import UtilityNetwork from "@arcgis/core/networks/UtilityNetwork";
-import UNTraceConfiguration from "@arcgis/core/networks/support/UNTraceConfiguration";
+import TraceConfiguration from "@arcgis/core/networks/support/TraceConfiguration";
 import NamedTraceConfiguration from "@arcgis/core/networks/support/NamedTraceConfiguration";
 
-const dummyTraceConfig: UNTraceConfiguration = new UNTraceConfiguration({});
-
-jest.mock("@arcgis/core/networks/support/UNTraceConfiguration", () => {
+jest.mock("@arcgis/core/networks/support/TraceConfiguration", () => {
     return function (params?: any) {
         return {
             toJSON: () => {
@@ -18,13 +16,14 @@ jest.mock("@arcgis/core/networks/support/UNTraceConfiguration", () => {
     };
 });
 
+const dummyTraceConfig: TraceConfiguration = new TraceConfiguration({});
+
 jest.mock("@arcgis/core/networks/support/NamedTraceConfiguration", () => {
     return function (params: any) {
         return {
             globalId: params.globalId,
             title: params.title,
-            traceConfiguration:
-                params.traceConfiguration as UNTraceConfiguration,
+            traceConfiguration: params.traceConfiguration as TraceConfiguration,
         };
     };
 });
@@ -80,10 +79,11 @@ describe("GetTraceConfiguration", () => {
             const activity = new GetTraceConfiguration();
             const result = activity.execute(inputs);
             expect(result).toBeDefined();
-
-            expect(result.traceConfiguration.toJSON()).toEqual(
-                dummyTraceConfig.toJSON()
-            );
+            if (result.traceConfiguration) {
+                expect(JSON.stringify(result.traceConfiguration)).toEqual(
+                    JSON.stringify(dummyTraceConfig)
+                );
+            }
         });
     });
 });

@@ -2,15 +2,14 @@ import {
     TraceConfigurationFromJSON,
     TraceConfigurationFromJSONInputs,
 } from "../TraceConfigurationFromJSON";
-import UNTraceConfiguration from "@arcgis/core/networks/support/UNTraceConfiguration";
-
-const dummyTraceConfig: UNTraceConfiguration = new UNTraceConfiguration({});
-
-jest.mock("@arcgis/core/networks/support/UNTraceConfiguration", () => {
+import TraceConfiguration from "@arcgis/core/networks/support/TraceConfiguration";
+jest.mock("@arcgis/core/networks/support/TraceConfiguration", () => {
     return function () {
         // no op
     };
 });
+
+const dummyTraceConfig: TraceConfiguration = new TraceConfiguration({});
 
 beforeEach(() => {
     jest.clearAllMocks();
