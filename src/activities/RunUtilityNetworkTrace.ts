@@ -126,9 +126,9 @@ export class RunUtilityNetworkTrace implements IActivityHandler {
                 // A Utlity Network Trace requires a UNTraceConfiguration (if it is defined),
                 // however, the arcgis/core package doesn't expose this module. We use
                 // TraceConfiguration instead but TraceConfiguration.toJSON discards
-                // UNTraceConfiguration properties so we need to create a shallow clone and override it.
+                // UNTraceConfiguration properties so we need to create a clone and override it.
                 toJSON: () => {
-                    return { ...traceConfiguration };
+                    return JSON.parse(JSON.stringify(traceConfiguration));
                 },
             };
         }
