@@ -128,26 +128,7 @@ export class RunUtilityNetworkTrace implements IActivityHandler {
                 // TraceConfiguration instead but TraceConfiguration.toJSON discards
                 // UNTraceConfiguration properties so we need to create a deep clone and override it.
                 toJSON: () => {
-                    return unTraceConfiguration.deepClone(traceConfiguration);
-                },
-                deepClone: (inObject) => {
-                    let value, key;
-
-                    if (typeof inObject !== "object" || inObject === null) {
-                        return inObject; // Return the value if inObject is not an object
-                    }
-
-                    // Create an array or object to hold the values
-                    const outObject = Array.isArray(inObject) ? [] : {};
-
-                    for (key in inObject) {
-                        value = inObject[key];
-
-                        // Recursively (deep) copy for nested objects, including arrays
-                        outObject[key] = unTraceConfiguration.deepClone(value);
-                    }
-
-                    return outObject;
+                    return deepClone(traceConfiguration);
                 },
             };
         }
@@ -169,4 +150,20 @@ export class RunUtilityNetworkTrace implements IActivityHandler {
             traceResult,
         };
     }
+}
+
+function deepClone(inObject) {
+    let value, key;
+    if (typeof inObject !== "object" || inObject === null) {
+        return inObject; // Return the value if inObject is not an object
+    }
+    // Create an array or object to hold the values
+    const outObject = Array.isArray(inObject) ? [] : {};
+
+    for (key in inObject) {
+        value = inObject[key];
+        // Recursively (deep) copy for nested objects, including arrays
+        outObject[key] = deepClone(value);
+    }
+    return outObject;
 }
