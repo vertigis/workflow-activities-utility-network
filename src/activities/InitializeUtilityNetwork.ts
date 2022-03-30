@@ -64,11 +64,11 @@ export class InitializeUtilityNetwork implements IActivityHandler {
                     (utilityNetwork as unknown as Network).networkServiceUrl
                 );
                 IdentityManager.registerToken(agsOauthInfo);
-                await utilityNetwork.load();
             } else {
                 throw new Error("Utility network not found.");
             }
         }
+        await utilityNetwork.load();
         return {
             result: utilityNetwork,
         };
