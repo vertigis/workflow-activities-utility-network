@@ -29,11 +29,12 @@ const mockProvider = {
 
 jest.mock("@arcgis/core/networks/UtilityNetwork", () => {
     return function () {
-        // no op
+        return {
+            load: jest.fn(),
+        };
     };
 });
 const mockUn = new UtilityNetwork();
-
 jest.mock("@arcgis/core/core/Collection", () => {
     return function () {
         return {
@@ -68,9 +69,6 @@ beforeEach(() => {
 
 describe("InitializeUtilityNetwork", () => {
     describe("execute", () => {
-        const un = new UtilityNetwork();
-        const uns = new Collection<UtilityNetwork>();
-        uns.push(un);
         const context = mockActivityContext();
         it("gets first UtilityNetwork from the WebMap's utilityNetworks collection", async () => {
             const activity = new InitializeUtilityNetwork();

@@ -21,7 +21,7 @@ import Polygon from "@arcgis/core/geometry/Polygon";
 export interface NetworkGraphic {
     graphic: Graphic;
     layerId: number;
-    traceLocation: TraceLocation;
+    traceLocations: TraceLocation[];
     label?: string;
 }
 
@@ -32,7 +32,8 @@ export function createNetworkGraphic(
     percentAlong: number,
     type: "starting-point" | "barrier",
     isFilterBarrier?: boolean,
-    terminalId?: number | undefined
+    terminalIds?: number[] | undefined,
+
 ): NetworkGraphic {
     //Esri geodatabase fields have inconsistant case.  Find the name of the global id field regardless of case.
     const globalIdKey = getKey(attributes, "globalid");
@@ -43,7 +44,7 @@ export function createNetworkGraphic(
     }
     const globalId = getValue(attributes, globalIdKey);
 
-    //Esri geodatabase fields have inconsistant case.  Find the name of the global id field regardless of case.
+    //Esri geodatabase fields have inconsistant case.  Find the name of the asset type field regardless of case.
     const assetTypeField = getKey(attributes, "assettype");
     //We should never get here but just in case.
     if (!assetTypeField) {
@@ -76,22 +77,84 @@ export function createNetworkGraphic(
     }
 
     const label = `${layer.title} - ${assetCodedDomainValue} : ${objectId}`;
-
-    const traceLocation = new TraceLocation({
-        globalId,
-        isFilterBarrier,
-        percentAlong,
-        type,
-        terminalId,
-    });
-
-    return {
+    const networkGraphic = {
         graphic: graphic,
         layerId: layer.layerId,
-        traceLocation: traceLocation,
         label,
     } as NetworkGraphic;
+
+    if (terminalIds) {
+        const traceLocations: TraceLocation[] = [];
+        for (let i = 0; i < terminalIds.length; i++) {
+
+            const terminalId: number = terminalIds[i];
+            const traceLocation = new TraceLocation({
+                globalId,
+                isFilterBarrier,
+                percentAlong,
+                terminalId,
+                type,
+
+            });
+            traceLocations.push(traceLocation);
+        }
+        networkGraphic.traceLocations = traceLocations;
+    } else {
+        networkGraphic.traceLocations = [
+            new TraceLocation({
+                globalId,
+                isFilterBarrier,
+                percentAlong,
+                type,
+            })
+        ]
+
+    }
+
+
+    return networkGraphic;
+
 }
+
+export function getTerminalIds(graphic: Graphic, utilityNetwork: UtilityNetwork): number[] {
+
+    const terminalIds: number[] = [];
+    //Esri geodatabase fields have inconsistant case.  Find the name of the asset type field regardless of case.
+    const assetTypeField = getKey(graphic.attributes, "assettype");
+    //We should never get here but just in case.
+    if (!assetTypeField) {
+        throw Error("No Asset Type field found in feature attributes.");
+    }
+    //Esri geodatabase fields have inconsistant case.  Find the name of the asset type field regardless of case.
+    const assetGroupField = getKey(graphic.attributes, "assetgroup");
+    if (!assetGroupField) {
+        throw Error("No Asset Group field found in feature attributes.");
+    }
+    const junctionIds = (utilityNetwork as any).dataElement.domainNetworks.map(
+        (dn) => {
+            return dn.junctionSources.map((js) => js.layerId);
+        }
+    );
+    const flattenedJunctionIds = flattenArrays(junctionIds);
+
+    if (flattenedJunctionIds.find(id => id === (graphic.layer as FeatureLayer).layerId)) {
+        const assetType = getAssetType((graphic.layer as FeatureLayer).layerId, graphic.attributes[assetGroupField], graphic.attributes[assetTypeField], utilityNetwork);
+        if (assetType) {
+            const terminalConfigurations = getTerminalConfiguration(assetType.terminalConfigurationId, utilityNetwork);
+            for (const terminal of terminalConfigurations.terminals) {
+                terminalIds.push(terminal.terminalId);
+            };
+        }
+
+    }
+    return terminalIds;
+}
+
+
+
+
+
+
 
 export function getValue(obj: Record<string, number>, prop: string): any {
     prop = prop.toString().toLowerCase();
@@ -185,16 +248,11 @@ export function flattenArrays(arr: any[]): any[] {
 }
 
 export function getCodedDomainValue(
-    domains: CodedValueDomain[],
+    domain: CodedValueDomain,
     code: string | number
 ): any {
-    const codedValueDomain = domains.find((domain) => {
-        return domain.codedValues.find((cv) => {
-            return cv.code == code;
-        });
-    });
 
-    const codedValue = codedValueDomain?.codedValues.find((c) => {
+    const codedValue = domain?.codedValues?.find((c) => {
         return c.code == code;
     });
     return codedValue?.name;
@@ -203,15 +261,87 @@ export function getCodedDomainValue(
 export function getCodedDomain(
     layer: FeatureLayer,
     field: string
-): CodedValueDomain[] {
-    const domains = layer.types.map((type) => {
-        return type.domains[field];
-    });
-    return domains as CodedValueDomain[];
+): any {
+    if (layer.types instanceof Array) {
+        for (const t of layer.types) {
+            const domains = t.domains;
+            if (domains !== undefined && domains != null) {
+                const domain = domains[field];
+                if (domain != undefined && domain != null) {
+                    const codedValues = domain.codedValues;
+                    if (codedValues instanceof Array) {
+                        return domain;
+                    }
+                    if (domain.type === "inherited") {
+                        return domainOf(layer, field);
+                    }
+                }
+
+            }
+        }
+    }
+    return <any>{};
+}
+
+export function domainOf(layer: FeatureLayer, field: string): any {
+    const fields = layer.fields;
+    if (fields instanceof Array) {
+        for (const f of fields) {
+            if (f.name === field) {
+                const domain = f.domain as CodedValueDomain;
+                if (domain !== undefined && domain !== null) {
+                    const codedValues = domain.codedValues;
+                    if (codedValues instanceof Array) {
+                        return { domain: domain };
+                    }
+                }
+            }
+        }
+    }
+
+    return <any>{};
 }
 
 export function getKey(object: Record<string, unknown>, key: string): any {
     return Object.keys(object).find(
         (k) => k.toLowerCase() === key.toLowerCase()
     );
+}
+
+
+export function getAssetType(layerId: number, assetGroupCode: number, assetTypeCode: number, utilityNetwork: UtilityNetwork): any {
+
+    const domainNetworks = (utilityNetwork as any).dataElement.domainNetworks;
+
+    for (let i = 0; i < domainNetworks.length; i++) {
+        const domainNetwork = domainNetworks[i];
+        for (let j = 0; j < domainNetwork.junctionSources.length; j++)
+            if (domainNetwork.junctionSources[j].layerId == layerId) {
+                const assetGroup = domainNetwork.junctionSources[j].assetGroups.find(ag => ag.assetGroupCode === assetGroupCode);
+                if (assetGroup instanceof Object) {
+                    const assetType = assetGroup.assetTypes.find(at => at.assetTypeCode === assetTypeCode);
+                    assetType.assetGroupName = assetGroup.assetGroupName;
+                    assetType.utilityNetworkFeatureClassUsageType = domainNetwork.junctionSources[j].utilityNetworkFeatureClassUsageType;
+                    if (assetType instanceof Object) return assetType;
+                }
+            }
+
+        for (let j = 0; j < domainNetwork.edgeSources.length; j++)
+            if (domainNetwork.edgeSources[j].layerId == layerId) {
+                const assetGroup = domainNetwork.edgeSources[j].assetGroups.find(ag => ag.assetGroupCode === assetGroupCode);
+                if (assetGroup instanceof Object) {
+                    const assetType = assetGroup.assetTypes.find(at => at.assetTypeCode === assetTypeCode);
+                    assetType.assetGroupName = assetGroup.assetGroupName;
+                    assetType.utilityNetworkFeatureClassUsageType = domainNetwork.edgeSources[j].utilityNetworkFeatureClassUsageType;
+                    if (assetType instanceof Object) return assetType;
+                }
+            }
+    }
+
+    return undefined;
+}
+
+export function getTerminalConfiguration(terminalConfigurationId: number, utilityNetwork: UtilityNetwork): any {
+    const dataElement = (utilityNetwork as any).dataElement;
+    return dataElement.terminalConfigurations.find(tc => tc.terminalConfigurationId === terminalConfigurationId);
 }
