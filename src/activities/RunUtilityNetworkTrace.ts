@@ -5,11 +5,10 @@ import { trace } from "@arcgis/core/rest/networks/trace";
 import TraceParameters from "@arcgis/core/rest/networks/support/TraceParameters";
 import TraceLocation from "@arcgis/core/rest/networks/support/TraceLocation";
 import TraceResult from "@arcgis/core/rest/networks/support/TraceResult";
-import TraceConfiguration from "esri/networks/support/TraceConfiguration";
 import { MapProvider } from "@geocortex/workflow/runtime/activities/arcgis/MapProvider";
 import { activate } from "@geocortex/workflow/runtime/Hooks";
 
-//type TraceConfiguration = TraceParameters["traceConfiguration"];
+type TraceConfiguration = TraceParameters["traceConfiguration"];
 
 /** An interface that defines the inputs of the activity. */
 export interface RunUtilityNetworkTraceInputs {
@@ -143,7 +142,10 @@ export class RunUtilityNetworkTrace implements IActivityHandler {
             moment,
             namedTraceConfigurationGlobalId,
             resultTypes: resultTypes,
-            traceConfiguration: traceConfiguration as any,
+            traceConfiguration:
+                typeof traceConfiguration !== "string"
+                    ? traceConfiguration
+                    : undefined,
             traceLocations,
             traceType,
         });

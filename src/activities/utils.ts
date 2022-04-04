@@ -110,10 +110,7 @@ export function createNetworkGraphic(
         ]
 
     }
-
-
     return networkGraphic;
-
 }
 
 export function getTerminalIds(graphic: Graphic, utilityNetwork: UtilityNetwork): number[] {
@@ -149,12 +146,6 @@ export function getTerminalIds(graphic: Graphic, utilityNetwork: UtilityNetwork)
     }
     return terminalIds;
 }
-
-
-
-
-
-
 
 export function getValue(obj: Record<string, number>, prop: string): any {
     prop = prop.toString().toLowerCase();
