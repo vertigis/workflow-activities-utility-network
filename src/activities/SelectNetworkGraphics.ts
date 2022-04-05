@@ -11,6 +11,7 @@ import {
     getValue,
     createNetworkGraphic,
     getNetworkLayerIds,
+    getTerminalIds,
 } from "./utils";
 import WebMap from "@arcgis/core/WebMap";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
@@ -50,11 +51,6 @@ export interface SelectNetworkGraphicsInputs {
      */
     isFilterBarrier?: boolean;
 
-    /**
-     * @displayName Terminal Id
-     * @description The terminal Id to place the starting location at. Applicable for junction/device sources only.
-     */
-    terminalId?: number;
 }
 
 /** An interface that defines the outputs of the activity. */
@@ -84,7 +80,6 @@ export class SelectNetworkGraphics implements IActivityHandler {
             utilityNetwork,
             locationType,
             isFilterBarrier,
-            terminalId,
         } = inputs;
 
         if (!point) {
@@ -162,6 +157,12 @@ export class SelectNetworkGraphics implements IActivityHandler {
                 queriedGraphic.geometry,
                 point
             );
+            let terminalIds: number[] | undefined = undefined;
+            if(queriedGraphic.geometry && queriedGraphic.geometry.type === 'point') {
+
+                terminalIds = getTerminalIds(queriedGraphic, utilityNetwork)
+            }
+            
             const networkGraphic = createNetworkGraphic(
                 point,
                 queriedGraphic.attributes,
@@ -169,7 +170,7 @@ export class SelectNetworkGraphics implements IActivityHandler {
                 percAlong,
                 locationType,
                 isFilterBarrier,
-                terminalId
+                terminalIds,
             );
             networkGraphics.push(networkGraphic);
         }

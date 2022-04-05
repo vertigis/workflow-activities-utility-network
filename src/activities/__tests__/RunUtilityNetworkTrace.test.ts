@@ -43,8 +43,13 @@ jest.mock("@arcgis/core/WebMap", () => {
         };
     };
 });
-jest.mock("@geocortex/workflow/runtime/activities/arcgis/MapProvider");
-
+jest.mock("@geocortex/workflow/runtime/activities/arcgis/MapProvider", () => {
+    return function () {
+        return {
+            featureLayer: {},
+        };
+    };
+});
 jest.mock("@arcgis/core/rest/networks/support/TraceLocation", () => {
     return function () {
         return mockTraceLocation;

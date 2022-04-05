@@ -5,6 +5,8 @@ import { trace } from "@arcgis/core/rest/networks/trace";
 import TraceParameters from "@arcgis/core/rest/networks/support/TraceParameters";
 import TraceLocation from "@arcgis/core/rest/networks/support/TraceLocation";
 import TraceResult from "@arcgis/core/rest/networks/support/TraceResult";
+import { MapProvider } from "@geocortex/workflow/runtime/activities/arcgis/MapProvider";
+import { activate } from "@geocortex/workflow/runtime/Hooks";
 
 type TraceConfiguration = TraceParameters["traceConfiguration"];
 
@@ -82,6 +84,7 @@ export interface RunUtilityNetworkTraceOutputs {
  * @clientOnly
  * @unsupportedApps GMV, GVH, WAB
  */
+@activate(MapProvider)
 export class RunUtilityNetworkTrace implements IActivityHandler {
     async execute(
         inputs: RunUtilityNetworkTraceInputs
@@ -95,6 +98,7 @@ export class RunUtilityNetworkTrace implements IActivityHandler {
             traceConfiguration,
             resultTypes = [],
         } = inputs;
+
         if (!utilityNetwork) {
             throw new Error("utilityNetwork is required");
         }
@@ -119,17 +123,18 @@ export class RunUtilityNetworkTrace implements IActivityHandler {
                 )?.globalId || namedTraceConfigurationGlobalId;
         }
 
-        let unTraceConfiguration;
-
         if (traceConfiguration && typeof traceConfiguration !== "string") {
-            unTraceConfiguration = {
+            (traceConfiguration as any).toJSON = () => {
                 // A Utlity Network Trace requires a UNTraceConfiguration (if it is defined),
                 // however, the arcgis/core package doesn't expose this module. We use
                 // TraceConfiguration instead but TraceConfiguration.toJSON discards
-                // UNTraceConfiguration properties so we need to create a deep clone and override it.
-                toJSON: () => {
-                    return deepClone(traceConfiguration);
-                },
+                // UNTraceConfiguration properties so we need to create a deep clone and override
+                // the toJSON function to force a full copy.
+                const obj = deepClone(traceConfiguration);
+                obj.toJSON = null;
+                const jsonString = JSON.stringify(obj);
+                const json = JSON.parse(jsonString);
+                return json;
             };
         }
         const traceParams = new TraceParameters({
@@ -137,7 +142,10 @@ export class RunUtilityNetworkTrace implements IActivityHandler {
             moment,
             namedTraceConfigurationGlobalId,
             resultTypes: resultTypes,
-            traceConfiguration: unTraceConfiguration,
+            traceConfiguration:
+                typeof traceConfiguration !== "string"
+                    ? traceConfiguration
+                    : undefined,
             traceLocations,
             traceType,
         });
@@ -152,8 +160,9 @@ export class RunUtilityNetworkTrace implements IActivityHandler {
     }
 }
 
-function deepClone(inObject) {
-    let value, key;
+function deepClone(inObject: any) {
+    let value: any;
+    let key: any;
     if (typeof inObject !== "object" || inObject === null) {
         return inObject; // Return the value if inObject is not an object
     }
