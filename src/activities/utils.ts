@@ -76,6 +76,7 @@ export function createNetworkGraphic(
     } else {
         label = `${layer.title} : ${objectId}`;
     }
+
     const networkGraphic = {
         graphic: graphic,
         layerId: layer.layerId,
