@@ -67,16 +67,15 @@ export function createNetworkGraphic(
         layer: layer,
     });
 
-    const domain = getCodedDomain(layer, assetTypeField);
-    let assetCodedDomainValue = "N/A";
-    if (domain) {
-        const value = getCodedDomainValue(domain, attributes[assetTypeField]);
-        if (value !== undefined && value !== null) {
-            assetCodedDomainValue = value;
-        }
-    }
+    let label;
 
-    const label = `${layer.title} - ${assetCodedDomainValue} : ${objectId}`;
+    const value = getCodedDomain(layer, assetTypeField, attributes[assetTypeField]);
+    if (value) {
+        const labelVal:string = value.toString();
+        label = `${layer.title} (${labelVal}) : ${objectId}`;
+    } else {
+        label = `${layer.title} : ${objectId}`;
+    }
     const networkGraphic = {
         graphic: graphic,
         layerId: layer.layerId,
@@ -251,46 +250,57 @@ export function getCodedDomainValue(
 
 export function getCodedDomain(
     layer: FeatureLayer,
-    field: string
+    field: string,
+    code: string | number
 ): any {
-    if (layer.types instanceof Array) {
-        for (const t of layer.types) {
-            const domains = t.domains;
-            if (domains !== undefined && domains != null) {
-                const domain = domains[field];
-                if (domain != undefined && domain != null) {
-                    const codedValues = domain.codedValues;
-                    if (codedValues instanceof Array) {
-                        return domain;
-                    }
-                    if (domain.type === "inherited") {
-                        return domainOf(layer, field);
-                    }
-                }
+    let domain = domainOf(layer, field);
+    let value;
+    if (!domain) {
+        if (layer.types instanceof Array) {
+            for (const t of layer.types) {
+                const domains = t.domains;
+                if (domains !== undefined && domains != null) {
+                    domain = domains[field];
+                    if (domain != undefined && domain != null) {
+                        const codedValues = domain.codedValues;
+                        if (codedValues instanceof Array) {
+                            value  = getCodedDomainValue(domain, code);
 
+                            if(value) {
+                                break;
+                            }
+                        }
+                       
+                    }
+
+                }
             }
         }
+    } else {
+        value  = getCodedDomainValue(domain, code);
     }
-    return <any>{};
+    return value;
 }
 
+
 export function domainOf(layer: FeatureLayer, field: string): any {
+    let domain;
     const fields = layer.fields;
     if (fields instanceof Array) {
         for (const f of fields) {
             if (f.name === field) {
-                const domain = f.domain as CodedValueDomain;
+                domain = f.domain as CodedValueDomain;
                 if (domain !== undefined && domain !== null) {
                     const codedValues = domain.codedValues;
                     if (codedValues instanceof Array) {
-                        return { domain: domain };
+                        break;
                     }
                 }
             }
         }
     }
 
-    return <any>{};
+    return domain;
 }
 
 export function getKey(object: Record<string, unknown>, key: string): any {
