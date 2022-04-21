@@ -11,7 +11,7 @@ import {
     rotate,
     cut,
     planarLength,
-} from "esri/geometry/geometryEngineAsync";
+} from "@arcgis/core/geometry/geometryEngineAsync";
 import * as Projection from "@arcgis/core/geometry/projection";
 import UtilityNetwork from "@arcgis/core/networks/UtilityNetwork";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
@@ -262,7 +262,7 @@ export function getCodedDomainValue(
 export function getCodedDomain(
     graphic: Graphic,
     field: string
-): CodedValueDomain {
+): CodedValueDomain | undefined {
 
     const layer = graphic.layer as FeatureLayer;
     let domain = domainOf(layer, field);
@@ -283,8 +283,7 @@ export function getCodedDomain(
     return domain;
 }
 
-
-export function domainOf(layer: FeatureLayer, field: string): any {
+export function domainOf(layer: FeatureLayer, field: string): CodedValueDomain | undefined {
     let domain;
     const fields = layer.fields;
     if (fields instanceof Array) {
