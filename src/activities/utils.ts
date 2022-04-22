@@ -69,20 +69,15 @@ export function createNetworkGraphic(
 
     let label;
 
-    const assetTypeDomain = getCodedDomain(graphic, assetTypeField);
+    const assetTypeDomain = getCodedDomain(graphic, assetTypeField, layer);
+
     if (assetTypeDomain != undefined && assetTypeDomain != null) {
         const assetTypeCode = graphic.attributes[assetTypeField];
         if (assetTypeCode != undefined && assetTypeCode != null) {
-            const codedVal = assetTypeDomain.codedValues.find(c => c.code === graphic.attributes[assetTypeField]);
+            const codedVal = assetTypeDomain.getName(graphic.attributes[assetTypeField]);
             if (codedVal != undefined) {
-                const labelVal: string | undefined = getCodedDomainValue(assetTypeDomain, assetTypeCode).toString();
-                if (labelVal != undefined) {
-                    label = `${layer.title} (${labelVal}) : ${objectId}`;
-                } else {
-                    label = `${layer.title} : ${objectId}`;
-                }
+                label = `${layer.title} (${codedVal}) : ${objectId}`;
             }
-
         }
     } else {
         label = `${layer.title} : ${objectId}`;
@@ -248,42 +243,38 @@ export function flattenArrays(arr: any[]): any[] {
     }, []);
 }
 
-export function getCodedDomainValue(
-    domain: CodedValueDomain,
-    code: string | number
-): any {
-
-    const codedValue = domain?.codedValues?.find((c) => {
-        return c.code == code;
-    });
-    return codedValue?.name;
-}
-
 export function getCodedDomain(
     graphic: Graphic,
-    field: string
+    field: string,
+    layer: FeatureLayer
 ): CodedValueDomain | undefined {
 
-    const layer = graphic.layer as FeatureLayer;
-    let domain = domainOf(layer, field);
+    let domain;
 
-    if (!domain) {
-        const subtypeField = layer.sourceJSON.subtypeField;
+    const subtypeField = layer.sourceJSON.subtypeField;
 
-        if (subtypeField != undefined && subtypeField != null) {
-            const subTypeValue = graphic.attributes[subtypeField];
-            if (subTypeValue != undefined && subTypeValue != null) {
-                const subType = layer.sourceJSON.subtypes.find(sub => sub.code == subTypeValue);
-                if (subType != undefined && subType != null) {
-                    domain = subType.domains[field];
-                }
+    if (subtypeField != undefined && subtypeField != null) {
+        const subTypeValue = graphic.attributes[subtypeField];
+        if (subTypeValue != undefined && subTypeValue != null) {
+            const subType = layer.sourceJSON.subtypes.find(sub => sub.code == subTypeValue);
+            if (subType != undefined && subType != null) {
+                domain = subType.domains[field];
             }
         }
     }
-    return domain;
+    if (!domain) {
+        domain = domainOf(layer, field);
+    }
+    /* Subtypes are not instantiated CodedValueDomain objects - just JSON so 
+     * we need to check to ensure we return an instaiated class when it is defined
+    */
+    if (domain != undefined && !(domain instanceof CodedValueDomain)){
+        return CodedValueDomain.fromJSON(domain);
+    } 
+    return domain;    
 }
 
-export function domainOf(layer: FeatureLayer, field: string): CodedValueDomain | undefined {
+function domainOf(layer: FeatureLayer, field: string): CodedValueDomain | undefined {
     let domain;
     const fields = layer.fields;
     if (fields instanceof Array) {
