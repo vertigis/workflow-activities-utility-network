@@ -11,7 +11,7 @@ import {
     rotate,
     cut,
     planarLength,
-} from "esri/geometry/geometryEngineAsync";
+} from "@arcgis/core/geometry/geometryEngineAsync";
 import * as Projection from "@arcgis/core/geometry/projection";
 import UtilityNetwork from "@arcgis/core/networks/UtilityNetwork";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
@@ -66,17 +66,20 @@ export function createNetworkGraphic(
         attributes: attributes,
         layer: layer,
     });
-
-    const domain = getCodedDomain(layer, assetTypeField);
-    let assetCodedDomainValue = "N/A";
-    if (domain) {
-        const value = getCodedDomainValue(domain, attributes[assetTypeField]);
-        if (value !== undefined && value !== null) {
-            assetCodedDomainValue = value;
+    let label;
+    //Get the coded domain value for the label.
+    const assetTypeDomain = getCodedDomain(graphic, assetTypeField, layer);
+    if (assetTypeDomain != undefined && assetTypeDomain != null) {
+        const assetTypeCode = graphic.attributes[assetTypeField];
+        if (assetTypeCode != undefined && assetTypeCode != null) {
+            const codedVal = assetTypeDomain.getName(graphic.attributes[assetTypeField]);
+            if (codedVal != undefined) {
+                label = `${layer.title} (${codedVal}) : ${objectId}`;
+            }
         }
+    } else {
+        label = `${layer.title} : ${objectId}`;
     }
-
-    const label = `${layer.title} - ${assetCodedDomainValue} : ${objectId}`;
     const networkGraphic = {
         graphic: graphic,
         layerId: layer.layerId,
@@ -238,59 +241,55 @@ export function flattenArrays(arr: any[]): any[] {
     }, []);
 }
 
-export function getCodedDomainValue(
-    domain: CodedValueDomain,
-    code: string | number
-): any {
-
-    const codedValue = domain?.codedValues?.find((c) => {
-        return c.code == code;
-    });
-    return codedValue?.name;
-}
-
 export function getCodedDomain(
-    layer: FeatureLayer,
-    field: string
-): any {
-    if (layer.types instanceof Array) {
-        for (const t of layer.types) {
-            const domains = t.domains;
-            if (domains !== undefined && domains != null) {
-                const domain = domains[field];
-                if (domain != undefined && domain != null) {
-                    const codedValues = domain.codedValues;
-                    if (codedValues instanceof Array) {
-                        return domain;
-                    }
-                    if (domain.type === "inherited") {
-                        return domainOf(layer, field);
-                    }
-                }
+    graphic: Graphic,
+    field: string,
+    layer: FeatureLayer
+): CodedValueDomain | undefined {
 
+    let domain;
+
+    const subtypeField = layer.sourceJSON.subtypeField;
+
+    if (subtypeField != undefined && subtypeField != null) {
+        const subTypeValue = graphic.attributes[subtypeField];
+        if (subTypeValue != undefined && subTypeValue != null) {
+            const subType = layer.sourceJSON.subtypes.find(sub => sub.code == subTypeValue);
+            if (subType != undefined && subType != null) {
+                domain = subType.domains[field];
             }
         }
     }
-    return <any>{};
+    if (!domain) {
+        domain = domainOf(layer, field);
+    }
+    /* Subtypes are not instantiated CodedValueDomain objects - just JSON so 
+     * we need to check to ensure we return an instaiated class when it is defined
+    */
+    if (domain != undefined && !(domain instanceof CodedValueDomain)){
+        return CodedValueDomain.fromJSON(domain);
+    } 
+    return domain;    
 }
 
-export function domainOf(layer: FeatureLayer, field: string): any {
+function domainOf(layer: FeatureLayer, field: string): CodedValueDomain | undefined {
+    let domain;
     const fields = layer.fields;
     if (fields instanceof Array) {
         for (const f of fields) {
             if (f.name === field) {
-                const domain = f.domain as CodedValueDomain;
+                domain = f.domain as CodedValueDomain;
                 if (domain !== undefined && domain !== null) {
                     const codedValues = domain.codedValues;
                     if (codedValues instanceof Array) {
-                        return { domain: domain };
+                        break;
                     }
                 }
             }
         }
     }
 
-    return <any>{};
+    return domain;
 }
 
 export function getKey(object: Record<string, unknown>, key: string): any {
