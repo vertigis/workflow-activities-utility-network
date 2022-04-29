@@ -66,11 +66,9 @@ export function createNetworkGraphic(
         attributes: attributes,
         layer: layer,
     });
-
     let label;
-
+    //Get the coded domain value for the label.
     const assetTypeDomain = getCodedDomain(graphic, assetTypeField, layer);
-
     if (assetTypeDomain != undefined && assetTypeDomain != null) {
         const assetTypeCode = graphic.attributes[assetTypeField];
         if (assetTypeCode != undefined && assetTypeCode != null) {
