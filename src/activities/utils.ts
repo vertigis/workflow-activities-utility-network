@@ -11,6 +11,7 @@ import {
     rotate,
     cut,
     planarLength,
+    nearestCoordinate,
 } from "@arcgis/core/geometry/geometryEngineAsync";
 import * as Projection from "@arcgis/core/geometry/projection";
 import UtilityNetwork from "@arcgis/core/networks/UtilityNetwork";
@@ -59,7 +60,7 @@ export function createNetworkGraphic(
     }
     const objectId: number = attributes[objectIdField];
 
-    const flagPoint = Point.fromJSON(point.toJSON());
+    const flagPoint = point.clone();
 
     const graphic = new Graphic({
         geometry: flagPoint,
@@ -165,20 +166,19 @@ export function getValue(obj: Record<string, number>, prop: string): any {
 export async function splitPolyline(sourceLine: Polyline, flagGeom: Point): Promise<Polyline[]> {
 
     let splitLines: Polyline[] = [];
-    const line = Polyline.fromJSON(sourceLine.toJSON());
+    const line = sourceLine.clone();
     const projectedLine = Projection.project(
         line,
         flagGeom.spatialReference
     ) as Polyline;
-
-    const buffer = (await geodesicBuffer(flagGeom, 20, "feet")) as Polygon;
+    const snappedPoint = await getPolylineIntersection(projectedLine, flagGeom);
+    const buffer = (await geodesicBuffer(snappedPoint, 20, "feet")) as Polygon;
     const polyIntersection = await intersect(projectedLine, buffer);
     if (polyIntersection) {
         const rotated = await rotate(polyIntersection, 90);
         const newGeom = await cut(projectedLine, rotated as Polyline);
         if (newGeom.length > 0) {
             splitLines = newGeom as Polyline[];
-
         }
     }
     return splitLines;
@@ -186,14 +186,9 @@ export async function splitPolyline(sourceLine: Polyline, flagGeom: Point): Prom
 
 export async function getPolylineIntersection(sourceLine: Polyline, flagGeom: Point): Promise<Point> {
     let intersectionPoint;
-    const splitGeom = await splitPolyline(sourceLine, flagGeom);
-    if (splitGeom.length > 0) {
-        const vertice = splitGeom[1].paths[0][0];
-        intersectionPoint = new Point( {
-            x: vertice[0], 
-            y: vertice[1], 
-            spatialReference: splitGeom[1].spatialReference 
-        });
+    const nearestCoord = await nearestCoordinate(sourceLine, flagGeom);
+    if (nearestCoord.coordinate) {
+        intersectionPoint =  nearestCoord.coordinate;
     }
 
     return intersectionPoint;
