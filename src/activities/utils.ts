@@ -11,6 +11,7 @@ import {
     rotate,
     cut,
     planarLength,
+    nearestCoordinate,
 } from "@arcgis/core/geometry/geometryEngineAsync";
 import * as Projection from "@arcgis/core/geometry/projection";
 import UtilityNetwork from "@arcgis/core/networks/UtilityNetwork";
@@ -59,7 +60,7 @@ export function createNetworkGraphic(
     }
     const objectId: number = attributes[objectIdField];
 
-    const flagPoint = Point.fromJSON(point.toJSON());
+    const flagPoint = point.clone();
 
     const graphic = new Graphic({
         geometry: flagPoint,
@@ -162,6 +163,36 @@ export function getValue(obj: Record<string, number>, prop: string): any {
     }
     return undefined;
 }
+export async function splitPolyline(sourceLine: Polyline, flagGeom: Point): Promise<Polyline[]> {
+
+    let splitLines: Polyline[] = [];
+    const line = sourceLine.clone();
+    const projectedLine = Projection.project(
+        line,
+        flagGeom.spatialReference
+    ) as Polyline;
+    const snappedPoint = await getPolylineIntersection(projectedLine, flagGeom);
+    const buffer = (await geodesicBuffer(snappedPoint, 20, "feet")) as Polygon;
+    const polyIntersection = await intersect(projectedLine, buffer);
+    if (polyIntersection) {
+        const rotated = await rotate(polyIntersection, 90);
+        const newGeom = await cut(projectedLine, rotated as Polyline);
+        if (newGeom.length > 0) {
+            splitLines = newGeom as Polyline[];
+        }
+    }
+    return splitLines;
+}
+
+export async function getPolylineIntersection(sourceLine: Polyline, flagGeom: Point): Promise<Point> {
+    let intersectionPoint;
+    const nearestCoord = await nearestCoordinate(sourceLine, flagGeom);
+    if (nearestCoord.coordinate) {
+        intersectionPoint =  nearestCoord.coordinate;
+    }
+
+    return intersectionPoint;
+}
 
 export async function getPercentageAlong(
     sourceGeom: Geometry,
@@ -174,32 +205,25 @@ export async function getPercentageAlong(
     } else {
         percentage = 0.5;
     }
-    const sourceLine = Polyline.fromJSON(sourceGeom.toJSON());
+    const sourceLine = sourceGeom as Polyline;
+    const splitGeom = await splitPolyline(sourceLine, flagGeom);
 
-    const projectedLine = Projection.project(
-        sourceLine,
-        flagGeom.spatialReference
-    ) as Polyline;
-    const buffer = (await geodesicBuffer(flagGeom, 10, "feet")) as Polygon;
-    const intersection = await intersect(projectedLine, buffer);
-    if (intersection) {
-        const rotated = await rotate(intersection, 90);
-        const newGeom = await cut(projectedLine, rotated as Polyline);
-        if (newGeom.length > 0) {
-            const sourceLength = await planarLength(sourceLine, "feet");
-            const lineGeom = newGeom as Polyline[];
-            let pieceLength;
-            if (
-                lineGeom[0].paths[0][0][0] == sourceLine.paths[0][0][0] &&
-                lineGeom[0].paths[0][0][1] == sourceLine.paths[0][0][1]
-            ) {
-                pieceLength = await planarLength(newGeom[0], "feet");
-            } else {
-                pieceLength = await planarLength(newGeom[1], "feet");
-            }
-            percentage = pieceLength / sourceLength;
+
+    if (splitGeom.length > 0) {
+        const sourceLength = await planarLength(sourceLine, "feet");
+
+        let pieceLength;
+        if (
+            splitGeom[0].paths[0][0][0] == sourceLine.paths[0][0][0] &&
+            splitGeom[0].paths[0][0][1] == sourceLine.paths[0][0][1]
+        ) {
+            pieceLength = await planarLength(splitGeom[0], "feet");
+        } else {
+            pieceLength = await planarLength(splitGeom[1], "feet");
         }
+        percentage = pieceLength / sourceLength;
     }
+
     return percentage;
 }
 
@@ -266,10 +290,10 @@ export function getCodedDomain(
     /* Subtypes are not instantiated CodedValueDomain objects - just JSON so 
      * we need to check to ensure we return an instaiated class when it is defined
     */
-    if (domain != undefined && !(domain instanceof CodedValueDomain)){
+    if (domain != undefined && !(domain instanceof CodedValueDomain)) {
         return CodedValueDomain.fromJSON(domain);
-    } 
-    return domain;    
+    }
+    return domain;
 }
 
 function domainOf(layer: FeatureLayer, field: string): CodedValueDomain | undefined {

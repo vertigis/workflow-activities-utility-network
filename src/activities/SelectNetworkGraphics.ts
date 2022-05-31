@@ -12,6 +12,7 @@ import {
     createNetworkGraphic,
     getNetworkLayerIds,
     getTerminalIds,
+    getPolylineIntersection,
 } from "./utils";
 import WebMap from "@arcgis/core/WebMap";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
@@ -21,6 +22,7 @@ import { activate } from "@geocortex/workflow/runtime/Hooks";
 import UtilityNetwork from "esri/networks/UtilityNetwork";
 import Network from "@arcgis/core/networks/Network";
 import Layer from "@arcgis/core/layers/Layer";
+import { Polyline } from "esri/geometry";
 
 /** An interface that defines the inputs of the activity. */
 export interface SelectNetworkGraphicsInputs {
@@ -91,6 +93,7 @@ export class SelectNetworkGraphics implements IActivityHandler {
         if (!utilityNetwork) {
             throw new Error("utilityNetwork is required");
         }
+        let hitPoint = point;
         const mapProvider = type.create();
         await mapProvider.load();
 
@@ -114,7 +117,7 @@ export class SelectNetworkGraphics implements IActivityHandler {
         }
         await view.when();
 
-        const screenPoint = view.toScreen(point);
+        const screenPoint = view.toScreen(hitPoint);
         const hitResult = await view.hitTest(screenPoint);
         const hitGraphics = hitResult.results.filter(
             (g) => g.graphic?.attributes
@@ -141,9 +144,9 @@ export class SelectNetworkGraphics implements IActivityHandler {
                 if (
                     result.features.length > 0 &&
                     getValue(result.features[0].attributes, "globalid") !=
-                        undefined &&
+                    undefined &&
                     getValue(result.features[0].attributes, "assettype") !=
-                        undefined
+                    undefined
                 ) {
                     result.features[0].layer = x.graphic.layer;
                     queriedGraphics.push(result.features[0]);
@@ -155,16 +158,23 @@ export class SelectNetworkGraphics implements IActivityHandler {
         for (const queriedGraphic of queriedGraphics) {
             const percAlong = await getPercentageAlong(
                 queriedGraphic.geometry,
-                point
+                hitPoint
             );
             let terminalIds: number[] | undefined = undefined;
-            if(queriedGraphic.geometry && queriedGraphic.geometry.type === 'point') {
-
-                terminalIds = getTerminalIds(queriedGraphic, utilityNetwork)
+            if (queriedGraphic.geometry) {
+                if (queriedGraphic.geometry.type === 'point') {
+                    terminalIds = getTerminalIds(queriedGraphic, utilityNetwork);
+                    hitPoint = queriedGraphic.geometry as Point;
+                } else if (queriedGraphic.geometry.type === 'polyline') {
+                    const snappedPoint = await getPolylineIntersection(queriedGraphic.geometry as Polyline, hitPoint);
+                    if (snappedPoint) {
+                        hitPoint = snappedPoint;
+                    }
+                }
             }
-            
+
             const networkGraphic = createNetworkGraphic(
-                point,
+                hitPoint,
                 queriedGraphic.attributes,
                 queriedGraphic.layer as FeatureLayer,
                 percAlong,
