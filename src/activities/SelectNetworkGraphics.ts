@@ -144,9 +144,9 @@ export class SelectNetworkGraphics implements IActivityHandler {
                 if (
                     result.features.length > 0 &&
                     getValue(result.features[0].attributes, "globalid") !=
-                        undefined &&
+                    undefined &&
                     getValue(result.features[0].attributes, "assettype") !=
-                        undefined
+                    undefined
                 ) {
                     result.features[0].layer = x.graphic.layer;
                     queriedGraphics.push(result.features[0]);
@@ -161,15 +161,18 @@ export class SelectNetworkGraphics implements IActivityHandler {
                 hitPoint
             );
             let terminalIds: number[] | undefined = undefined;
-            if(queriedGraphic.geometry) {
-                if(queriedGraphic.geometry.type === 'point') {
+            if (queriedGraphic.geometry) {
+                if (queriedGraphic.geometry.type === 'point') {
                     terminalIds = getTerminalIds(queriedGraphic, utilityNetwork);
                     hitPoint = queriedGraphic.geometry as Point;
-                } else if(queriedGraphic.geometry.type === 'polyline'){
-                    hitPoint = await getPolylineIntersection(queriedGraphic.geometry as Polyline, hitPoint);
+                } else if (queriedGraphic.geometry.type === 'polyline') {
+                    const snappedPoint = await getPolylineIntersection(queriedGraphic.geometry as Polyline, hitPoint);
+                    if (snappedPoint) {
+                        hitPoint = snappedPoint;
+                    }
                 }
             }
-            
+
             const networkGraphic = createNetworkGraphic(
                 hitPoint,
                 queriedGraphic.attributes,
