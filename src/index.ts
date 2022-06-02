@@ -7,5 +7,3 @@ export * from "./activities/RunSynthesizeAssociationGeometries";
 export * from "./activities/GetTraceConfiguration";
 export * from "./activities/SelectNetworkGraphics";
 export * from "./activities/TraceConfigurationFromJSON";
-
-export { GetNamedTraceConfigurationActivity } from "./activities/GetNamedTraceConfiguration";
