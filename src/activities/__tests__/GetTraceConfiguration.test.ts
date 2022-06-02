@@ -24,6 +24,8 @@ jest.mock("@arcgis/core/networks/support/NamedTraceConfiguration", () => {
             globalId: params.globalId,
             title: params.title,
             traceConfiguration: params.traceConfiguration as TraceConfiguration,
+            resultTypes: [],
+            traceType: "upstream",
         };
     };
 });
@@ -72,6 +74,11 @@ describe("GetTraceConfiguration", () => {
             }).toThrow("traceId is required");
         });
         it("gets a TraceLocation", () => {
+            const outputs = {
+                traceConfiguration: dummyTraceConfig,
+                resultTypes: [],
+                traceType: "upstream",
+            };
             const inputs: GetTraceConfigurationInputs = {
                 traceId: "abc",
                 utilityNetwork: dummyUn,
@@ -81,7 +88,13 @@ describe("GetTraceConfiguration", () => {
             expect(result).toBeDefined();
             if (result.traceConfiguration) {
                 expect(JSON.stringify(result.traceConfiguration)).toEqual(
-                    JSON.stringify(dummyTraceConfig)
+                    JSON.stringify(outputs.traceConfiguration)
+                );
+                expect(JSON.stringify(result.resultTypes)).toEqual(
+                    JSON.stringify(outputs.resultTypes)
+                );
+                expect(JSON.stringify(result.traceType)).toEqual(
+                    JSON.stringify(outputs.traceType)
                 );
             }
         });
