@@ -24,7 +24,9 @@ export interface GetTraceConfigurationOutputs {
     /**
      * @description The trace configurations associated with the Utility Network results.
      */
-    traceConfiguration: any;
+    traceConfiguration: any | undefined;
+    traceType: string | undefined;
+    resultTypes: any[] | undefined;
 }
 
 /**
@@ -44,6 +46,8 @@ export class GetTraceConfiguration implements IActivityHandler {
             throw new Error("traceId is required");
         }
         let traceConfiguration: TraceConfiguration | undefined;
+        let resultTypes: any[] | undefined;
+        let traceType: string | undefined;
 
         const namedTraceConfiguration =
             utilityNetwork.sharedNamedTraceConfigurations.find(
@@ -54,10 +58,14 @@ export class GetTraceConfiguration implements IActivityHandler {
             traceConfiguration = new TraceConfiguration(
                 namedTraceConfiguration.traceConfiguration.toJSON()
             );
+            resultTypes = namedTraceConfiguration.resultTypes;
+            traceType = namedTraceConfiguration.traceType;
         }
 
         return {
             traceConfiguration,
+            resultTypes,
+            traceType,
         };
     }
 }
