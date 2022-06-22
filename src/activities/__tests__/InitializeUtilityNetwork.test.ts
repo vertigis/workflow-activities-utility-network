@@ -5,8 +5,6 @@ import { mockActivityContext } from "../__mocks__/ActivityContext";
 import { mockWebMap } from "../__mocks__/WebMap";
 import { mockMapView } from "../__mocks__/MapView";
 
-const mockMapProvider = jest.fn();
-
 jest.mock("@arcgis/core/identity/IdentityManager", () => ({
     registerToken: jest.fn(),
 }));
