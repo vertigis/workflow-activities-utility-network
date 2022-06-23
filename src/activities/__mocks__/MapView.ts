@@ -2,7 +2,6 @@ import WebMap from "@arcgis/core/WebMap";
 import MapView from "@arcgis/core/views/MapView";
 import Point from "@arcgis/core/geometry/Point";
 
-const map = {} as WebMap;
 jest.mock("@arcgis/core/geometry/Point", () => {
     return function () {
         return {
