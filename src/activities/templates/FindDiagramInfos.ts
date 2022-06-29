@@ -66,7 +66,9 @@ export default class FindDiagramInfosActivity implements IActivityHandler {
         if (!serviceUrl) {
             throw new Error("serviceUrl is required");
         }
-
+        if (!names) {
+            throw new Error("names is required");
+        }
         // Remove trailing slashes
         const normalizedUrl = serviceUrl.replace(/\/*$/, "");
 

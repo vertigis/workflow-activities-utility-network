@@ -28,7 +28,7 @@ interface FindDiagramNamesInputs {
 
     /**
      * @displayName Features
-     * @description   A set of utility network feature Global IDs, or network diagram feature Global IDs represented in a given diagram that are included in the resulting queried diagrams.
+     * @description   A set of utility network feature Global IDs, or network diagram feature Global IDs represented in a given diagram.
      */
     features?: any;
 
@@ -89,7 +89,7 @@ export default class FindDiagramNamesActivity implements IActivityHandler {
         const normalizedUrl = serviceUrl.replace(/\/*$/, "");
 
         const channel = type.create(undefined, "arcgis");
-        channel.request.url = `${normalizedUrl}\\findDiagramNames`;
+        channel.request.url = `${normalizedUrl}//findDiagramNames`;
         channel.request.method = "POST";
         channel.request.json = {
             f: "json",

@@ -74,6 +74,9 @@ export default class GetDiagramDynamicLayerActivity
         if (!serviceUrl) {
             throw new Error("serviceUrl is required");
         }
+        if (!name) {
+            throw new Error("name is required");
+        }
 
         // Remove trailing slashes
         const normalizedUrl = serviceUrl.replace(/\/*$/, "");

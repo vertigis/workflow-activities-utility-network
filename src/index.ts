@@ -12,6 +12,8 @@ export { default as FindDiagramNamesActivity } from "./activities/templates/Find
 
 export { default as FindDiagramInfosActivity } from "./activities/templates/FindDiagramInfos";
 
-export { default as GetDiagramDynamicLayerActivity } from "./activities/templates/GetDiagramDynamicLayer";
+export { default as GetDiagramDynamicLayerActivity } from "./activities/templates/GetDiagramDynamicLayers";
 
-export { default as GetDiagramMapInfoActivity } from "./activities/GetDiagramMapInfo";
+export { default as GetDiagramMapInfoActivity } from "./activities/templates/GetDiagramMapInfo";
+
+export { default as FindDiagramFeatures } from "./activities/templates/FindDiagramFeatures";

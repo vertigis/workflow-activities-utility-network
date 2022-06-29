@@ -61,6 +61,9 @@ export default class GetDiagramMapInfoActivity implements IActivityHandler {
         if (!serviceUrl) {
             throw new Error("serviceUrl is required");
         }
+        if (!diagramName) {
+            throw new Error("diagramName is required");
+        }
 
         // Remove trailing slashes
         const normalizedUrl = serviceUrl.replace(/\/*$/, "");
