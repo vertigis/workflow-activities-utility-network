@@ -19,10 +19,10 @@ import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import Graphic from "@arcgis/core/Graphic";
 import { MapProvider } from "@geocortex/workflow/runtime/activities/arcgis/MapProvider";
 import { activate } from "@geocortex/workflow/runtime/Hooks";
-import UtilityNetwork from "esri/networks/UtilityNetwork";
+import UtilityNetwork from "@arcgis/core/networks/UtilityNetwork";
 import Network from "@arcgis/core/networks/Network";
 import Layer from "@arcgis/core/layers/Layer";
-import { Polyline } from "esri/geometry";
+import { Polyline } from "@arcgis/core/geometry";
 
 /** An interface that defines the inputs of the activity. */
 export interface SelectNetworkGraphicsInputs {
