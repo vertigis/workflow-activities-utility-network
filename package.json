@@ -32,20 +32,15 @@
         "@types/arcgis-js-api": "^4.22.0"
     },
     "devDependencies": {
-        "@geocortex/workflow": "5.25.2",
-        "@types/jest": "^26.0.23",
-        "@vertigis/workflow-sdk": "2.0.3",
-        "conventional-changelog-conventionalcommits": "^4.6.3",
-        "eslint-plugin-prettier": "^3.4.0",
-        "jest": "^26.6.3",
-        "prettier": "^2.5.1",
-        "ts-jest": "^26.5.6",
-        "typescript": "^4.2.4"
-    },
-    "jest": {
-        "transformIgnorePatterns": [
-            "node_modules/(?!(@arcgis)/)"
-        ]
+        "@geocortex/workflow": "5.27.1",
+        "@types/jest": "^28.1.3",
+        "@vertigis/workflow-sdk": "2.0.5",
+        "conventional-changelog-conventionalcommits": "^5.0.0",
+        "eslint-plugin-prettier": "^4.0.0",
+        "jest": "^28.1.1",
+        "prettier": "^2.7.1",
+        "ts-jest": "^28.0.5",
+        "typescript": "^4.7.4"
     },
     "browserslist": [
         "last 2 chrome versions",
