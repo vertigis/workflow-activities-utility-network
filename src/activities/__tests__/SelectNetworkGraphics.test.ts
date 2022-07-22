@@ -3,7 +3,7 @@ import {
     SelectNetworkGraphicsInputs,
 } from "../SelectNetworkGraphics";
 import Point from "@arcgis/core/geometry/Point";
-import { mockMapView } from "../__mocks__/MapView";
+//import { mockMapView } from "../__mocks__/MapView";
 import { mockWebMap } from "../__mocks__/WebMap";
 import { mockActivityContext } from "../__mocks__/ActivityContext";
 
@@ -18,7 +18,7 @@ const mockProvider = {
         return {
             load: jest.fn(),
             map: mockWebMap(),
-            view: mockMapView(),
+            //view: mockMapView(),
         };
     },
 };

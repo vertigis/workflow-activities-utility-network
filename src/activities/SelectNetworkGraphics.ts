@@ -10,7 +10,6 @@ import {
     getPercentageAlong,
     getValue,
     createNetworkGraphic,
-    getNetworkLayerIds,
     getTerminalIds,
     getPolylineIntersection,
 } from "./utils";
@@ -21,7 +20,6 @@ import { MapProvider } from "@geocortex/workflow/runtime/activities/arcgis/MapPr
 import { activate } from "@geocortex/workflow/runtime/Hooks";
 import UtilityNetwork from "@arcgis/core/networks/UtilityNetwork";
 import Network from "@arcgis/core/networks/Network";
-import Layer from "@arcgis/core/layers/Layer";
 import { Polyline } from "@arcgis/core/geometry";
 
 /** An interface that defines the inputs of the activity. */
@@ -42,7 +40,7 @@ export interface SelectNetworkGraphicsInputs {
 
     /**
      * @displayName Utility Network
-     * @description The Utility Network object for the target service.
+     * @description The target Utility Network.
      * @required
      */
     utilityNetwork: Network & UtilityNetwork;
@@ -79,11 +77,10 @@ export class SelectNetworkGraphics implements IActivityHandler {
     ): Promise<SelectNetworkGraphicsOutputs> {
         const {
             point,
-            utilityNetwork,
             locationType,
             isFilterBarrier,
+            utilityNetwork,
         } = inputs;
-
         if (!point) {
             throw new Error("point is required");
         }
@@ -99,17 +96,10 @@ export class SelectNetworkGraphics implements IActivityHandler {
 
         const webMap = mapProvider.map as WebMap;
         const view = mapProvider.view as MapView;
-        const supportedLayerIds = getNetworkLayerIds(utilityNetwork);
-        const supportedLayers: Layer[] = [];
         const queriedGraphics: Graphic[] = [];
-        for (let i = 0; i < supportedLayerIds.length; i++) {
-            const l = webMap.allLayers.find(
-                (x) =>
-                    x.type === "feature" &&
-                    (x as any).source?.layer?.layerId == supportedLayerIds[i]
-            );
+        for (let i = 0; i < webMap.allLayers.length; i++) {
+            const l = webMap.allLayers.getItemAt(i)
             if (l != undefined) {
-                supportedLayers.push(l);
                 if (!l.initialized) {
                     await l.load();
                 }
@@ -120,38 +110,32 @@ export class SelectNetworkGraphics implements IActivityHandler {
         const screenPoint = view.toScreen(hitPoint);
         const hitResult = await view.hitTest(screenPoint);
         const hitGraphics = hitResult.results.filter(
-            (g) => g.graphic?.attributes
+            (g) => g.graphic?.attributes && g.graphic.layer.type === "feature"
         );
 
         for (let i = 0; i < hitGraphics.length; i++) {
             const x = hitGraphics[i];
+            const result = await (
+                x.graphic.layer as FeatureLayer
+            ).queryFeatures({
+                objectIds: [x.graphic.getObjectId()],
+                returnGeometry: true,
+                outFields: ["*"],
+                outSpatialReference: { wkid: point.spatialReference.wkid },
+            });
             if (
-                x.graphic.layer.type == "feature" &&
-                supportedLayers.findIndex(
-                    (l) =>
-                        (l as FeatureLayer).layerId ==
-                        (x.graphic.layer as FeatureLayer).layerId
-                ) != -1
+                result.features.length > 0 &&
+                getValue(result.features[0].attributes, "globalid") !=
+                undefined &&
+                getValue(result.features[0].attributes, "assettype") !=
+                undefined
             ) {
-                const result = await (
-                    x.graphic.layer as FeatureLayer
-                ).queryFeatures({
-                    objectIds: [x.graphic.getObjectId()],
-                    returnGeometry: true,
-                    outFields: ["*"],
-                    outSpatialReference: { wkid: point.spatialReference.wkid },
-                });
-                if (
-                    result.features.length > 0 &&
-                    getValue(result.features[0].attributes, "globalid") !=
-                    undefined &&
-                    getValue(result.features[0].attributes, "assettype") !=
-                    undefined
-                ) {
-                    result.features[0].layer = x.graphic.layer;
-                    queriedGraphics.push(result.features[0]);
-                }
+                result.features[0].layer = x.graphic.layer;
+
+                queriedGraphics.push(result.features[0]);
+
             }
+
         }
         const networkGraphics: NetworkGraphic[] = [];
 
@@ -161,28 +145,36 @@ export class SelectNetworkGraphics implements IActivityHandler {
                 hitPoint
             );
             let terminalIds: number[] | undefined = undefined;
-            if (queriedGraphic.geometry) {
-                if (queriedGraphic.geometry.type === 'point') {
-                    terminalIds = getTerminalIds(queriedGraphic, utilityNetwork);
-                    hitPoint = queriedGraphic.geometry as Point;
-                } else if (queriedGraphic.geometry.type === 'polyline') {
-                    const snappedPoint = await getPolylineIntersection(queriedGraphic.geometry as Polyline, hitPoint);
-                    if (snappedPoint) {
-                        hitPoint = snappedPoint;
+            if (utilityNetwork != undefined) {
+                if (queriedGraphic.geometry) {
+                    if (queriedGraphic.geometry.type === 'point') {
+
+                        terminalIds = getTerminalIds(queriedGraphic, utilityNetwork);
+                        hitPoint = queriedGraphic.geometry as Point;
+                    } else if (queriedGraphic.geometry.type === 'polyline') {
+                        const snappedPoint = await getPolylineIntersection(queriedGraphic.geometry as Polyline, hitPoint);
+                        if (snappedPoint) {
+                            hitPoint = snappedPoint;
+                        }
                     }
                 }
-            }
 
-            const networkGraphic = createNetworkGraphic(
-                hitPoint,
-                queriedGraphic.attributes,
-                queriedGraphic.layer as FeatureLayer,
-                percAlong,
-                locationType,
-                isFilterBarrier,
-                terminalIds,
-            );
-            networkGraphics.push(networkGraphic);
+                const networkGraphic = createNetworkGraphic(
+                    hitPoint,
+                    queriedGraphic.geometry,
+                    queriedGraphic.attributes,
+                    queriedGraphic.layer as FeatureLayer,
+                    percAlong,
+                    locationType,
+                    utilityNetwork,
+                    isFilterBarrier,
+                    terminalIds,
+
+                );
+                if (networkGraphic != undefined) {
+                    networkGraphics.push(networkGraphic);
+                }
+            }
         }
         return {
             networkGraphics: networkGraphics,

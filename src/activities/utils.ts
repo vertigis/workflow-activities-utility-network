@@ -1,5 +1,4 @@
 /* eslint-disable prettier/prettier */
-import SpatialReference from "@arcgis/core/geometry/SpatialReference";
 import Geometry from "@arcgis/core/geometry/Geometry";
 import Point from "@arcgis/core/geometry/Point";
 import Polyline from "@arcgis/core/geometry/Polyline";
@@ -18,24 +17,39 @@ import UtilityNetwork from "@arcgis/core/networks/UtilityNetwork";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import TraceLocation from "@arcgis/core/rest/networks/support/TraceLocation";
 import Polygon from "@arcgis/core/geometry/Polygon";
+import WebMap from "@arcgis/core/WebMap";
+import GroupLayer from "@arcgis/core/layers/GroupLayer";
+import Query from "@arcgis/core/tasks/support/Query";
+
 
 export interface NetworkGraphic {
     graphic: Graphic;
+    originGeometry: Geometry;
+    globalId: string;
+    layer: FeatureLayer;
     layerId: number;
     traceLocations: TraceLocation[];
+    utilityNetwork: UtilityNetwork;
+    assetTypeCode: number;
+    assetGroupCode: number;
+    domainId: number;
+    sourceCode: number;
+    selectedTraceLocation: TraceLocation | undefined;
     label?: string;
 }
 
 export function createNetworkGraphic(
     point: Point,
-    attributes: Record<string, number>,
+    originGeometry: Geometry,
+    attributes: Record<string, any>,
     layer: FeatureLayer,
     percentAlong: number,
     type: "starting-point" | "barrier",
+    utilityNetwork: UtilityNetwork,
     isFilterBarrier?: boolean,
     terminalIds?: number[] | undefined,
 
-): NetworkGraphic {
+): NetworkGraphic | undefined {
     //Esri geodatabase fields have inconsistant case.  Find the name of the global id field regardless of case.
     const globalIdKey = getKey(attributes, "globalid");
 
@@ -58,7 +72,12 @@ export function createNetworkGraphic(
     if (!objectIdField) {
         throw Error("No Object Id field found in feature attributes.");
     }
-    const objectId: number = attributes[objectIdField];
+
+    const assetGroupField = getKey(attributes, "assetgroup");
+    if (!assetGroupField) {
+        throw Error("No Asset Group field found in feature attributes.");
+    }
+
 
     const flagPoint = point.clone();
 
@@ -68,6 +87,12 @@ export function createNetworkGraphic(
         layer: layer,
     });
     let label;
+    
+    const labelDetailField: string = getKey(attributes, "assetid");
+    let labelDetail: string = attributes[labelDetailField];
+    if(labelDetail == undefined || labelDetail == null) {
+        labelDetail = attributes[objectIdField].toString();
+    }
     //Get the coded domain value for the label.
     const assetTypeDomain = getCodedDomain(graphic, assetTypeField, layer);
     if (assetTypeDomain != undefined && assetTypeDomain != null) {
@@ -75,46 +100,61 @@ export function createNetworkGraphic(
         if (assetTypeCode != undefined && assetTypeCode != null) {
             const codedVal = assetTypeDomain.getName(graphic.attributes[assetTypeField]);
             if (codedVal != undefined) {
-                label = `${layer.title} (${codedVal}) : ${objectId}`;
+                label = `${layer.title} (${codedVal}) : ${labelDetail}`;
             }
         }
     } else {
-        label = `${layer.title} : ${objectId}`;
+        label = `${layer.title} : ${labelDetail}`;
     }
-    const networkGraphic = {
-        graphic: graphic,
-        layerId: layer.layerId,
-        label,
-    } as NetworkGraphic;
 
-    if (terminalIds) {
-        const traceLocations: TraceLocation[] = [];
-        for (let i = 0; i < terminalIds.length; i++) {
+    const domainNetwork = getAssetDomain( graphic.attributes[assetGroupField], graphic.attributes[assetTypeField], utilityNetwork);
+    if (domainNetwork != undefined) {
+        const assetSource = getAssetSource(graphic.attributes[assetGroupField], graphic.attributes[assetTypeField], domainNetwork);
+        if (assetSource != undefined) {
+            const networkGraphic = {
+                graphic: graphic,
+                originGeometry: originGeometry,
+                globalId: globalId,
+                layer: layer,
+                layerId: layer.layerId,
+                utilityNetwork: utilityNetwork,
+                domainId: domainNetwork.domainNetworkId,
+                sourceCode: assetSource.sourceId,
+                assetTypeCode: graphic.attributes[assetTypeField] as number,
+                assetGroupCode: graphic.attributes[assetGroupField] as number,
+                label: label,
+            } as NetworkGraphic;
 
-            const terminalId: number = terminalIds[i];
-            const traceLocation = new TraceLocation({
-                globalId,
-                isFilterBarrier,
-                percentAlong,
-                terminalId,
-                type,
+            if (terminalIds) {
+                const traceLocations: TraceLocation[] = [];
+                for (let i = 0; i < terminalIds.length; i++) {
 
-            });
-            traceLocations.push(traceLocation);
+                    const terminalId: number = terminalIds[i];
+                    const traceLocation = new TraceLocation({
+                        globalId,
+                        isFilterBarrier,
+                        percentAlong,
+                        terminalId,
+                        type,
+
+                    });
+                    traceLocations.push(traceLocation);
+                }
+                networkGraphic.traceLocations = traceLocations;
+            } else {
+                networkGraphic.traceLocations = [
+                    new TraceLocation({
+                        globalId,
+                        isFilterBarrier,
+                        percentAlong,
+                        type,
+                    })
+                ]
+
+            }
+            return networkGraphic;
         }
-        networkGraphic.traceLocations = traceLocations;
-    } else {
-        networkGraphic.traceLocations = [
-            new TraceLocation({
-                globalId,
-                isFilterBarrier,
-                percentAlong,
-                type,
-            })
-        ]
-
     }
-    return networkGraphic;
 }
 
 export function getTerminalIds(graphic: Graphic, utilityNetwork: UtilityNetwork): number[] {
@@ -131,22 +171,25 @@ export function getTerminalIds(graphic: Graphic, utilityNetwork: UtilityNetwork)
     if (!assetGroupField) {
         throw Error("No Asset Group field found in feature attributes.");
     }
-    const junctionIds = (utilityNetwork as any).dataElement.domainNetworks.map(
-        (dn) => {
-            return dn.junctionSources.map((js) => js.layerId);
-        }
-    );
-    const flattenedJunctionIds = flattenArrays(junctionIds);
+    let assetType;
 
-    if (flattenedJunctionIds.find(id => id === (graphic.layer as FeatureLayer).layerId)) {
-        const assetType = getAssetType((graphic.layer as FeatureLayer).layerId, graphic.attributes[assetGroupField], graphic.attributes[assetTypeField], utilityNetwork);
-        if (assetType) {
-            const terminalConfigurations = getTerminalConfiguration(assetType.terminalConfigurationId, utilityNetwork);
-            for (const terminal of terminalConfigurations.terminals) {
-                terminalIds.push(terminal.terminalId);
-            };
-        }
+    const domainNetwork = getAssetDomain(graphic.attributes[assetGroupField], graphic.attributes[assetTypeField], utilityNetwork);
+    if (domainNetwork != undefined) {
+        const assetSource = getAssetSource(graphic.attributes[assetGroupField], graphic.attributes[assetTypeField], domainNetwork);
+        if (assetSource != undefined) {
+            const assetGroup = getAssetGroup(graphic.attributes[assetGroupField], assetSource);
+            if (assetGroup != undefined) {
+                assetType = getAssetType(graphic.attributes[assetTypeField], assetGroup);
+            }
 
+        }
+    }
+
+    if (assetType) {
+        const terminalConfigurations = getTerminalConfiguration(assetType.terminalConfigurationId, utilityNetwork);
+        for (const terminal of terminalConfigurations.terminals) {
+            terminalIds.push(terminal.terminalId);
+        };
     }
     return terminalIds;
 }
@@ -188,7 +231,7 @@ export async function getPolylineIntersection(sourceLine: Polyline, flagGeom: Po
     let intersectionPoint;
     const nearestCoord = await nearestCoordinate(sourceLine, flagGeom);
     if (nearestCoord.coordinate) {
-        intersectionPoint =  nearestCoord.coordinate;
+        intersectionPoint = nearestCoord.coordinate;
     }
 
     return intersectionPoint;
@@ -227,43 +270,103 @@ export async function getPercentageAlong(
     return percentage;
 }
 
-//create a polyline to use tor percentage along calculation
-export function createPolyline(
-    paths: number[][][],
-    inSR: SpatialReference
-): Polyline {
-    const newLine = new Polyline({
-        hasZ: false,
-        hasM: false,
-        paths: paths,
-        spatialReference: inSR.clone(),
-    });
-    return newLine;
+export function getAssetUtilityNetwork(assetGroupCode: number, assetTypeCode: number, utilityNetworks: UtilityNetwork[]): UtilityNetwork | undefined {
+    for (const utilityNetwork of utilityNetworks) {
+        const domainNetwork = getAssetDomain(assetGroupCode, assetTypeCode, utilityNetwork);
+        if (domainNetwork != undefined) {
+            const assetSource = getAssetSource(assetGroupCode, assetTypeCode, domainNetwork);
+            if (assetSource != undefined) {
+                const assetGroup = getAssetGroup(assetGroupCode, assetSource);
+                if (assetGroup != undefined) {
+                    const assetType = getAssetType(assetTypeCode, assetGroup);
+                    if (assetType != undefined) {
+                        return utilityNetwork;
+                    }
+                }
+            }
+        }
+    }
+    return undefined;
 }
 
-export function getNetworkLayerIds(utilityNetwork: UtilityNetwork): any[] {
-    const edgeIds = (utilityNetwork as any).dataElement.domainNetworks.map(
-        (dn) => {
-            return dn.edgeSources.map((js) => js.layerId);
+
+export function getAssetDomain(assetGroupCode: number, assetTypeCode: number, utilityNetwork: UtilityNetwork): any | undefined {
+    for (const domainNetwork of (utilityNetwork as any).dataElement.domainNetworks) {
+        if (domainNetwork != undefined) {
+            const assetSource = getAssetSource(assetGroupCode, assetTypeCode, domainNetwork);
+            if (assetSource != undefined) {
+                const assetGroup = getAssetGroup(assetGroupCode, assetSource);
+                if (assetGroup != undefined) {
+                    const assetType = getAssetType(assetTypeCode, assetGroup);
+                    if (assetType != undefined) {
+                        return domainNetwork;
+                    }
+                }
+            }
         }
-    );
-    const junctionIds = (utilityNetwork as any).dataElement.domainNetworks.map(
-        (dn) => {
-            return dn.junctionSources.map((js) => js.layerId);
-        }
-    );
-    const flatEdgeIds = flattenArrays(edgeIds);
-    const flatJunctionIds = flattenArrays(junctionIds);
-    return flatJunctionIds.concat(flatEdgeIds);
+    }
+    return undefined;
 }
 
-export function flattenArrays(arr: any[]): any[] {
-    return arr.reduce(function (flat, toFlatten) {
-        return flat.concat(
-            Array.isArray(toFlatten) ? flattenArrays(toFlatten) : toFlatten
-        );
-    }, []);
+export function getAssetSource(assetGroupCode: number, assetTypeCode: number, domainNetwork: Record<string, any>): any | undefined {
+    for (const assetSource of domainNetwork.edgeSources) {
+        if (assetSource != undefined) {
+            const assetGroup = getAssetGroup(assetGroupCode, assetSource);
+            if (assetGroup != undefined) {
+                const assetType = getAssetType(assetTypeCode, assetGroup);
+                if (assetType != undefined) {
+                    return assetSource;
+                }
+            }
+        }
+    }
+    for (const assetSource of domainNetwork.junctionSources) {
+        if (assetSource != undefined) {
+            const assetGroup = getAssetGroup(assetGroupCode, assetSource);
+            if (assetGroup != undefined) {
+                const assetType = getAssetType(assetTypeCode, assetGroup);
+                if (assetType != undefined) {
+                    return assetSource;
+                }
+            }
+        }
+    }
+    return undefined;
 }
+
+export function getAssetGroup(assetGroupCode: number, assetSource: Record<string, any>): any | undefined {
+
+    for (const assetGroup of assetSource.assetGroups) {
+        if (assetGroup != undefined && assetGroup.assetGroupCode == assetGroupCode) {
+                return assetGroup;
+        }
+    }
+    return undefined;
+}
+
+export function getAssetType(assetTypeCode: number, assetGroup: Record<string, any>): any | undefined {
+    for (const assetType of assetGroup.assetTypes) {
+        if (assetType != undefined && assetType.assetTypeCode == assetTypeCode) {
+            return assetType;
+        }
+    }
+    return undefined;
+}
+
+export function getLayerIdBySourceId(assetSourceId: number, utilityNetwork: UtilityNetwork): number | undefined {
+    for (const domainNetwork of (utilityNetwork as any).dataElement.domainNetworks) {
+        const edgeSources = domainNetwork.edgeSources.find(x => x.sourceId === assetSourceId);
+        if (edgeSources != undefined && edgeSources != null) {
+            return edgeSources.layerId;
+        }
+        const junctionSources = domainNetwork.junctionSources.find(x => x.sourceId === assetSourceId);
+        if (junctionSources != undefined && junctionSources != null) {
+            return junctionSources.layerId;
+        }
+    }
+    return undefined;
+}
+
 
 export function getCodedDomain(
     graphic: Graphic,
@@ -274,7 +377,6 @@ export function getCodedDomain(
     let domain;
 
     const subtypeField = layer.sourceJSON.subtypeField;
-
     if (subtypeField != undefined && subtypeField != null) {
         const subTypeValue = graphic.attributes[subtypeField];
         if (subTypeValue != undefined && subTypeValue != null) {
@@ -312,7 +414,6 @@ function domainOf(layer: FeatureLayer, field: string): CodedValueDomain | undefi
             }
         }
     }
-
     return domain;
 }
 
@@ -323,39 +424,236 @@ export function getKey(object: Record<string, unknown>, key: string): any {
 }
 
 
-export function getAssetType(layerId: number, assetGroupCode: number, assetTypeCode: number, utilityNetwork: UtilityNetwork): any {
-
-    const domainNetworks = (utilityNetwork as any).dataElement.domainNetworks;
-
-    for (let i = 0; i < domainNetworks.length; i++) {
-        const domainNetwork = domainNetworks[i];
-        for (let j = 0; j < domainNetwork.junctionSources.length; j++)
-            if (domainNetwork.junctionSources[j].layerId == layerId) {
-                const assetGroup = domainNetwork.junctionSources[j].assetGroups.find(ag => ag.assetGroupCode === assetGroupCode);
-                if (assetGroup instanceof Object) {
-                    const assetType = assetGroup.assetTypes.find(at => at.assetTypeCode === assetTypeCode);
-                    assetType.assetGroupName = assetGroup.assetGroupName;
-                    assetType.utilityNetworkFeatureClassUsageType = domainNetwork.junctionSources[j].utilityNetworkFeatureClassUsageType;
-                    if (assetType instanceof Object) return assetType;
-                }
-            }
-
-        for (let j = 0; j < domainNetwork.edgeSources.length; j++)
-            if (domainNetwork.edgeSources[j].layerId == layerId) {
-                const assetGroup = domainNetwork.edgeSources[j].assetGroups.find(ag => ag.assetGroupCode === assetGroupCode);
-                if (assetGroup instanceof Object) {
-                    const assetType = assetGroup.assetTypes.find(at => at.assetTypeCode === assetTypeCode);
-                    assetType.assetGroupName = assetGroup.assetGroupName;
-                    assetType.utilityNetworkFeatureClassUsageType = domainNetwork.edgeSources[j].utilityNetworkFeatureClassUsageType;
-                    if (assetType instanceof Object) return assetType;
-                }
-            }
-    }
-
-    return undefined;
-}
-
 export function getTerminalConfiguration(terminalConfigurationId: number, utilityNetwork: UtilityNetwork): any {
     const dataElement = (utilityNetwork as any).dataElement;
     return dataElement.terminalConfigurations.find(tc => tc.terminalConfigurationId === terminalConfigurationId);
 }
+
+export async function getWebMapLayersByAssets(assets: any[], map: WebMap, utilityNetwork: UtilityNetwork): Promise<any> {
+    const layerSet = {};
+    const domainNetworkSet = {};
+
+    for (const asset of assets) {
+        const layerId = getLayerIdBySourceId(asset.networkSourceId, utilityNetwork);
+        if (layerId != undefined) {
+            const domainNetwork = getAssetDomain(asset.assetGroupCode, asset.assetTypeCode, utilityNetwork);
+            if (domainNetwork != undefined) {
+
+
+                let domainSet = domainNetworkSet[domainNetwork.domainNetworkId];
+                if (domainSet == undefined) {
+                    domainSet = {};
+                    domainNetworkSet[domainNetwork.domainNetworkId] = domainSet;
+                }
+                let assetSet = domainSet[asset.networkSourceId];
+                if (assetSet == undefined) {
+                    assetSet = {};
+                    domainSet[asset.networkSourceId] = assetSet;
+                }
+                let groupSet = assetSet[asset.assetGroupCode];
+                if (groupSet == undefined) {
+                    groupSet = {};
+                    assetSet[asset.assetGroupCode] = groupSet;
+                }
+                let typeSet = groupSet[asset.assetTypeCode];
+                if (typeSet == undefined) {
+                    const layer = await getWebMapLayerByAsset(asset, layerId, map, utilityNetwork);
+                    if (layer != undefined) {
+                        typeSet = { layerId: layer.layerId };
+                        groupSet[asset.assetTypeCode] = typeSet;
+                        layerSet[layer.layerId] = { objectIds: [asset.objectId], layer: layer };
+                        
+                    }
+                } else {
+                    layerSet[typeSet["layerId"]].objectIds.push(asset.objectId);
+
+                }
+
+            }
+        }
+
+    }
+    return layerSet;
+}
+
+export async function getWebMapLayerByAsset(asset: Record<string, any>, layerId: number, map: WebMap, utilityNetwork: UtilityNetwork): Promise<FeatureLayer | undefined> {
+    const domainNetwork = getAssetDomain(asset.assetGroupCode, asset.assetTypeCode, utilityNetwork);
+
+    if (domainNetwork != undefined) {
+
+        const assetSource = getAssetSource(asset.assetGroupCode, asset.assetTypeCode, domainNetwork);
+        if (assetSource != undefined) {
+            const layers = map.layers
+            if (layers.length > 0) {
+                for (const layer of layers) {
+                    let featureLayer;
+                    if (layer.type === "feature") {
+                        featureLayer = layer as FeatureLayer;
+                    } else if (layer.type === "group") {
+                        featureLayer = (layer as GroupLayer).layers.find(x => x.type == "feature" && (x as FeatureLayer).layerId == layerId);
+                    }
+                    if (featureLayer != undefined && featureLayer != null) {
+                        const globalIdField = featureLayer.fields.find(x => x.name.toUpperCase() === "GLOBALID");
+                        if (globalIdField != undefined && globalIdField != null) {
+                            const fieldName: string = globalIdField.name;
+                            const assetGlobalId: string = asset.globalId;
+                            const query = new Query();
+                            query.where = `${fieldName}='${assetGlobalId}'`;
+                            query.returnGeometry = false;
+                            const features = await featureLayer.queryFeatures(query);
+                            if (features.features.length > 0) {
+                                return featureLayer;
+                            }
+                        }
+                    }
+                }
+
+            }
+
+        }
+        return undefined;
+    }
+}
+
+export async function getUtilityNetworkFromGraphic(utilityNetworks: UtilityNetwork[], graphic: Graphic): Promise<UtilityNetwork | undefined> {
+    let assetType;
+    const layer = (graphic.layer as FeatureLayer);
+    //Esri geodatabase fields have inconsistant case.  Find the name of the asset type field regardless of case.
+    const assetTypeField: string = getKey(graphic.attributes, "assettype");
+    //We should never get here but just in case.
+    if (!assetTypeField) {
+        throw Error("No Asset Type field found in feature attributes.");
+    }
+    //Esri geodatabase fields have inconsistant case.  Find the name of the asset type field regardless of case.
+    const assetGroupField: string = getKey(graphic.attributes, "assetgroup");
+    if (!assetGroupField) {
+        throw Error("No Asset Group field found in feature attributes.");
+    }
+    //Esri geodatabase fields have inconsistant case.  Find the name of the asset type field regardless of case.
+    const globalIdField: string = getKey(graphic.attributes, "globalId");
+    if (!assetGroupField) {
+        throw Error("No Asset Group field found in feature attributes.");
+    }
+    const utilityNetwork = getAssetUtilityNetwork(graphic.attributes[assetGroupField], graphic.attributes[assetTypeField], utilityNetworks);
+    if (utilityNetwork != undefined) {
+        const domainNetwork = getAssetDomain(graphic.attributes[assetGroupField], graphic.attributes[assetTypeField], utilityNetwork);
+        if (domainNetwork != undefined) {
+            const assetSource = getAssetSource(graphic.attributes[assetGroupField], graphic.attributes[assetTypeField], domainNetwork);
+            if (assetSource != undefined) {
+                const assetGroup = getAssetGroup(graphic.attributes[assetGroupField], assetSource);
+                if (assetGroup != undefined) {
+                    assetType = getAssetType(graphic.attributes[assetTypeField], assetGroup);
+                    if (assetType != undefined) {
+                        const fsUrl: string = (utilityNetwork as any).featureServiceUrl;
+                        const tempLayer = new FeatureLayer({
+                            url: `${fsUrl}/${layer.layerId}`,
+                        });
+                        const globalId: string = graphic.attributes[globalIdField];
+                        const query = {
+                            where: `${globalIdField}='${globalId}'`,
+                        };
+                        const count = await tempLayer.queryFeatureCount(query);
+                        if (count > 0) {
+                            return utilityNetwork;
+                        }
+
+                    }
+                }
+
+            }
+
+        }
+    }
+    return undefined;
+}
+
+export function isInTier(assetGroupCode: number, assetTypeCode: number, tier: Record<string, any>): boolean {
+    for (const source of tier.validDevices) {
+        if (source.assetGroupCode === assetGroupCode) {
+            for (const type of source.assetTypes) {
+                if (type.assetTypeCode === assetTypeCode) {
+                    return true;
+
+                }
+            }
+        }
+    }
+
+    for (const source of tier.validEdgeObjects) {
+        if (source.assetGroupCode === assetGroupCode) {
+            for (const type of source.assetTypes) {
+                if (type.assetTypeCode === assetTypeCode) {
+                    return true;
+
+                }
+            }
+        }
+    }
+
+    for (const source of tier.validJunctionObjectSubnetworkControllers) {
+        if (source.assetGroupCode === assetGroupCode) {
+            for (const type of source.assetTypes) {
+                if (type.assetTypeCode === assetTypeCode) {
+                    return true;
+
+                }
+            }
+        }
+    }
+    for (const source of tier.validJunctionObjects) {
+        if (source.assetGroupCode === assetGroupCode) {
+            for (const type of source.assetTypes) {
+                if (type.assetTypeCode === assetTypeCode) {
+                    return true;
+
+                }
+            }
+        }
+    }
+    for (const source of tier.validJunctions) {
+        if (source.assetGroupCode === assetGroupCode) {
+            for (const type of source.assetTypes) {
+                if (type.assetTypeCode === assetTypeCode) {
+                    return true;
+
+                }
+            }
+        }
+    }
+    for (const source of tier.validLines) {
+        if (source.assetGroupCode === assetGroupCode) {
+            for (const type of source.assetTypes) {
+                if (type.assetTypeCode === assetTypeCode) {
+                    return true;
+
+                }
+            }
+        }
+    }
+    for (const source of tier.validSubnetworkControllers) {
+        if (source.assetGroupCode === assetGroupCode) {
+            for (const type of source.assetTypes) {
+                if (type.assetTypeCode === assetTypeCode) {
+                    return true;
+
+                }
+            }
+        }
+    }
+    return false;
+}
+
+export const utils = (function UtilityNetworkUtils(): any {
+
+    return {
+        getUtilityNetworkFromGraphic: getUtilityNetworkFromGraphic,
+        getAssetDomain: getAssetDomain,
+        getAssetSource: getAssetSource,
+        getAssetGroup: getAssetGroup,
+        getAssetType: getAssetType,
+        getWebMapLayerByAsset: getWebMapLayerByAsset,
+        getLayerIdBySourceId: getLayerIdBySourceId,
+        getWebMapLayersByAssets: getWebMapLayersByAssets,
+        isInTier: isInTier,
+    }
+})();
