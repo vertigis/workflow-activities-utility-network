@@ -4,6 +4,6 @@ module.exports = {
         "<rootDir>/src"
     ],
     transformIgnorePatterns: [
-        "node_modules/(?!(@arcgis)/)"
+        "node_modules/(?!(@arcgis)/)/core/"
     ]
 };

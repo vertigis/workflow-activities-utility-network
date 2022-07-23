@@ -4,6 +4,7 @@ import Collection from "@arcgis/core/core/Collection";
 import { mockActivityContext } from "../__mocks__/ActivityContext";
 import { mockWebMap } from "../__mocks__/WebMap";
 import { mockMapView } from "../__mocks__/MapView";
+import WebMap from "@arcgis/core/WebMap";
 
 jest.mock("@arcgis/core/identity/IdentityManager", () => ({
     registerToken: jest.fn(),
@@ -15,6 +16,22 @@ jest.mock("@geocortex/workflow/runtime/activities/arcgis/MapProvider", () => {
     };
 });
 
+jest.mock("../utils", () => {
+    return {
+        getNetworkGraphic: jest.fn(),
+        getPercentageAlong: jest.fn(),
+        getUtilityNetworkFromGraphic: jest.fn(),
+        getAssetDomain: jest.fn(),
+        getAssetSource: jest.fn(),
+        getAssetGroup: jest.fn(),
+        getAssetType: jest.fn(),
+        getWebMapLayerByAsset: jest.fn(),
+        getLayerIdByAsset: jest.fn(),
+        getWebMapLayersByAssets: jest.fn(),
+        isInTier: jest.fn(),
+    };
+});
+
 const mockProvider = {
     create: () => {
         return {
@@ -23,6 +40,10 @@ const mockProvider = {
             view: mockMapView(),
         };
     },
+    load: jest.fn(),
+    map: {},
+    view: {},
+    UtilityNetworks: new Collection(),
 };
 
 jest.mock("@arcgis/core/networks/UtilityNetwork", () => {
@@ -42,6 +63,9 @@ jest.mock("@arcgis/core/core/Collection", () => {
             getItemAt: (i: number) => {
                 return mockUn;
             },
+            toArray: () => {
+                return [mockUn];
+            },
         };
     };
 });
@@ -52,7 +76,11 @@ mockColl.push(mockUn);
 jest.mock("@arcgis/core/WebMap", () => {
     return function (params: any) {
         return {
-            portalItem: params.portalItem,
+            portalItem: {
+                portal: {
+                    credential: {},
+                },
+            } as any,
             utilityNetworks: mockColl,
             load: () => {
                 //no op
@@ -61,9 +89,14 @@ jest.mock("@arcgis/core/WebMap", () => {
     };
 });
 
+const mockMap = new WebMap();
+mockMap.utilityNetworks = mockColl;
+
+mockProvider.map = mockMap;
 beforeEach(() => {
     jest.clearAllMocks();
 });
+console.log("****" + JSON.stringify(mockProvider));
 
 describe("InitializeUtilityNetwork", () => {
     describe("execute", () => {
@@ -77,6 +110,8 @@ describe("InitializeUtilityNetwork", () => {
             );
             expect(result).toStrictEqual({
                 result: mockUn,
+                utilityNetworks: [mockUn],
+                utils: undefined,
             });
         });
     });
