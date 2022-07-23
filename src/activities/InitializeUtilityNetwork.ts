@@ -116,7 +116,8 @@ export class InitializeUtilityNetwork implements IActivityHandler {
         for (let i = 0; i < utilityNetworks.length; i++) {
             await utilityNetworks.getItemAt(i).load();
         }
-
+        console.log(JSON.stringify(map));
+        console.log(JSON.stringify(mapProvider));
         return {
             result: utilityNetworks.getItemAt(0),
             utilityNetworks: utilityNetworks.toArray(),

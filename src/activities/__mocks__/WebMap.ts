@@ -19,14 +19,31 @@ jest.mock("@arcgis/core/networks/UtilityNetwork", () => {
         // no op;
     };
 });
-const unColl = new Collection<UtilityNetwork>();
+export const mockUn = new UtilityNetwork();
+jest.mock("@arcgis/core/core/Collection", () => {
+    return function () {
+        return {
+            push: (utilityNetwork: UtilityNetwork) => {
+                //no op
+            },
+            getItemAt: (i: number) => {
+                return mockUn;
+            },
+            toArray: () => {
+                return [mockUn];
+            },
+        };
+    };
+});
+
+export const mockColl = new Collection();
 
 export function mockWebMap(): WebMap {
     const webMap: Partial<WebMap> = {
         load: () => {
             return Promise.resolve({} as WebMap);
         },
-        utilityNetworks: unColl,
+        utilityNetworks: mockColl,
         allLayers: new Collection<Layer>(),
         portalItem: {
             portal: {
