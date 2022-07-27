@@ -87,10 +87,10 @@ export function createNetworkGraphic(
         layer: layer,
     });
     let label;
-    
+
     const labelDetailField: string = getKey(attributes, "assetid");
     let labelDetail: string = attributes[labelDetailField];
-    if(labelDetail == undefined || labelDetail == null) {
+    if (labelDetail == undefined || labelDetail == null) {
         labelDetail = attributes[objectIdField].toString();
     }
     //Get the coded domain value for the label.
@@ -107,7 +107,7 @@ export function createNetworkGraphic(
         label = `${layer.title} : ${labelDetail}`;
     }
 
-    const domainNetwork = getAssetDomain( graphic.attributes[assetGroupField], graphic.attributes[assetTypeField], utilityNetwork);
+    const domainNetwork = getAssetDomain(graphic.attributes[assetGroupField], graphic.attributes[assetTypeField], utilityNetwork);
     if (domainNetwork != undefined) {
         const assetSource = getAssetSource(graphic.attributes[assetGroupField], graphic.attributes[assetTypeField], domainNetwork);
         if (assetSource != undefined) {
@@ -338,7 +338,7 @@ export function getAssetGroup(assetGroupCode: number, assetSource: Record<string
 
     for (const assetGroup of assetSource.assetGroups) {
         if (assetGroup != undefined && assetGroup.assetGroupCode == assetGroupCode) {
-                return assetGroup;
+            return assetGroup;
         }
     }
     return undefined;
@@ -459,20 +459,22 @@ export async function getWebMapLayersByAssets(assets: any[], map: WebMap, utilit
                 if (typeSet == undefined) {
                     const layer = await getWebMapLayerByAsset(asset, layerId, map, utilityNetwork);
                     if (layer != undefined) {
-                        typeSet = { layerId: layer.layerId };
+                        const layerRef = layerSet[layer.id];
+                        if (layerRef == undefined) {
+                            layerSet[layer.id] = { id: layer.id, objectIds: [], layer: layer };
+                        }
+                        typeSet = layerSet[layer.id];
                         groupSet[asset.assetTypeCode] = typeSet;
-                        layerSet[layer.layerId] = { objectIds: [asset.objectId], layer: layer };
-                        
                     }
-                } else {
-                    layerSet[typeSet["layerId"]].objectIds.push(asset.objectId);
-
                 }
+                layerSet[typeSet.id].objectIds.push(asset.objectId);
+
 
             }
         }
-
     }
+
+
     return layerSet;
 }
 
@@ -484,32 +486,31 @@ export async function getWebMapLayerByAsset(asset: Record<string, any>, layerId:
         const assetSource = getAssetSource(asset.assetGroupCode, asset.assetTypeCode, domainNetwork);
         if (assetSource != undefined) {
             const layers = map.layers
-            if (layers.length > 0) {
-                for (const layer of layers) {
-                    let featureLayer;
-                    if (layer.type === "feature") {
-                        featureLayer = layer as FeatureLayer;
-                    } else if (layer.type === "group") {
-                        featureLayer = (layer as GroupLayer).layers.find(x => x.type == "feature" && (x as FeatureLayer).layerId == layerId);
-                    }
-                    if (featureLayer != undefined && featureLayer != null) {
-                        const globalIdField = featureLayer.fields.find(x => x.name.toUpperCase() === "GLOBALID");
-                        if (globalIdField != undefined && globalIdField != null) {
-                            const fieldName: string = globalIdField.name;
-                            const assetGlobalId: string = asset.globalId;
-                            const query = new Query();
-                            query.where = `${fieldName}='${assetGlobalId}'`;
-                            query.returnGeometry = false;
-                            const features = await featureLayer.queryFeatures(query);
-                            if (features.features.length > 0) {
-                                return featureLayer;
-                            }
+            for (const layer of layers) {
+                let featureLayers: FeatureLayer[] = [];
+                if (layer.type === "feature") {
+                    featureLayers.push(layer as FeatureLayer);
+                } else if (layer.type === "group") {
+                    const subFeatureLayers = (layer as GroupLayer).layers.filter(x => x.type == "feature" && (x as FeatureLayer).layerId == layerId).toArray() as FeatureLayer[];
+                    featureLayers = subFeatureLayers;
+                }
+
+                for (const featureLayer of featureLayers) {
+
+                    const globalIdField = featureLayer.fields.find(x => x.name.toUpperCase() === "GLOBALID");
+                    if (globalIdField != undefined && globalIdField != null) {
+                        const fieldName: string = globalIdField.name;
+                        const assetGlobalId: string = asset.globalId;
+                        const query = new Query();
+                        query.where = `${fieldName}='${assetGlobalId}'`;
+                        query.returnGeometry = false;
+                        const features = await featureLayer.queryFeatures(query);
+                        if (features.features.length > 0) {
+                            return featureLayer;
                         }
                     }
                 }
-
             }
-
         }
         return undefined;
     }
