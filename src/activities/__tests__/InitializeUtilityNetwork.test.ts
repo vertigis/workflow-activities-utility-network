@@ -16,22 +16,6 @@ jest.mock("@geocortex/workflow/runtime/activities/arcgis/MapProvider", () => {
     };
 });
 
-jest.mock("../utils", () => {
-    return {
-        getNetworkGraphic: jest.fn(),
-        getPercentageAlong: jest.fn(),
-        getUtilityNetworkFromGraphic: jest.fn(),
-        getAssetDomain: jest.fn(),
-        getAssetSource: jest.fn(),
-        getAssetGroup: jest.fn(),
-        getAssetType: jest.fn(),
-        getWebMapLayerByAsset: jest.fn(),
-        getLayerIdByAsset: jest.fn(),
-        getWebMapLayersByAssets: jest.fn(),
-        isInTier: jest.fn(),
-    };
-});
-
 const mockProvider = {
     create: () => {
         return {
@@ -96,7 +80,6 @@ mockProvider.map = mockMap;
 beforeEach(() => {
     jest.clearAllMocks();
 });
-console.log("****" + JSON.stringify(mockProvider));
 
 describe("InitializeUtilityNetwork", () => {
     describe("execute", () => {
@@ -111,7 +94,6 @@ describe("InitializeUtilityNetwork", () => {
             expect(result).toStrictEqual({
                 result: mockUn,
                 utilityNetworks: [mockUn],
-                utils: undefined,
             });
         });
     });

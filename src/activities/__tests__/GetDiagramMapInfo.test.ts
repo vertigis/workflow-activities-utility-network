@@ -1,58 +1,51 @@
-import GetDiagramMapInfoActivity from "../templates/GetDiagramMapInfo";
-import { mockActivityContext } from "../__mocks__/ActivityContext";
-import {
-    DefaultMockChannelProviderType,
-    getMockData,
-    setMockData,
-} from "../__mocks__/ChannelProvider";
-const mockProvider = DefaultMockChannelProviderType;
-const context = mockActivityContext();
-beforeEach(() => {
-    jest.clearAllMocks();
+import GetDiagramMapInfoActivity from "../diagrams/GetDiagramMapInfo";
+jest.mock("@arcgis/core/request", () => {
+    return function (url, options) {
+        return new Promise((resolve) => {
+            resolve({ data: response });
+        });
+    };
 });
-
+const response = {
+    dynamicLayers: [
+        {
+            id: 101,
+            source: {
+                type: "workspaceLayer",
+                workspaceId: "Diagram",
+                layerId: "0_ElectricDistributionAssembly",
+            },
+            definitionExpression:
+                "MAP.UN_6_Junctions.DIAGRAMGUID = '{FDA323D6-4868-4375-9773-06AFF80B2F02}'",
+        },
+    ],
+};
 describe("FindDiagraminfos", () => {
     it("throws if service url input is missing", async () => {
         const activity = new GetDiagramMapInfoActivity();
         await expect(
-            activity.execute(
-                {
-                    serviceUrl: undefined as any,
-                    diagramName: "name",
-                },
-                context,
-                DefaultMockChannelProviderType as any
-            )
+            activity.execute({
+                serviceUrl: undefined as any,
+                diagramName: "name",
+            })
         ).rejects.toThrow("serviceUrl is required");
     });
     it("throws if diagramName input is missing", async () => {
         const activity = new GetDiagramMapInfoActivity();
         await expect(
-            activity.execute(
-                {
-                    serviceUrl: "https://server/url",
-                    diagramName: undefined as any,
-                },
-                context,
-                DefaultMockChannelProviderType as any
-            )
+            activity.execute({
+                serviceUrl: "https://server/url",
+                diagramName: undefined as any,
+            })
         ).rejects.toThrow("diagramName is required");
     });
     it("calls the service with the path and data", async () => {
         const activity = new GetDiagramMapInfoActivity();
-        setMockData({
-            result: {
-                tag: "#ElectricDistribution#RMT001#Medium Voltage Radial",
-            },
+
+        const result = await activity.execute({
+            serviceUrl: "https://server/url",
+            diagramName: "name",
         });
-        const result = await activity.execute(
-            {
-                serviceUrl: "https://server/url",
-                diagramName: "name",
-            },
-            context,
-            DefaultMockChannelProviderType
-        );
-        expect(result.result).toStrictEqual(getMockData());
+        expect(result.result).toStrictEqual(response);
     });
 });

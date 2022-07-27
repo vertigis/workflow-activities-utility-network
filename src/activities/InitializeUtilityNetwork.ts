@@ -8,10 +8,7 @@ import IdentityManager from "@arcgis/core/identity/IdentityManager";
 import Credential from "@arcgis/core/identity/Credential";
 import Network from "@arcgis/core/networks/Network";
 import { MapProvider } from "@geocortex/workflow/runtime/activities/arcgis/MapProvider";
-import { utils } from "./utils";
 import { activate } from "@geocortex/workflow/runtime/Hooks";
-import Graphic from "@arcgis/core/Graphic";
-import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 
 /** An interface that defines the outputs of the activity. */
 export interface InitializeUtilityNetworkOutputs {
@@ -20,44 +17,6 @@ export interface InitializeUtilityNetworkOutputs {
      */
     result: UtilityNetwork | undefined;
     utilityNetworks: UtilityNetwork[] | undefined;
-    utils: {
-        getUtilityNetworkFromGraphic: (
-            utilityNetworks: UtilityNetwork[],
-            graphic: Graphic
-        ) => Promise<UtilityNetwork>;
-        getAssetDomain: (
-            assetGroupCode: number,
-            assetTypeCode: number,
-            utilityNetwork: UtilityNetwork
-        ) => any;
-        getAssetSource: (
-            assetGroupCode: number,
-            assetTypeCode: number,
-            domainNetwork: any
-        ) => any;
-        getAssetGroup: (assetGroupCode: number, assetSource: any) => any;
-        getAssetType: (assetTypeCode: number, assetGroup: any) => any;
-        getWebMapLayerByAsset: (
-            asset: any,
-            layerId: number,
-            map: WebMap,
-            utilityNetwork: UtilityNetwork
-        ) => Promise<FeatureLayer>;
-        getLayerIdByAsset: (
-            assetSourceId: number,
-            utilityNetwork: UtilityNetwork
-        ) => number;
-        getWebMapLayersByAssets: (
-            assets: any[],
-            map: WebMap,
-            utilityNetwork: UtilityNetwork
-        ) => Promise<any>;
-        isInTier: (
-            assetGroupCode: number,
-            assetTypeCode: number,
-            tier: any
-        ) => boolean;
-    };
 }
 
 /**
@@ -116,12 +75,9 @@ export class InitializeUtilityNetwork implements IActivityHandler {
         for (let i = 0; i < utilityNetworks.length; i++) {
             await utilityNetworks.getItemAt(i).load();
         }
-        console.log(JSON.stringify(map));
-        console.log(JSON.stringify(mapProvider));
         return {
             result: utilityNetworks.getItemAt(0),
             utilityNetworks: utilityNetworks.toArray(),
-            utils: utils,
         };
     }
     getOauthInfo(credential: Credential, server?: string): any {

@@ -1,9 +1,5 @@
-import type {
-    IActivityContext,
-    IActivityHandler,
-} from "@geocortex/workflow/runtime/IActivityHandler";
-import { ChannelProvider } from "@geocortex/workflow/runtime/activities/core/ChannelProvider";
-import { activate } from "@geocortex/workflow/runtime/Hooks";
+import type { IActivityHandler } from "@geocortex/workflow/runtime/IActivityHandler";
+import esriRequest from "@arcgis/core/request";
 
 /** An interface that defines the inputs of the activity. */
 interface GetDiagramDynamicLayerInputs {
@@ -59,15 +55,12 @@ interface GetDiagramDynamicLayerOutputs {
  * @clientOnly
  * @unsupportedApps GMV, GVH, WAB
  */
-@activate(ChannelProvider)
 export default class GetDiagramDynamicLayerActivity
     implements IActivityHandler
 {
     /** Perform the execution logic of the activity. */
     async execute(
-        inputs: GetDiagramDynamicLayerInputs,
-        context: IActivityContext,
-        type: typeof ChannelProvider
+        inputs: GetDiagramDynamicLayerInputs
     ): Promise<GetDiagramDynamicLayerOutputs> {
         const { serviceUrl, name, ...other } = inputs;
 
@@ -80,28 +73,20 @@ export default class GetDiagramDynamicLayerActivity
 
         // Remove trailing slashes
         const normalizedUrl = serviceUrl.replace(/\/*$/, "");
+        const url = `${normalizedUrl}//diagrams/${name}/dynamicLayers`;
 
-        const channel = type.create(undefined, "arcgis");
-        channel.request.url = `${normalizedUrl}//diagrams/${name}/dynamicLayers`;
-        channel.request.method = "POST";
-        channel.request.json = {
+        const query = {
             f: "json",
             ...other,
         };
-
-        await channel.send();
-
-        context.cancellationToken.finally(function () {
-            channel.cancel();
-        });
-
-        const responseData =
-            channel.response.payload &&
-            (channel.getResponseData(channel.response.payload) as any);
-        const dynamicLayers =
-            responseData?.dynamicLayers ||
-            responseData?.data?.dynamicLayers ||
-            [];
+        const options: any = {
+            method: "post",
+            query: query,
+            responseType: "json",
+        };
+        const response = await esriRequest(url, options);
+        const responseData = response.data;
+        const dynamicLayers = responseData?.dynamicLayers || [];
 
         return {
             dynamicLayers,

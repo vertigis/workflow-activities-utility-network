@@ -1,9 +1,5 @@
-import type {
-    IActivityContext,
-    IActivityHandler,
-} from "@geocortex/workflow/runtime/IActivityHandler";
-import { ChannelProvider } from "@geocortex/workflow/runtime/activities/core/ChannelProvider";
-import { activate } from "@geocortex/workflow/runtime/Hooks";
+import type { IActivityHandler } from "@geocortex/workflow/runtime/IActivityHandler";
+import esriRequest from "@arcgis/core/request";
 
 /** An interface that defines the inputs of the activity. */
 interface GetDiagramMapInfoInputs {
@@ -49,13 +45,10 @@ interface GetDiagramMapInfoOutputs {
  * @clientOnly
  * @unsupportedApps GMV, GVH, WAB
  */
-@activate(ChannelProvider)
 export default class GetDiagramMapInfoActivity implements IActivityHandler {
     /** Perform the execution logic of the activity. */
     async execute(
-        inputs: GetDiagramMapInfoInputs,
-        context: IActivityContext,
-        type: typeof ChannelProvider
+        inputs: GetDiagramMapInfoInputs
     ): Promise<GetDiagramMapInfoOutputs> {
         const { serviceUrl, diagramName, ...other } = inputs;
         if (!serviceUrl) {
@@ -67,25 +60,20 @@ export default class GetDiagramMapInfoActivity implements IActivityHandler {
 
         // Remove trailing slashes
         const normalizedUrl = serviceUrl.replace(/\/*$/, "");
+        const url = `${normalizedUrl}\\diagrams\\${diagramName}\\map`;
 
-        const channel = type.create(undefined, "arcgis");
-        channel.request.url = `${normalizedUrl}\\diagrams\\${diagramName}\\map`;
-        channel.request.method = "POST";
-        channel.request.json = {
+        const query = {
             f: "json",
             ...other,
         };
-
-        await channel.send();
-
-        context.cancellationToken.finally(function () {
-            channel.cancel();
-        });
-
-        const responseData =
-            channel.response.payload &&
-            (channel.getResponseData(channel.response.payload) as any);
-        const result = responseData || responseData?.data || [];
+        const options: any = {
+            method: "post",
+            query: query,
+            responseType: "json",
+        };
+        const response = await esriRequest(url, options);
+        const responseData = response.data;
+        const result = responseData || [];
 
         return {
             result,

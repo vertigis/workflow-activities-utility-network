@@ -642,18 +642,3 @@ export function isInTier(assetGroupCode: number, assetTypeCode: number, tier: Re
     }
     return false;
 }
-
-export const utils = (function UtilityNetworkUtils(): any {
-
-    return {
-        getUtilityNetworkFromGraphic: getUtilityNetworkFromGraphic,
-        getAssetDomain: getAssetDomain,
-        getAssetSource: getAssetSource,
-        getAssetGroup: getAssetGroup,
-        getAssetType: getAssetType,
-        getWebMapLayerByAsset: getWebMapLayerByAsset,
-        getLayerIdBySourceId: getLayerIdBySourceId,
-        getWebMapLayersByAssets: getWebMapLayersByAssets,
-        isInTier: isInTier,
-    }
-})();
