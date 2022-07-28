@@ -5,11 +5,14 @@ import {
     getAssetGroup,
     getAssetSource,
     getAssetType,
+    getAssetUtilityNetwork,
     getLayerIdBySourceId,
     getUtilityNetworkFromGraphic,
     getWebMapLayerByAsset,
     getWebMapLayersByAssets,
     isInTier,
+    getTerminalIds,
+    getUtilityNetworkAttributeFieldByType,
 } from "../utils";
 
 jest.mock("../utils", () => {
@@ -23,6 +26,9 @@ jest.mock("../utils", () => {
         getLayerIdBySourceId: jest.fn(),
         getWebMapLayersByAssets: jest.fn(),
         isInTier: jest.fn(),
+        getAssetUtilityNetwork: jest.fn(),
+        getTerminalIds: jest.fn(),
+        getUtilityNetworkAttributeFieldByType: jest.fn(),
     };
 });
 
@@ -79,6 +85,28 @@ describe("GetUtilityNeworkHelper", () => {
                         getWebMapLayersByAssets(assets, map, utilityNetwork),
                     isInTier: (assetGroupCode, assetTypeCode, tier) =>
                         isInTier(assetGroupCode, assetTypeCode, tier),
+                    getAssetUtilityNetwork: (
+                        assetGroupCode,
+                        assetTypeCode,
+                        utilityNetworks
+                    ) =>
+                        getAssetUtilityNetwork(
+                            assetGroupCode,
+                            assetTypeCode,
+                            utilityNetworks
+                        ),
+                    getTerminalIds: (graphic, utilityNetwork) =>
+                        getTerminalIds(graphic, utilityNetwork),
+                    getUtilityNetworkAttributeFieldByType: (
+                        type,
+                        layerId,
+                        utilityNetwork
+                    ) =>
+                        getUtilityNetworkAttributeFieldByType(
+                            type,
+                            layerId,
+                            utilityNetwork
+                        ),
                 };
             })();
             const activity = new GetUtilityNetworkHelper();

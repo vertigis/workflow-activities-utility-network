@@ -13,6 +13,9 @@ import {
     getLayerIdBySourceId,
     getWebMapLayersByAssets,
     isInTier,
+    getAssetUtilityNetwork,
+    getTerminalIds,
+    getUtilityNetworkAttributeFieldByType,
 } from "./utils";
 
 /** An interface that defines the outputs of the activity. */
@@ -57,6 +60,17 @@ interface GetUtilityNetworkHelperOutputs {
             assetTypeCode: number,
             tier: any
         ) => boolean;
+        getAssetUtilityNetwork: (
+            assetGroupCode,
+            assetTypeCode,
+            utilityNetworks
+        ) => any;
+        getTerminalIds: (graphic, utilityNetwork) => any;
+        getUtilityNetworkAttributeFieldByType: (
+            type,
+            layerId,
+            utilityNetwork
+        ) => string;
     };
 }
 
@@ -106,6 +120,28 @@ export default class GetUtilityNetworkHelperActivity
                     getWebMapLayersByAssets(assets, map, utilityNetwork),
                 isInTier: (assetGroupCode, assetTypeCode, tier) =>
                     isInTier(assetGroupCode, assetTypeCode, tier),
+                getAssetUtilityNetwork: (
+                    assetGroupCode,
+                    assetTypeCode,
+                    utilityNetworks
+                ) =>
+                    getAssetUtilityNetwork(
+                        assetGroupCode,
+                        assetTypeCode,
+                        utilityNetworks
+                    ),
+                getTerminalIds: (graphic, utilityNetwork) =>
+                    getTerminalIds(graphic, utilityNetwork),
+                getUtilityNetworkAttributeFieldByType: (
+                    type,
+                    layerId,
+                    utilityNetwork
+                ) =>
+                    getUtilityNetworkAttributeFieldByType(
+                        type,
+                        layerId,
+                        utilityNetwork
+                    ),
             };
         })();
         return {

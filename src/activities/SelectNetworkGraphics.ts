@@ -12,6 +12,7 @@ import {
     createNetworkGraphic,
     getTerminalIds,
     getPolylineIntersection,
+    getUtilityNetworkAttributeFieldByType,
 } from "./utils";
 import WebMap from "@arcgis/core/WebMap";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
@@ -123,12 +124,14 @@ export class SelectNetworkGraphics implements IActivityHandler {
                 outFields: ["*"],
                 outSpatialReference: { wkid: point.spatialReference.wkid },
             });
+            const assetTypeField = getUtilityNetworkAttributeFieldByType("esriUNAUTAssetType", (x.graphic.layer as FeatureLayer).layerId, utilityNetwork)
+            const assetGroupField = getUtilityNetworkAttributeFieldByType("esriUNAUTAssetGroup", (x.graphic.layer as FeatureLayer).layerId, utilityNetwork)
+
             if (
                 result.features.length > 0 &&
                 getValue(result.features[0].attributes, "globalid") !=
-                undefined &&
-                getValue(result.features[0].attributes, "assettype") !=
-                undefined
+                undefined && assetGroupField != undefined &&
+                assetTypeField != undefined
             ) {
                 result.features[0].layer = x.graphic.layer;
 
