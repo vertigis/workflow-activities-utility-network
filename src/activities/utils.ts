@@ -411,49 +411,63 @@ export function getTerminalConfiguration(terminalConfigurationId: number, utilit
 
 export async function getWebMapLayersByAssets(assets: any[], map: WebMap, utilityNetwork: UtilityNetwork): Promise<any> {
     const layerSet = {};
-    const domainNetworkSet = {};
+    const domainNetworkSet = groupAssets(assets, utilityNetwork);
+    const domainKeys = Object.keys(domainNetworkSet);
 
-    for (const asset of assets) {
-        const layerId = getLayerIdBySourceId(asset.networkSourceId, utilityNetwork);
-        if (layerId != undefined) {
-            const domainNetwork = getAssetDomain(asset.assetGroupCode, asset.assetTypeCode, utilityNetwork);
-            if (domainNetwork != undefined) {
-
-
-                let domainSet = domainNetworkSet[domainNetwork.domainNetworkId];
-                if (domainSet == undefined) {
-                    domainSet = {};
-                    domainNetworkSet[domainNetwork.domainNetworkId] = domainSet;
-                }
-                let assetSet = domainSet[asset.networkSourceId];
-                if (assetSet == undefined) {
-                    assetSet = {};
-                    domainSet[asset.networkSourceId] = assetSet;
-                }
-                let groupSet = assetSet[asset.assetGroupCode];
-                if (groupSet == undefined) {
-                    groupSet = {};
-                    assetSet[asset.assetGroupCode] = groupSet;
-                }
-                let typeSet = groupSet[asset.assetTypeCode];
-                if (typeSet == undefined) {
-                    const layer = await getWebMapLayerByAsset(asset, layerId, map, utilityNetwork);
-                    if (layer != undefined) {
-                        const layerRef = layerSet[layer.id];
-                        if (layerRef == undefined) {
-                            layerSet[layer.id] = { id: layer.id, objectIds: [], layer: layer };
+    for (const domainKey of domainKeys) {
+        const sourceKeys = Object.keys(domainNetworkSet[domainKey]);
+        for (const sourceKey of sourceKeys) {
+            const groupKeys = Object.keys(domainNetworkSet[domainKey][sourceKey]);
+            for (const groupKey of groupKeys) {
+                const typeKeys = Object.keys(domainNetworkSet[domainKey][sourceKey][groupKey]);
+                for (const typeKey of typeKeys) {
+                    const type = domainNetworkSet[domainKey][sourceKey][groupKey][typeKey];
+                    const layerId = getLayerIdBySourceId(parseInt(sourceKey), utilityNetwork);
+                    if (layerId != undefined) {
+                        const layer = await getWebMapLayerByAsset(type.assets[0], layerId, map, utilityNetwork);
+                        if (layer != undefined) {
+                            layerSet[layer.id] = { id: layer.id, objectIds: type.assets.map(x => x.objectId), layer: layer };
                         }
-                        typeSet = layerSet[layer.id];
-                        groupSet[asset.assetTypeCode] = typeSet;
                     }
                 }
-                layerSet[typeSet.id].objectIds.push(asset.objectId);
+            }
+        }
+        return layerSet;
+    }
+}
+
+export function groupAssets(assets: Record<string, any>[], utilityNetwork: UtilityNetwork): any {
+    const domainNetworkSet = {};
+    for (const asset of assets) {
+        const domainNetwork = getAssetDomain(asset.assetGroupCode, asset.assetTypeCode, utilityNetwork);
+        if (domainNetwork != undefined) {
+            let domainSet = domainNetworkSet[domainNetwork.domainNetworkId];
+            if (domainSet == undefined) {
+                domainSet = {};
+                domainNetworkSet[domainNetwork.domainNetworkId] = domainSet;
+            }
+            let assetSet = domainSet[asset.networkSourceId];
+            if (assetSet == undefined) {
+                assetSet = {};
+                domainSet[asset.networkSourceId] = assetSet;
+            }
+            let groupSet = assetSet[asset.assetGroupCode];
+            if (groupSet == undefined) {
+                groupSet = {};
+                assetSet[asset.assetGroupCode] = groupSet;
+            }
+            let typeSet = groupSet[asset.assetTypeCode];
+
+            if (typeSet == undefined) {
+                typeSet = { assets: [asset] };
+                groupSet[asset.assetTypeCode] = typeSet;
+            } else {
+                typeSet.assets.push(asset);
             }
         }
     }
 
-
-    return layerSet;
+    return domainNetworkSet;
 }
 
 export async function getWebMapLayerByAsset(asset: Record<string, any>, layerId: number, map: WebMap, utilityNetwork: UtilityNetwork): Promise<FeatureLayer | undefined> {
@@ -616,7 +630,7 @@ export function isInTier(assetGroupCode: number, assetTypeCode: number, tier: Re
 export function getUtilityNetworkAttributeFieldByType(type: string, layerId: number, utilityNetwork: UtilityNetwork): string | undefined {
     let result;
     const networkAttributes = (utilityNetwork as any).dataElement.networkAttributes;
-    const networkAttribute = networkAttributes.find(att => att.usageType  == type);
+    const networkAttribute = networkAttributes.find(att => att.usageType == type);
     if (networkAttribute != undefined) {
         const assignment = networkAttribute.assignments.find(x => x.layerId == layerId);
         if (assignment != undefined) {
