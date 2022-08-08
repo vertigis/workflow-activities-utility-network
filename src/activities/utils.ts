@@ -20,6 +20,7 @@ import TraceLocation from "@arcgis/core/rest/networks/support/TraceLocation";
 import Polygon from "@arcgis/core/geometry/Polygon";
 import GroupLayer from "@arcgis/core/layers/GroupLayer";
 import Query from "@arcgis/core/tasks/support/Query";
+import LayerSearchSource from "esri/widgets/Search/LayerSearchSource";
 
 
 export interface NetworkGraphic {
@@ -92,53 +93,54 @@ export function createNetworkGraphic(
         } else {
             label = `${layer.title} : ${labelDetail}`;
         }
+        const assetSource = getAssetSourceByLayerId(layer.layerId, utilityNetwork);
+        if (assetSource != undefined) {
+            const domainNetwork = getAssetDomain(assetSource.sourceId, utilityNetwork);
+            if (domainNetwork != undefined) {
+                if (assetSource != undefined) {
+                    const networkGraphic = {
+                        graphic: graphic,
+                        originGeometry: originGeometry,
+                        globalId: globalId,
+                        layer: layer,
+                        layerId: layer.layerId,
+                        utilityNetwork: utilityNetwork,
+                        domainId: domainNetwork.domainNetworkId,
+                        sourceCode: assetSource.sourceId,
+                        assetTypeCode: graphic.attributes[assetTypeField] as number,
+                        assetGroupCode: graphic.attributes[assetGroupField] as number,
+                        label: label,
+                    } as NetworkGraphic;
 
-        const domainNetwork = getAssetDomain(graphic.attributes[assetGroupField], graphic.attributes[assetTypeField], utilityNetwork);
-        if (domainNetwork != undefined) {
-            const assetSource = getAssetSource(graphic.attributes[assetGroupField], graphic.attributes[assetTypeField], domainNetwork);
-            if (assetSource != undefined) {
-                const networkGraphic = {
-                    graphic: graphic,
-                    originGeometry: originGeometry,
-                    globalId: globalId,
-                    layer: layer,
-                    layerId: layer.layerId,
-                    utilityNetwork: utilityNetwork,
-                    domainId: domainNetwork.domainNetworkId,
-                    sourceCode: assetSource.sourceId,
-                    assetTypeCode: graphic.attributes[assetTypeField] as number,
-                    assetGroupCode: graphic.attributes[assetGroupField] as number,
-                    label: label,
-                } as NetworkGraphic;
+                    if (terminalIds) {
+                        const traceLocations: TraceLocation[] = [];
+                        for (let i = 0; i < terminalIds.length; i++) {
 
-                if (terminalIds) {
-                    const traceLocations: TraceLocation[] = [];
-                    for (let i = 0; i < terminalIds.length; i++) {
+                            const terminalId: number = terminalIds[i];
+                            const traceLocation = new TraceLocation({
+                                globalId,
+                                isFilterBarrier,
+                                percentAlong,
+                                terminalId,
+                                type,
 
-                        const terminalId: number = terminalIds[i];
-                        const traceLocation = new TraceLocation({
-                            globalId,
-                            isFilterBarrier,
-                            percentAlong,
-                            terminalId,
-                            type,
+                            });
+                            traceLocations.push(traceLocation);
+                        }
+                        networkGraphic.traceLocations = traceLocations;
+                    } else {
+                        networkGraphic.traceLocations = [
+                            new TraceLocation({
+                                globalId,
+                                isFilterBarrier,
+                                percentAlong,
+                                type,
+                            })
+                        ]
 
-                        });
-                        traceLocations.push(traceLocation);
                     }
-                    networkGraphic.traceLocations = traceLocations;
-                } else {
-                    networkGraphic.traceLocations = [
-                        new TraceLocation({
-                            globalId,
-                            isFilterBarrier,
-                            percentAlong,
-                            type,
-                        })
-                    ]
-
+                    return networkGraphic;
                 }
-                return networkGraphic;
             }
         }
     }
@@ -152,23 +154,19 @@ export function getTerminalIds(graphic: Graphic, utilityNetwork: UtilityNetwork)
     const assetGroupField = getUtilityNetworkAttributeFieldByType("esriUNAUTAssetGroup", (graphic.layer as FeatureLayer).layerId, utilityNetwork)
     let assetType;
     if (assetTypeField != undefined && assetGroupField != undefined) {
-        const domainNetwork = getAssetDomain(graphic.attributes[assetGroupField], graphic.attributes[assetTypeField], utilityNetwork);
-        if (domainNetwork != undefined) {
-            const assetSource = getAssetSource(graphic.attributes[assetGroupField], graphic.attributes[assetTypeField], domainNetwork);
-            if (assetSource != undefined) {
-                const assetGroup = getAssetGroup(graphic.attributes[assetGroupField], assetSource);
-                if (assetGroup != undefined) {
-                    assetType = getAssetType(graphic.attributes[assetTypeField], assetGroup);
-                }
-
+        const assetSource = getAssetSourceByLayerId((graphic.layer as FeatureLayer).layerId, utilityNetwork);
+        if (assetSource != undefined) {
+            const assetGroup = getAssetGroup(graphic.attributes[assetGroupField], assetSource);
+            if (assetGroup != undefined) {
+                assetType = getAssetType(graphic.attributes[assetTypeField], assetGroup);
             }
-        }
 
-        if (assetType) {
-            const terminalConfigurations = getTerminalConfiguration(assetType.terminalConfigurationId, utilityNetwork);
-            for (const terminal of terminalConfigurations.terminals) {
-                terminalIds.push(terminal.terminalId);
-            };
+            if (assetType) {
+                const terminalConfigurations = getTerminalConfiguration(assetType.terminalConfigurationId, utilityNetwork);
+                for (const terminal of terminalConfigurations.terminals) {
+                    terminalIds.push(terminal.terminalId);
+                };
+            }
         }
     }
     return terminalIds;
@@ -250,36 +248,25 @@ export async function getPercentageAlong(
     return percentage;
 }
 
-export function getAssetUtilityNetwork(assetGroupCode: number, assetTypeCode: number, utilityNetworks: UtilityNetwork[]): UtilityNetwork | undefined {
-    for (const utilityNetwork of utilityNetworks) {
-        const domainNetwork = getAssetDomain(assetGroupCode, assetTypeCode, utilityNetwork);
-        if (domainNetwork != undefined) {
-            const assetSource = getAssetSource(assetGroupCode, assetTypeCode, domainNetwork);
-            if (assetSource != undefined) {
-                const assetGroup = getAssetGroup(assetGroupCode, assetSource);
-                if (assetGroup != undefined) {
-                    const assetType = getAssetType(assetTypeCode, assetGroup);
-                    if (assetType != undefined) {
-                        return utilityNetwork;
-                    }
-                }
-            }
-        }
-    }
-    return undefined;
-}
 
-
-export function getAssetDomain(assetGroupCode: number, assetTypeCode: number, utilityNetwork: UtilityNetwork): any | undefined {
+export function getAssetSourceByLayerId(layerId: number, utilityNetwork: UtilityNetwork): any | undefined {
     for (const domainNetwork of (utilityNetwork as any).dataElement.domainNetworks) {
         if (domainNetwork != undefined) {
-            const assetSource = getAssetSource(assetGroupCode, assetTypeCode, domainNetwork);
-            if (assetSource != undefined) {
-                const assetGroup = getAssetGroup(assetGroupCode, assetSource);
-                if (assetGroup != undefined) {
-                    const assetType = getAssetType(assetTypeCode, assetGroup);
-                    if (assetType != undefined) {
-                        return domainNetwork;
+            for (const assetSource of domainNetwork.edgeSources) {
+                if (assetSource != undefined) {
+                    if (assetSource.layerId == layerId) {
+                        return assetSource;
+                    }
+
+                }
+            }
+            for (const assetSource of domainNetwork.junctionSources) {
+                if (assetSource != undefined) {
+                    if (assetSource != undefined) {
+                        if (assetSource.layerId == layerId) {
+                            return assetSource;
+                        }
+
                     }
                 }
             }
@@ -288,27 +275,33 @@ export function getAssetDomain(assetGroupCode: number, assetTypeCode: number, ut
     return undefined;
 }
 
-export function getAssetSource(assetGroupCode: number, assetTypeCode: number, domainNetwork: Record<string, any>): any | undefined {
-    for (const assetSource of domainNetwork.edgeSources) {
-        if (assetSource != undefined) {
-            const assetGroup = getAssetGroup(assetGroupCode, assetSource);
-            if (assetGroup != undefined) {
-                const assetType = getAssetType(assetTypeCode, assetGroup);
-                if (assetType != undefined) {
-                    return assetSource;
-                }
+
+export function getAssetDomain(assetSourceCode: number, utilityNetwork: UtilityNetwork): any | undefined {
+    for (const domainNetwork of (utilityNetwork as any).dataElement.domainNetworks) {
+        if (domainNetwork != undefined) {
+            const assetSource = getAssetSource(assetSourceCode, domainNetwork);
+            if (assetSource != undefined) {
+
+                return domainNetwork;
+
             }
+        }
+    }
+    return undefined;
+}
+
+export function getAssetSource(assetSourceCode: number, domainNetwork: Record<string, any>): any | undefined {
+    for (const assetSource of domainNetwork.edgeSources) {
+        if (assetSource != undefined && assetSource.sourceId == assetSourceCode) {
+
+            return assetSource;
         }
     }
     for (const assetSource of domainNetwork.junctionSources) {
-        if (assetSource != undefined) {
-            const assetGroup = getAssetGroup(assetGroupCode, assetSource);
-            if (assetGroup != undefined) {
-                const assetType = getAssetType(assetTypeCode, assetGroup);
-                if (assetType != undefined) {
-                    return assetSource;
-                }
-            }
+        if (assetSource != undefined && assetSource.sourceId == assetSourceCode) {
+
+            return assetSource;
+
         }
     }
     return undefined;
@@ -333,17 +326,18 @@ export function getAssetType(assetTypeCode: number, assetGroup: Record<string, a
     return undefined;
 }
 
-export function getLayerIdBySourceId(assetSourceId: number, utilityNetwork: UtilityNetwork): number | undefined {
-    for (const domainNetwork of (utilityNetwork as any).dataElement.domainNetworks) {
-        const edgeSources = domainNetwork.edgeSources.find(x => x.sourceId === assetSourceId);
-        if (edgeSources != undefined && edgeSources != null) {
-            return edgeSources.layerId;
-        }
-        const junctionSources = domainNetwork.junctionSources.find(x => x.sourceId === assetSourceId);
-        if (junctionSources != undefined && junctionSources != null) {
-            return junctionSources.layerId;
-        }
+export function getLayerIdByDomainAndSourceId(domainNetworkId: number, assetSourceId: number, utilityNetwork: UtilityNetwork): number | undefined {
+
+    const domainNetwork = (utilityNetwork as any).dataElement.domainNetworks.find(x => x.domainNetworkId == domainNetworkId);
+    const edgeSources = domainNetwork.edgeSources.find(x => x.sourceId === assetSourceId);
+    if (edgeSources != undefined && edgeSources != null) {
+        return edgeSources.layerId;
     }
+    const junctionSources = domainNetwork.junctionSources.find(x => x.sourceId === assetSourceId);
+    if (junctionSources != undefined && junctionSources != null) {
+        return junctionSources.layerId;
+    }
+
     return undefined;
 }
 
@@ -422,13 +416,19 @@ export async function getWebMapLayersByAssets(assets: any[], map: WebMap, utilit
                 const typeKeys = Object.keys(domainNetworkSet[domainKey][sourceKey][groupKey]);
                 for (const typeKey of typeKeys) {
                     const type = domainNetworkSet[domainKey][sourceKey][groupKey][typeKey];
-                    const layerId = getLayerIdBySourceId(parseInt(sourceKey), utilityNetwork);
+                    const layerId = getLayerIdByDomainAndSourceId(parseInt(domainKey), parseInt(sourceKey), utilityNetwork);
                     if (layerId != undefined) {
                         const layer = await getWebMapLayerByAsset(type.assets[0], layerId, map, utilityNetwork);
+
                         if (layer != undefined) {
-                            layerSet[layer.id] = { id: layer.id, objectIds: type.assets.map(x => x.objectId), layer: layer };
+                            const objectids = type.assets.map(x=> x.objectId);
+                            if(layerSet[layer.id] == undefined) {
+                                layerSet[layer.id] = { id: layer.id, objectIds: objectids, layer: layer };
+                            } else {
+                                layerSet[layer.id].objectIds = [...layerSet[layer.id].objectIds, ...objectids];
+                            }
                         }
-                    }
+                    } 
                 }
             }
         }
@@ -438,8 +438,10 @@ export async function getWebMapLayersByAssets(assets: any[], map: WebMap, utilit
 
 export function groupAssets(assets: Record<string, any>[], utilityNetwork: UtilityNetwork): any {
     const domainNetworkSet = {};
+
     for (const asset of assets) {
-        const domainNetwork = getAssetDomain(asset.assetGroupCode, asset.assetTypeCode, utilityNetwork);
+
+        const domainNetwork = getAssetDomain(asset.networkSourceId, utilityNetwork);
         if (domainNetwork != undefined) {
             let domainSet = domainNetworkSet[domainNetwork.domainNetworkId];
             if (domainSet == undefined) {
@@ -471,16 +473,16 @@ export function groupAssets(assets: Record<string, any>[], utilityNetwork: Utili
 }
 
 export async function getWebMapLayerByAsset(asset: Record<string, any>, layerId: number, map: WebMap, utilityNetwork: UtilityNetwork): Promise<FeatureLayer | undefined> {
-    const domainNetwork = getAssetDomain(asset.assetGroupCode, asset.assetTypeCode, utilityNetwork);
+    const domainNetwork = getAssetDomain(asset.networkSourceId, utilityNetwork);
 
     if (domainNetwork != undefined) {
 
-        const assetSource = getAssetSource(asset.assetGroupCode, asset.assetTypeCode, domainNetwork);
+        const assetSource = getAssetSource(asset.networkSourceId, domainNetwork);
         if (assetSource != undefined) {
             const layers = map.layers
             for (const layer of layers) {
                 let featureLayers: FeatureLayer[] = [];
-                if (layer.type === "feature") {
+                if (layer.type === "feature" && (layer as FeatureLayer).layerId == layerId) {
                     featureLayers.push(layer as FeatureLayer);
                 } else if (layer.type === "group") {
                     const subFeatureLayers = (layer as GroupLayer).layers.filter(x => x.type == "feature" && (x as FeatureLayer).layerId == layerId).toArray() as FeatureLayer[];
@@ -506,7 +508,7 @@ export async function getWebMapLayerByAsset(asset: Record<string, any>, layerId:
         return undefined;
     }
 }
-
+/** TO DO: Fix asset search */
 export async function getUtilityNetworkFromGraphic(utilityNetworks: UtilityNetwork[], graphic: Graphic): Promise<UtilityNetwork | undefined> {
     let assetType;
     const layer = (graphic.layer as FeatureLayer);
@@ -518,32 +520,33 @@ export async function getUtilityNetworkFromGraphic(utilityNetworks: UtilityNetwo
         const assetTypeField = getUtilityNetworkAttributeFieldByType("esriUNAUTAssetType", (graphic.layer as FeatureLayer).layerId, utilityNetwork)
         const assetGroupField = getUtilityNetworkAttributeFieldByType("esriUNAUTAssetGroup", (graphic.layer as FeatureLayer).layerId, utilityNetwork)
         if (assetTypeField != undefined && assetGroupField != undefined) {
-            const domainNetwork = getAssetDomain(graphic.attributes[assetGroupField], graphic.attributes[assetTypeField], utilityNetwork);
-            if (domainNetwork != undefined) {
-                const assetSource = getAssetSource(graphic.attributes[assetGroupField], graphic.attributes[assetTypeField], domainNetwork);
-                if (assetSource != undefined) {
-                    const assetGroup = getAssetGroup(graphic.attributes[assetGroupField], assetSource);
-                    if (assetGroup != undefined) {
-                        assetType = getAssetType(graphic.attributes[assetTypeField], assetGroup);
-                        if (assetType != undefined) {
-                            const fsUrl: string = (utilityNetwork as any).featureServiceUrl;
-                            const tempLayer = new FeatureLayer({
-                                url: `${fsUrl}/${layer.layerId}`,
-                            });
-                            const globalId: string = graphic.attributes[globalIdField];
-                            const query = {
-                                where: `${globalIdField}='${globalId}'`,
-                            };
-                            const count = await tempLayer.queryFeatureCount(query);
-                            if (count > 0) {
-                                return utilityNetwork;
-                            }
+            for (const domainNetwork of (utilityNetwork as any).dataElement.domainNetworks) {
+                if (domainNetwork != undefined) {
+                    const assetSource = getAssetSource((graphic.layer as FeatureLayer).layerId, domainNetwork);
+                    if (assetSource != undefined) {
+                        const assetGroup = getAssetGroup(graphic.attributes[assetGroupField], assetSource);
+                        if (assetGroup != undefined) {
+                            assetType = getAssetType(graphic.attributes[assetTypeField], assetGroup);
+                            if (assetType != undefined) {
+                                const fsUrl: string = (utilityNetwork as any).featureServiceUrl;
+                                const tempLayer = new FeatureLayer({
+                                    url: `${fsUrl}/${layer.layerId}`,
+                                });
+                                const globalId: string = graphic.attributes[globalIdField];
+                                const query = {
+                                    where: `${globalIdField}='${globalId}'`,
+                                };
+                                const count = await tempLayer.queryFeatureCount(query);
+                                if (count > 0) {
+                                    return utilityNetwork;
+                                }
 
+                            }
                         }
+
                     }
 
                 }
-
             }
         }
     }

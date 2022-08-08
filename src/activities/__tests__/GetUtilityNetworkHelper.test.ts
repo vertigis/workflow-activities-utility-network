@@ -5,8 +5,7 @@ import {
     getAssetGroup,
     getAssetSource,
     getAssetType,
-    getAssetUtilityNetwork,
-    getLayerIdBySourceId,
+    getLayerIdByDomainAndSourceId,
     getUtilityNetworkFromGraphic,
     getWebMapLayerByAsset,
     getWebMapLayersByAssets,
@@ -23,7 +22,7 @@ jest.mock("../utils", () => {
         getAssetGroup: jest.fn(),
         getAssetType: jest.fn(),
         getWebMapLayerByAsset: jest.fn(),
-        getLayerIdBySourceId: jest.fn(),
+        getLayerIdByDomainAndSourceId: jest.fn(),
         getWebMapLayersByAssets: jest.fn(),
         isInTier: jest.fn(),
         getAssetUtilityNetwork: jest.fn(),
@@ -43,26 +42,10 @@ describe("GetUtilityNeworkHelper", () => {
                 return {
                     getUtilityNetworkFromGraphic: (utilityNetwork, graphic) =>
                         getUtilityNetworkFromGraphic(utilityNetwork, graphic),
-                    getAssetDomain: (
-                        assetGroupCode,
-                        assetTypeCode,
-                        utilityNetwork
-                    ) =>
-                        getAssetDomain(
-                            assetGroupCode,
-                            assetTypeCode,
-                            utilityNetwork
-                        ),
-                    getAssetSource: (
-                        assetGroupCode,
-                        assetTypeCode,
-                        domainNetwork
-                    ) =>
-                        getAssetSource(
-                            assetGroupCode,
-                            assetTypeCode,
-                            domainNetwork
-                        ),
+                    getAssetDomain: (assetSourceCode, utilityNetwork) =>
+                        getAssetDomain(assetSourceCode, utilityNetwork),
+                    getAssetSource: (assetSourceCode, domainNetwork) =>
+                        getAssetSource(assetSourceCode, domainNetwork),
                     getAssetGroup: (assetGroupCode, assetSource) =>
                         getAssetGroup(assetGroupCode, assetSource),
                     getAssetType: (assetTypeCode, assetGroup) =>
@@ -79,22 +62,20 @@ describe("GetUtilityNeworkHelper", () => {
                             map,
                             utilityNetwork
                         ),
-                    getLayerIdBySourceId: (assetSourceId, utilityNetwork) =>
-                        getLayerIdBySourceId(assetSourceId, utilityNetwork),
+                    getLayerIdByDomainAndSourceId: (
+                        domainNetworkId,
+                        assetSourceId,
+                        utilityNetwork
+                    ) =>
+                        getLayerIdByDomainAndSourceId(
+                            domainNetworkId,
+                            assetSourceId,
+                            utilityNetwork
+                        ),
                     getWebMapLayersByAssets: (assets, map, utilityNetwork) =>
                         getWebMapLayersByAssets(assets, map, utilityNetwork),
                     isInTier: (assetGroupCode, assetTypeCode, tier) =>
                         isInTier(assetGroupCode, assetTypeCode, tier),
-                    getAssetUtilityNetwork: (
-                        assetGroupCode,
-                        assetTypeCode,
-                        utilityNetworks
-                    ) =>
-                        getAssetUtilityNetwork(
-                            assetGroupCode,
-                            assetTypeCode,
-                            utilityNetworks
-                        ),
                     getTerminalIds: (graphic, utilityNetwork) =>
                         getTerminalIds(graphic, utilityNetwork),
                     getUtilityNetworkAttributeFieldByType: (
