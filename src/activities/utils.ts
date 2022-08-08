@@ -20,8 +20,6 @@ import TraceLocation from "@arcgis/core/rest/networks/support/TraceLocation";
 import Polygon from "@arcgis/core/geometry/Polygon";
 import GroupLayer from "@arcgis/core/layers/GroupLayer";
 import Query from "@arcgis/core/tasks/support/Query";
-import LayerSearchSource from "esri/widgets/Search/LayerSearchSource";
-
 
 export interface NetworkGraphic {
     graphic: Graphic;
