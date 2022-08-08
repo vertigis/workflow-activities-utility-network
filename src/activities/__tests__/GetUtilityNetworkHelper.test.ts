@@ -12,6 +12,7 @@ import {
     isInTier,
     getTerminalIds,
     getUtilityNetworkAttributeFieldByType,
+    getAssetSourceByLayerId,
 } from "../utils";
 
 jest.mock("../utils", () => {
@@ -28,6 +29,7 @@ jest.mock("../utils", () => {
         getAssetUtilityNetwork: jest.fn(),
         getTerminalIds: jest.fn(),
         getUtilityNetworkAttributeFieldByType: jest.fn(),
+        getAssetSourceByLayerId: jest.fn(),
     };
 });
 
@@ -88,6 +90,8 @@ describe("GetUtilityNeworkHelper", () => {
                             layerId,
                             utilityNetwork
                         ),
+                    getAssetSourceByLayerId: (layerId, utilityNetwork) =>
+                        getAssetSourceByLayerId(layerId, utilityNetwork),
                 };
             })();
             const activity = new GetUtilityNetworkHelper();

@@ -15,6 +15,7 @@ import {
     isInTier,
     getTerminalIds,
     getUtilityNetworkAttributeFieldByType,
+    getAssetSourceByLayerId,
 } from "./utils";
 
 /** An interface that defines the outputs of the activity. */
@@ -71,6 +72,7 @@ interface GetUtilityNetworkHelperOutputs {
             layerId,
             utilityNetwork
         ) => string;
+        getAssetSourceByLayerId: (layerId: number, utilityNetwork: any) => any;
     };
 }
 
@@ -124,6 +126,8 @@ export default class GetUtilityNetworkHelperActivity
                         layerId,
                         utilityNetwork
                     ),
+                getAssetSourceByLayerId: (layerId, utilityNetwork) =>
+                    getAssetSourceByLayerId(layerId, utilityNetwork),
             };
         })();
         return {

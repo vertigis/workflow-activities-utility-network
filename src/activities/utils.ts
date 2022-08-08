@@ -406,35 +406,33 @@ export function getTerminalConfiguration(terminalConfigurationId: number, utilit
 export async function getWebMapLayersByAssets(assets: any[], map: WebMap, utilityNetwork: UtilityNetwork): Promise<any> {
     const layerSet = {};
     const domainNetworkSet = groupAssets(assets, utilityNetwork);
-    const domainKeys = Object.keys(domainNetworkSet);
-
-    for (const domainKey of domainKeys) {
-        const sourceKeys = Object.keys(domainNetworkSet[domainKey]);
-        for (const sourceKey of sourceKeys) {
-            const groupKeys = Object.keys(domainNetworkSet[domainKey][sourceKey]);
-            for (const groupKey of groupKeys) {
-                const typeKeys = Object.keys(domainNetworkSet[domainKey][sourceKey][groupKey]);
-                for (const typeKey of typeKeys) {
-                    const type = domainNetworkSet[domainKey][sourceKey][groupKey][typeKey];
+    for (const domainKey in domainNetworkSet) {
+        for (const sourceKey in domainNetworkSet[domainKey]) {
+            for (const groupKey in domainNetworkSet[domainKey][sourceKey]) {
+                for (const typeKey in domainNetworkSet[domainKey][sourceKey][groupKey]) {
+                    const typeSet = domainNetworkSet[domainKey][sourceKey][groupKey][typeKey];
                     const layerId = getLayerIdByDomainAndSourceId(parseInt(domainKey), parseInt(sourceKey), utilityNetwork);
                     if (layerId != undefined) {
-                        const layer = await getWebMapLayerByAsset(type.assets[0], layerId, map, utilityNetwork);
+                        const layer = await getWebMapLayerByAsset(typeSet.assets[0], layerId, map, utilityNetwork);
 
                         if (layer != undefined) {
-                            const objectids = type.assets.map(x=> x.objectId);
-                            if(layerSet[layer.id] == undefined) {
+                            const objectids = typeSet.assets.map(x => x.objectId);
+                            if (layerSet[layer.id] == undefined) {
                                 layerSet[layer.id] = { id: layer.id, objectIds: objectids, layer: layer };
                             } else {
                                 layerSet[layer.id].objectIds = [...layerSet[layer.id].objectIds, ...objectids];
                             }
                         }
-                    } 
+                    }
                 }
+
             }
         }
-        return layerSet;
     }
+
+    return layerSet;
 }
+
 
 export function groupAssets(assets: Record<string, any>[], utilityNetwork: UtilityNetwork): any {
     const domainNetworkSet = {};
