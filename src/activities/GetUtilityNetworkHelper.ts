@@ -4,18 +4,18 @@ import UtilityNetwork from "@arcgis/core/networks/UtilityNetwork";
 import WebMap from "@arcgis/core/WebMap";
 import type { IActivityHandler } from "@geocortex/workflow/runtime";
 import {
-    getUtilityNetworkFromGraphic,
     getAssetDomain,
-    getAssetSource,
     getAssetGroup,
+    getAssetSource,
+    getAssetSourceByLayerId,
     getAssetType,
-    getWebMapLayerByAsset,
     getLayerIdByDomainAndSourceId,
-    getWebMapLayersByAssets,
-    isInTier,
     getTerminalIds,
     getUtilityNetworkAttributeFieldByType,
-    getAssetSourceByLayerId,
+    getUtilityNetworkFromGraphic,
+    getWebMapLayerByAsset,
+    getWebMapLayersByAssets,
+    isInTier,
 } from "./utils";
 
 /** An interface that defines the outputs of the activity. */
@@ -24,33 +24,41 @@ interface GetUtilityNetworkHelperOutputs {
      * @description A collection of functions for working with a Utility Network.
      */
     utils: {
-        getUtilityNetworkFromGraphic: (
-            utilityNetworks: UtilityNetwork[],
-            graphic: Graphic
-        ) => Promise<UtilityNetwork>;
         getAssetDomain: (
-            assetGroupCode: number,
-            assetTypeCode: number,
+            assetSourceCode: number,
             utilityNetwork: UtilityNetwork
-        ) => any;
-        getAssetSource: (
-            assetGroupCode: number,
-            assetTypeCode: number,
-            domainNetwork: any
-        ) => any;
+        ) => any | undefined;
         getAssetGroup: (assetGroupCode: number, assetSource: any) => any;
+        getAssetSource: (
+            assetSourceCode: number,
+            domainNetwork: Record<string, any>
+        ) => any | undefined;
+        getAssetSourceByLayerId: (layerId: number, utilityNetwork: any) => any;
         getAssetType: (assetTypeCode: number, assetGroup: any) => any;
-        getWebMapLayerByAsset: (
-            asset: any,
-            layerId: number,
-            map: WebMap,
-            utilityNetwork: UtilityNetwork
-        ) => Promise<FeatureLayer>;
         getLayerIdByDomainAndSourceId: (
             domainNetworkId: number,
             assetSourceId: number,
             utilityNetwork: UtilityNetwork
-        ) => number;
+        ) => number | undefined;
+        getTerminalIds: (
+            graphic: Graphic,
+            utilityNetwork: UtilityNetwork
+        ) => number[];
+        getUtilityNetworkAttributeFieldByType: (
+            type,
+            layerId,
+            utilityNetwork
+        ) => string | undefined;
+        getUtilityNetworkFromGraphic: (
+            utilityNetworks: UtilityNetwork[],
+            graphic: Graphic
+        ) => Promise<UtilityNetwork | undefined>;
+        getWebMapLayerByAsset: (
+            asset: Record<string, any>,
+            layerId: number,
+            map: WebMap,
+            utilityNetwork: UtilityNetwork
+        ) => Promise<FeatureLayer | undefined>;
         getWebMapLayersByAssets: (
             assets: any[],
             map: WebMap,
@@ -61,49 +69,35 @@ interface GetUtilityNetworkHelperOutputs {
             assetTypeCode: number,
             tier: any
         ) => boolean;
-        getAssetUtilityNetwork: (
-            assetGroupCode,
-            assetTypeCode,
-            utilityNetworks
-        ) => any;
-        getTerminalIds: (graphic, utilityNetwork) => any;
-        getUtilityNetworkAttributeFieldByType: (
-            type,
-            layerId,
-            utilityNetwork
-        ) => string;
-        getAssetSourceByLayerId: (layerId: number, utilityNetwork: any) => any;
     };
 }
 
 /**
- * @displayName GetUtilityNetworkHelper
+ * @category Utility Network
+ * @defaultName unHelper
+ * @displayName Get Utility Network Helper
  * @description Returns a set of useful functions for working with a Utility Network.
  * @helpUrl https://developers.arcgis.com/javascript/latest/api-reference/esri-networks-support-TraceConfiguration.html
  * @clientOnly
  * @unsupportedApps GMV, GVH, WAB
  */
 export default class GetUtilityNetworkHelper implements IActivityHandler {
-    /** Perform the execution logic of the activity. */
     execute(): GetUtilityNetworkHelperOutputs {
-        const utils = (function UtilityNetworkUtils(): any {
-            return {
-                getUtilityNetworkFromGraphic,
+        return {
+            utils: Object.freeze({
                 getAssetDomain,
-                getAssetSource,
                 getAssetGroup,
+                getAssetSource,
+                getAssetSourceByLayerId,
                 getAssetType,
-                getWebMapLayerByAsset,
                 getLayerIdByDomainAndSourceId,
-                getWebMapLayersByAssets,
-                isInTier,
                 getTerminalIds,
                 getUtilityNetworkAttributeFieldByType,
-                getAssetSourceByLayerId,
-            };
-        })();
-        return {
-            utils,
+                getUtilityNetworkFromGraphic,
+                getWebMapLayerByAsset,
+                getWebMapLayersByAssets,
+                isInTier,
+            }),
         };
     }
 }

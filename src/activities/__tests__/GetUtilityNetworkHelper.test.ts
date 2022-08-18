@@ -1,105 +1,39 @@
-import jsonUtils from "esri/geometry/support/jsonUtils";
 import GetUtilityNetworkHelper from "../GetUtilityNetworkHelper";
-import {
-    getAssetDomain,
-    getAssetGroup,
-    getAssetSource,
-    getAssetType,
-    getLayerIdByDomainAndSourceId,
-    getUtilityNetworkFromGraphic,
-    getWebMapLayerByAsset,
-    getWebMapLayersByAssets,
-    isInTier,
-    getTerminalIds,
-    getUtilityNetworkAttributeFieldByType,
-    getAssetSourceByLayerId,
-} from "../utils";
+import * as utils from "../utils";
 
-jest.mock("../utils", () => {
-    return {
-        getUtilityNetworkFromGraphic: jest.fn(),
-        getAssetDomain: jest.fn(),
-        getAssetSource: jest.fn(),
-        getAssetGroup: jest.fn(),
-        getAssetType: jest.fn(),
-        getWebMapLayerByAsset: jest.fn(),
-        getLayerIdByDomainAndSourceId: jest.fn(),
-        getWebMapLayersByAssets: jest.fn(),
-        isInTier: jest.fn(),
-        getAssetUtilityNetwork: jest.fn(),
-        getTerminalIds: jest.fn(),
-        getUtilityNetworkAttributeFieldByType: jest.fn(),
-        getAssetSourceByLayerId: jest.fn(),
-    };
-});
-
-beforeEach(() => {
-    jest.clearAllMocks();
-});
-
-describe("GetUtilityNeworkHelper", () => {
+describe("GetUtilityNetworkHelper", () => {
     describe("execute", () => {
-        it("creates a utils helper function", () => {
-            const mockUtils = (function UtilityNetworkUtils(): any {
-                return {
-                    getUtilityNetworkFromGraphic: (utilityNetwork, graphic) =>
-                        getUtilityNetworkFromGraphic(utilityNetwork, graphic),
-                    getAssetDomain: (assetSourceCode, utilityNetwork) =>
-                        getAssetDomain(assetSourceCode, utilityNetwork),
-                    getAssetSource: (assetSourceCode, domainNetwork) =>
-                        getAssetSource(assetSourceCode, domainNetwork),
-                    getAssetGroup: (assetGroupCode, assetSource) =>
-                        getAssetGroup(assetGroupCode, assetSource),
-                    getAssetType: (assetTypeCode, assetGroup) =>
-                        getAssetType(assetTypeCode, assetGroup),
-                    getWebMapLayerByAsset: (
-                        asset,
-                        layerId,
-                        map,
-                        utilityNetwork
-                    ) =>
-                        getWebMapLayerByAsset(
-                            asset,
-                            layerId,
-                            map,
-                            utilityNetwork
-                        ),
-                    getLayerIdByDomainAndSourceId: (
-                        domainNetworkId,
-                        assetSourceId,
-                        utilityNetwork
-                    ) =>
-                        getLayerIdByDomainAndSourceId(
-                            domainNetworkId,
-                            assetSourceId,
-                            utilityNetwork
-                        ),
-                    getWebMapLayersByAssets: (assets, map, utilityNetwork) =>
-                        getWebMapLayersByAssets(assets, map, utilityNetwork),
-                    isInTier: (assetGroupCode, assetTypeCode, tier) =>
-                        isInTier(assetGroupCode, assetTypeCode, tier),
-                    getTerminalIds: (graphic, utilityNetwork) =>
-                        getTerminalIds(graphic, utilityNetwork),
-                    getUtilityNetworkAttributeFieldByType: (
-                        type,
-                        layerId,
-                        utilityNetwork
-                    ) =>
-                        getUtilityNetworkAttributeFieldByType(
-                            type,
-                            layerId,
-                            utilityNetwork
-                        ),
-                    getAssetSourceByLayerId: (layerId, utilityNetwork) =>
-                        getAssetSourceByLayerId(layerId, utilityNetwork),
-                };
-            })();
+        it("creates a utils helper", () => {
             const activity = new GetUtilityNetworkHelper();
             const result = activity.execute();
             expect(result).toBeDefined();
-            expect(JSON.stringify(result)).toStrictEqual(
-                JSON.stringify({ utils: mockUtils })
+            expect(result.utils).toBeDefined();
+            expect(result.utils.getAssetDomain).toBe(utils.getAssetDomain);
+            expect(result.utils.getAssetGroup).toBe(utils.getAssetGroup);
+            expect(result.utils.getAssetSource).toBe(utils.getAssetSource);
+            expect(result.utils.getAssetSourceByLayerId).toBe(
+                utils.getAssetSourceByLayerId
             );
+            expect(result.utils.getAssetType).toBe(utils.getAssetType);
+            expect(result.utils.getLayerIdByDomainAndSourceId).toBe(
+                utils.getLayerIdByDomainAndSourceId
+            );
+            expect(result.utils.getLayerIdByDomainAndSourceId).toBe(
+                utils.getLayerIdByDomainAndSourceId
+            );
+            expect(result.utils.getUtilityNetworkAttributeFieldByType).toBe(
+                utils.getUtilityNetworkAttributeFieldByType
+            );
+            expect(result.utils.getUtilityNetworkFromGraphic).toBe(
+                utils.getUtilityNetworkFromGraphic
+            );
+            expect(result.utils.getWebMapLayerByAsset).toBe(
+                utils.getWebMapLayerByAsset
+            );
+            expect(result.utils.getWebMapLayersByAssets).toBe(
+                utils.getWebMapLayersByAssets
+            );
+            expect(result.utils.isInTier).toBe(utils.isInTier);
         });
     });
 });
