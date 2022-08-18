@@ -78,56 +78,28 @@ interface GetUtilityNetworkHelperOutputs {
 
 /**
  * @displayName GetUtilityNetworkHelper
- * @category Custom Activities
  * @description Returns a set of useful functions for working with a Utility Network.
+ * @helpUrl https://developers.arcgis.com/javascript/latest/api-reference/esri-networks-support-TraceConfiguration.html
+ * @clientOnly
+ * @unsupportedApps GMV, GVH, WAB
  */
-export default class GetUtilityNetworkHelperActivity
-    implements IActivityHandler
-{
+export default class GetUtilityNetworkHelper implements IActivityHandler {
     /** Perform the execution logic of the activity. */
     execute(): GetUtilityNetworkHelperOutputs {
         const utils = (function UtilityNetworkUtils(): any {
             return {
-                getUtilityNetworkFromGraphic: (utilityNetwork, graphic) =>
-                    getUtilityNetworkFromGraphic(utilityNetwork, graphic),
-                getAssetDomain: (assetSourceCode, utilityNetwork) =>
-                    getAssetDomain(assetSourceCode, utilityNetwork),
-                getAssetSource: (assetSourceCode, domainNetwork) =>
-                    getAssetSource(assetSourceCode, domainNetwork),
-                getAssetGroup: (assetGroupCode, assetSource) =>
-                    getAssetGroup(assetGroupCode, assetSource),
-                getAssetType: (assetTypeCode, assetGroup) =>
-                    getAssetType(assetTypeCode, assetGroup),
-                getWebMapLayerByAsset: (asset, layerId, map, utilityNetwork) =>
-                    getWebMapLayerByAsset(asset, layerId, map, utilityNetwork),
-                getLayerIdByDomainAndSourceId: (
-                    domainNetworkId,
-                    assetSourceId,
-                    utilityNetwork
-                ) =>
-                    getLayerIdByDomainAndSourceId(
-                        domainNetworkId,
-                        assetSourceId,
-                        utilityNetwork
-                    ),
-                getWebMapLayersByAssets: (assets, map, utilityNetwork) =>
-                    getWebMapLayersByAssets(assets, map, utilityNetwork),
-                isInTier: (assetGroupCode, assetTypeCode, tier) =>
-                    isInTier(assetGroupCode, assetTypeCode, tier),
-                getTerminalIds: (graphic, utilityNetwork) =>
-                    getTerminalIds(graphic, utilityNetwork),
-                getUtilityNetworkAttributeFieldByType: (
-                    type,
-                    layerId,
-                    utilityNetwork
-                ) =>
-                    getUtilityNetworkAttributeFieldByType(
-                        type,
-                        layerId,
-                        utilityNetwork
-                    ),
-                getAssetSourceByLayerId: (layerId, utilityNetwork) =>
-                    getAssetSourceByLayerId(layerId, utilityNetwork),
+                getUtilityNetworkFromGraphic,
+                getAssetDomain,
+                getAssetSource,
+                getAssetGroup,
+                getAssetType,
+                getWebMapLayerByAsset,
+                getLayerIdByDomainAndSourceId,
+                getWebMapLayersByAssets,
+                isInTier,
+                getTerminalIds,
+                getUtilityNetworkAttributeFieldByType,
+                getAssetSourceByLayerId,
             };
         })();
         return {

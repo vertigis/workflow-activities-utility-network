@@ -13,9 +13,13 @@ import { activate } from "@geocortex/workflow/runtime/Hooks";
 /** An interface that defines the outputs of the activity. */
 export interface InitializeUtilityNetworkOutputs {
     /**
-     * @description The initialized Utility Network.
+     * @description An initialized Utility Network.  Returns the first utilty network if the Web Map contains more than one.
      */
     result: UtilityNetwork | undefined;
+
+    /**
+     * @description An array of initialized Utility Networks defined in the Web Map.
+     */
     utilityNetworks: UtilityNetwork[] | undefined;
 }
 

@@ -18,4 +18,4 @@ export { default as GetDiagramMapInfoActivity } from "./activities/diagrams/GetD
 
 export { default as FindDiagramFeatures } from "./activities/diagrams/FindDiagramFeatures";
 
-export { default as GetUtilityNetworkHelperActivity } from "./activities/GetUtilityNetworkHelper";
+export { default as GetUtilityNetworkHelper } from "./activities/GetUtilityNetworkHelper";
