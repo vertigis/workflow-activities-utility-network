@@ -8,21 +8,26 @@ import IdentityManager from "@arcgis/core/identity/IdentityManager";
 import Credential from "@arcgis/core/identity/Credential";
 import Network from "@arcgis/core/networks/Network";
 import { MapProvider } from "@geocortex/workflow/runtime/activities/arcgis/MapProvider";
-
 import { activate } from "@geocortex/workflow/runtime/Hooks";
 
 /** An interface that defines the outputs of the activity. */
 export interface InitializeUtilityNetworkOutputs {
     /**
-     * @description The initialized Utility Network.
+     * @description An initialized Utility Network.  Returns the first utilty network if the Web Map contains more than one.
      */
-    result: UtilityNetwork;
+    result: UtilityNetwork | undefined;
+
+    /**
+     * @description An array of initialized Utility Networks defined in the Web Map.
+     */
+    utilityNetworks: UtilityNetwork[] | undefined;
 }
 
 /**
  * @category Utility Network
  * @defaultName initUtilityNetwork
- * @description Initializes the Utility Network from the given web map.
+ * @description Initializes the Utility Networks from the given web map. Returns the first utility network
+ * as well as the complete array of utility networks.
  * @helpUrl https://developers.arcgis.com/javascript/latest/api-reference/esri-networks-UtilityNetwork.html
  * @clientOnly
  * @unsupportedApps GMV, GVH, WAB
@@ -40,10 +45,10 @@ export class InitializeUtilityNetwork implements IActivityHandler {
             throw new Error("map is required");
         }
         const map = mapProvider.map as WebMap;
-        let utilityNetwork: UtilityNetwork;
+        let utilityNetworks: __esri.Collection<UtilityNetwork>;
         const portalItem = map.portalItem as any;
         if (map.utilityNetworks) {
-            utilityNetwork = map.utilityNetworks.getItemAt(0);
+            utilityNetworks = map.utilityNetworks;
         } else {
             const portalOauthInfo = this.getOauthInfo(
                 portalItem.portal.credential
@@ -58,19 +63,25 @@ export class InitializeUtilityNetwork implements IActivityHandler {
 
             await webmap.load();
             if (webmap.utilityNetworks?.length > 0) {
-                utilityNetwork = webmap.utilityNetworks.getItemAt(0);
-                const agsOauthInfo = this.getOauthInfo(
-                    portalItem.portal.credential,
-                    (utilityNetwork as unknown as Network).networkServiceUrl
-                );
-                IdentityManager.registerToken(agsOauthInfo);
+                utilityNetworks = webmap.utilityNetworks;
+                for (let i = 0; i < utilityNetworks.length; i++) {
+                    const agsOauthInfo = this.getOauthInfo(
+                        portalItem.portal.credential,
+                        (utilityNetworks.getItemAt(i) as unknown as Network)
+                            .networkServiceUrl
+                    );
+                    IdentityManager.registerToken(agsOauthInfo);
+                }
             } else {
                 throw new Error("Utility network not found.");
             }
         }
-        await utilityNetwork.load();
+        for (let i = 0; i < utilityNetworks.length; i++) {
+            await utilityNetworks.getItemAt(i).load();
+        }
         return {
-            result: utilityNetwork,
+            result: utilityNetworks.getItemAt(0),
+            utilityNetworks: utilityNetworks.toArray(),
         };
     }
     getOauthInfo(credential: Credential, server?: string): any {

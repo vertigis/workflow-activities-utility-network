@@ -3,9 +3,9 @@ import {
     SelectNetworkGraphicsInputs,
 } from "../SelectNetworkGraphics";
 import Point from "@arcgis/core/geometry/Point";
-import { mockMapView } from "../__mocks__/MapView";
 import { mockWebMap } from "../__mocks__/WebMap";
 import { mockActivityContext } from "../__mocks__/ActivityContext";
+import { mockMapView } from "../__mocks__/MapView";
 
 jest.mock("@geocortex/workflow/runtime/activities/arcgis/MapProvider", () => {
     return function () {

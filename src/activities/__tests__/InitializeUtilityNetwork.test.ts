@@ -4,6 +4,7 @@ import Collection from "@arcgis/core/core/Collection";
 import { mockActivityContext } from "../__mocks__/ActivityContext";
 import { mockWebMap } from "../__mocks__/WebMap";
 import { mockMapView } from "../__mocks__/MapView";
+import WebMap from "@arcgis/core/WebMap";
 
 jest.mock("@arcgis/core/identity/IdentityManager", () => ({
     registerToken: jest.fn(),
@@ -23,6 +24,10 @@ const mockProvider = {
             view: mockMapView(),
         };
     },
+    load: jest.fn(),
+    map: {},
+    view: {},
+    UtilityNetworks: new Collection(),
 };
 
 jest.mock("@arcgis/core/networks/UtilityNetwork", () => {
@@ -42,6 +47,9 @@ jest.mock("@arcgis/core/core/Collection", () => {
             getItemAt: (i: number) => {
                 return mockUn;
             },
+            toArray: () => {
+                return [mockUn];
+            },
         };
     };
 });
@@ -52,7 +60,11 @@ mockColl.push(mockUn);
 jest.mock("@arcgis/core/WebMap", () => {
     return function (params: any) {
         return {
-            portalItem: params.portalItem,
+            portalItem: {
+                portal: {
+                    credential: {},
+                },
+            } as any,
             utilityNetworks: mockColl,
             load: () => {
                 //no op
@@ -61,6 +73,10 @@ jest.mock("@arcgis/core/WebMap", () => {
     };
 });
 
+const mockMap = new WebMap();
+mockMap.utilityNetworks = mockColl;
+
+mockProvider.map = mockMap;
 beforeEach(() => {
     jest.clearAllMocks();
 });
@@ -77,6 +93,7 @@ describe("InitializeUtilityNetwork", () => {
             );
             expect(result).toStrictEqual({
                 result: mockUn,
+                utilityNetworks: [mockUn],
             });
         });
     });

@@ -1,10 +1,6 @@
 import Extent from "@arcgis/core/geometry/Extent";
-import type {
-    IActivityContext,
-    IActivityHandler,
-} from "@geocortex/workflow/runtime/IActivityHandler";
-import { ChannelProvider } from "@geocortex/workflow/runtime/activities/core/ChannelProvider";
-import { activate } from "@geocortex/workflow/runtime/Hooks";
+import type { IActivityHandler } from "@geocortex/workflow/runtime/IActivityHandler";
+import esriRequest from "@arcgis/core/request";
 
 /** An interface that defines the inputs of the activity. */
 interface FindDiagramNamesInputs {
@@ -71,13 +67,10 @@ interface FindDiagramNamesOutputs {
  * @clientOnly
  * @unsupportedApps GMV, GVH, WAB
  */
-@activate(ChannelProvider)
 export default class FindDiagramNamesActivity implements IActivityHandler {
     /** Perform the execution logic of the activity. */
     async execute(
-        inputs: FindDiagramNamesInputs,
-        context: IActivityContext,
-        type: typeof ChannelProvider
+        inputs: FindDiagramNamesInputs
     ): Promise<FindDiagramNamesOutputs> {
         const { serviceUrl, ...other } = inputs;
 
@@ -87,28 +80,20 @@ export default class FindDiagramNamesActivity implements IActivityHandler {
 
         // Remove trailing slashes
         const normalizedUrl = serviceUrl.replace(/\/*$/, "");
+        const url = `${normalizedUrl}//findDiagramNames`;
 
-        const channel = type.create(undefined, "arcgis");
-        channel.request.url = `${normalizedUrl}//findDiagramNames`;
-        channel.request.method = "POST";
-        channel.request.json = {
+        const query = {
             f: "json",
             ...other,
         };
-
-        await channel.send();
-
-        context.cancellationToken.finally(function () {
-            channel.cancel();
-        });
-
-        const responseData =
-            channel.response.payload &&
-            (channel.getResponseData(channel.response.payload) as any);
-        const diagramNames =
-            responseData?.diagramNames ||
-            responseData?.data?.diagramNames ||
-            [];
+        const options: any = {
+            method: "post",
+            query: query,
+            responseType: "json",
+        };
+        const response = await esriRequest(url, options);
+        const responseData = response.data;
+        const diagramNames = responseData?.diagramNames || [];
 
         return {
             diagramNames,
