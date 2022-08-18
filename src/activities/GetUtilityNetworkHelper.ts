@@ -28,13 +28,22 @@ interface GetUtilityNetworkHelperOutputs {
             assetSourceCode: number,
             utilityNetwork: UtilityNetwork
         ) => any | undefined;
-        getAssetGroup: (assetGroupCode: number, assetSource: any) => any;
+        getAssetGroup: (
+            assetGroupCode: number,
+            assetSource: Record<string, any>
+        ) => any | undefined;
         getAssetSource: (
             assetSourceCode: number,
             domainNetwork: Record<string, any>
         ) => any | undefined;
-        getAssetSourceByLayerId: (layerId: number, utilityNetwork: any) => any;
-        getAssetType: (assetTypeCode: number, assetGroup: any) => any;
+        getAssetSourceByLayerId: (
+            layerId: number,
+            utilityNetwork: UtilityNetwork
+        ) => any | undefined;
+        getAssetType: (
+            assetTypeCode: number,
+            assetGroup: Record<string, any>
+        ) => any | undefined;
         getLayerIdByDomainAndSourceId: (
             domainNetworkId: number,
             assetSourceId: number,
@@ -45,9 +54,9 @@ interface GetUtilityNetworkHelperOutputs {
             utilityNetwork: UtilityNetwork
         ) => number[];
         getUtilityNetworkAttributeFieldByType: (
-            type,
-            layerId,
-            utilityNetwork
+            type: string,
+            layerId: number,
+            utilityNetwork: UtilityNetwork
         ) => string | undefined;
         getUtilityNetworkFromGraphic: (
             utilityNetworks: UtilityNetwork[],
@@ -67,7 +76,7 @@ interface GetUtilityNetworkHelperOutputs {
         isInTier: (
             assetGroupCode: number,
             assetTypeCode: number,
-            tier: any
+            tier: Record<string, any>
         ) => boolean;
     };
 }
