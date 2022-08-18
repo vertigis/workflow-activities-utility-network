@@ -18,7 +18,7 @@ import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import TraceLocation from "@arcgis/core/rest/networks/support/TraceLocation";
 import Polygon from "@arcgis/core/geometry/Polygon";
 import GroupLayer from "@arcgis/core/layers/GroupLayer";
-import Query from "@arcgis/core/tasks/support/Query";
+import Query from "@arcgis/core/rest/support/Query";
 
 export interface NetworkGraphic {
     graphic: Graphic;
