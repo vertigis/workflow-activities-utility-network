@@ -27,15 +27,15 @@ import { Polyline } from "@arcgis/core/geometry";
 export interface SelectNetworkGraphicsInputs {
     /**
      * @displayName Point
-     * @description The point on the map to search.
-     ** @required
+     * @description The point on the map to search. 
+     * @required
      */
     point: Point;
 
     /**
      * @displayName Location Type
      * @description The type of location.
-     ** @required
+     * @required
      */
     locationType: "starting-point" | "barrier";
 
@@ -91,57 +91,13 @@ export class SelectNetworkGraphics implements IActivityHandler {
         if (!utilityNetwork) {
             throw new Error("utilityNetwork is required");
         }
+
+        const networkGraphics: NetworkGraphic[] = [];        
         let hitPoint = point;
-        const mapProvider = type.create();
-        await mapProvider.load();
 
-        const webMap = mapProvider.map as WebMap;
-        const view = mapProvider.view as MapView;
-        const queriedGraphics: Graphic[] = [];
-        for (let i = 0; i < webMap.allLayers.length; i++) {
-            const l = webMap.allLayers.getItemAt(i)
-            if (l != undefined) {
-                if (!l.initialized) {
-                    await l.load();
-                }
-            }
-        }
-        await view.when();
 
-        const screenPoint = view.toScreen(hitPoint);
-        const hitResult = await view.hitTest(screenPoint);
-        const hitGraphics = hitResult.results.filter(
-            (g) => g.graphic?.attributes && g.graphic.layer.type === "feature"
-        );
-
-        for (let i = 0; i < hitGraphics.length; i++) {
-            const x = hitGraphics[i];
-            const result = await (
-                x.graphic.layer as FeatureLayer
-            ).queryFeatures({
-                objectIds: [x.graphic.getObjectId()],
-                returnGeometry: true,
-                outFields: ["*"],
-                outSpatialReference: { wkid: point.spatialReference.wkid },
-            });
-            const assetTypeField = getUtilityNetworkAttributeFieldByType("esriUNAUTAssetType", (x.graphic.layer as FeatureLayer).layerId, utilityNetwork)
-            const assetGroupField = getUtilityNetworkAttributeFieldByType("esriUNAUTAssetGroup", (x.graphic.layer as FeatureLayer).layerId, utilityNetwork)
-
-            if (
-                result.features.length > 0 &&
-                getValue(result.features[0].attributes, "globalid") !=
-                undefined && assetGroupField != undefined &&
-                assetTypeField != undefined
-            ) {
-                result.features[0].layer = x.graphic.layer;
-
-                queriedGraphics.push(result.features[0]);
-
-            }
-
-        }
-        const networkGraphics: NetworkGraphic[] = [];
-
+        const queriedGraphics = await this.queryFeatures(hitPoint, type, utilityNetwork);
+   
         for (const queriedGraphic of queriedGraphics) {
             const percAlong = await getPercentageAlong(
                 queriedGraphic.geometry,
@@ -182,5 +138,66 @@ export class SelectNetworkGraphics implements IActivityHandler {
         return {
             networkGraphics: networkGraphics,
         };
+    }
+
+    private async queryFeatures(hitPoint: Point, type: typeof MapProvider, utilityNetwork: UtilityNetwork): Promise<Graphic[]> {
+        const queriedGraphics: Graphic[] = [];
+        const mapProvider = type.create();
+        await mapProvider.load();
+
+        const webMap = mapProvider.map as WebMap;
+        const view = mapProvider.view as MapView;
+        for (let i = 0; i < webMap.allLayers.length; i++) {
+            const l = webMap.allLayers.getItemAt(i)
+            if (l != undefined) {
+                if (!l.initialized) {
+                    await l.load();
+                }
+            }
+        }
+        await view.when();
+
+        const screenPoint = view.toScreen(hitPoint);
+        const hitResult = await view.hitTest(screenPoint);
+        const hitGraphics = hitResult.results.filter(
+            (g) => (g as any).graphic != undefined && (g as any).graphic.layer.type == "feature"
+        );
+
+        for (let i = 0; i < hitGraphics.length; i++) {
+            const x = hitGraphics[i];
+            const result = await (
+                (x as any).graphic.layer as FeatureLayer
+            ).queryFeatures({
+                objectIds: [(x as any).graphic.getObjectId()],
+                returnGeometry: true,
+                outFields: ["*"],
+                outSpatialReference: { wkid: hitPoint.spatialReference.wkid },
+            });
+
+            const validFeature = this.getValidFeature(result.features,  (x as any).graphic.layer, utilityNetwork);
+            if(validFeature != undefined){
+                queriedGraphics.push(validFeature);
+            }
+
+        }
+        return queriedGraphics;
+    }
+
+    private getValidFeature(features: Graphic[], layer: FeatureLayer, utilityNetwork: UtilityNetwork): Graphic | undefined {
+        const assetTypeField = getUtilityNetworkAttributeFieldByType("esriUNAUTAssetType", layer.layerId, utilityNetwork)
+        const assetGroupField = getUtilityNetworkAttributeFieldByType("esriUNAUTAssetGroup", layer.layerId, utilityNetwork)
+
+        if (
+            features.length > 0 &&
+            getValue(features[0].attributes, "globalid") !=
+            undefined && assetGroupField != undefined &&
+            assetTypeField != undefined
+        ) {
+            features[0].layer = layer;
+
+            return features[0];
+
+        }
+        return undefined;
     }
 }

@@ -1,7 +1,7 @@
 import type { IActivityHandler } from "@geocortex/workflow/runtime/IActivityHandler";
 import Network from "@arcgis/core/networks/Network";
 import UtilityNetwork from "@arcgis/core/networks/UtilityNetwork";
-import { trace } from "@arcgis/core/rest/networks/trace";
+import * as trace from "@arcgis/core/rest/networks/trace";
 import TraceParameters from "@arcgis/core/rest/networks/support/TraceParameters";
 import TraceLocation from "@arcgis/core/rest/networks/support/TraceLocation";
 import TraceResult from "@arcgis/core/rest/networks/support/TraceResult";
@@ -112,6 +112,11 @@ export class RunUtilityNetworkTrace implements IActivityHandler {
             throw new Error("traceConfiguration is required");
         }
 
+        const traceWrapper =
+            (trace as any).default != undefined
+                ? (trace as any).default
+                : trace;
+
         // Find named trace config
         let namedTraceConfigurationGlobalId: string | undefined;
         if (typeof traceConfiguration === "string") {
@@ -149,7 +154,7 @@ export class RunUtilityNetworkTrace implements IActivityHandler {
             traceLocations,
             traceType,
         });
-        const traceResult = await trace(
+        const traceResult = await traceWrapper.trace(
             utilityNetwork.networkServiceUrl,
             traceParams
         );

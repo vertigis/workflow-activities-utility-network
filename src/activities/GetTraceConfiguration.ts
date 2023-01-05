@@ -56,7 +56,7 @@ export class GetTraceConfiguration implements IActivityHandler {
 
         if (namedTraceConfiguration) {
             traceConfiguration = new TraceConfiguration(
-                namedTraceConfiguration.traceConfiguration.toJSON()
+                namedTraceConfiguration.traceConfiguration
             );
             resultTypes = namedTraceConfiguration.resultTypes;
             traceType = namedTraceConfiguration.traceType;
