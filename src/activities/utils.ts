@@ -13,7 +13,6 @@ import TraceLocation from "@arcgis/core/rest/networks/support/TraceLocation";
 import Polygon from "@arcgis/core/geometry/Polygon";
 import GroupLayer from "@arcgis/core/layers/GroupLayer";
 import Query from "@arcgis/core/rest/support/Query";
-import geometryEngine from "esri/geometry/geometryEngine";
 
 export interface NetworkGraphic {
     graphic: Graphic;
@@ -221,23 +220,23 @@ export async function splitPolyline(
     sourceLine: Polyline,
     flagGeom: Point
 ): Promise<Polyline[]> {
-    const projectWrapper =
+    const project =
         (Projection as any).default != undefined
             ? (Projection as any).default.project
             : Projection.project;
-    const intersectWrapper =
+    const intersect =
         (GeometryEngine as any).default != undefined
             ? (GeometryEngine as any).default.intersect
             : GeometryEngine.intersect;
-    const geodesicBufferWrapper =
+    const geodesicBuffer =
         (GeometryEngine as any).default != undefined
             ? (GeometryEngine as any).default.geodesicBuffer
             : GeometryEngine.geodesicBuffer;
-    const rotateWrapper =
+    const rotate =
         (GeometryEngine as any).default != undefined
             ? (GeometryEngine as any).default.rotate
             : GeometryEngine.rotate;
-    const cutWrapper =
+    const cut =
         (GeometryEngine as any).default != undefined
             ? (GeometryEngine as any).default.cut
             : GeometryEngine.cut;
@@ -245,22 +244,15 @@ export async function splitPolyline(
     let splitLines: Polyline[] = [];
     const line = sourceLine.clone();
 
-    const projectedLine = projectWrapper(
-        line,
-        flagGeom.spatialReference
-    ) as Polyline;
+    const projectedLine = project(line, flagGeom.spatialReference) as Polyline;
     const snappedPoint = await getPolylineIntersection(projectedLine, flagGeom);
 
-    const buffer = (await geodesicBufferWrapper(
-        snappedPoint,
-        20,
-        "feet"
-    )) as Polygon;
+    const buffer = (await geodesicBuffer(snappedPoint, 20, "feet")) as Polygon;
 
-    const polyIntersection = await intersectWrapper(projectedLine, buffer);
+    const polyIntersection = await intersect(projectedLine, buffer);
     if (polyIntersection) {
-        const rotated = await rotateWrapper(polyIntersection, 90);
-        const newGeom = await cutWrapper(projectedLine, rotated as Polyline);
+        const rotated = await rotate(polyIntersection, 90);
+        const newGeom = await cut(projectedLine, rotated as Polyline);
         if (newGeom.length > 0) {
             splitLines = newGeom as Polyline[];
         }
@@ -273,11 +265,11 @@ export async function getPolylineIntersection(
     flagGeom: Point
 ): Promise<Point> {
     let intersectionPoint;
-    const nearestCoordinateWrapper =
+    const nearestCoordinate =
         (GeometryEngine as any).default != undefined
             ? (GeometryEngine as any).default.nearestCoordinate
             : GeometryEngine.nearestCoordinate;
-    const nearestCoord = await nearestCoordinateWrapper(sourceLine, flagGeom);
+    const nearestCoord = await nearestCoordinate(sourceLine, flagGeom);
     if (nearestCoord.coordinate) {
         intersectionPoint = nearestCoord.coordinate;
     }
@@ -289,7 +281,7 @@ export async function getPercentageAlong(
     sourceGeom: Geometry,
     flagGeom: Point
 ): Promise<number> {
-    const planarLengthWrapper =
+    const planarLength =
         (GeometryEngine as any).default != undefined
             ? (GeometryEngine as any).default.planarLength
             : GeometryEngine.planarLength;
@@ -304,16 +296,16 @@ export async function getPercentageAlong(
     const splitGeom = await splitPolyline(sourceLine, flagGeom);
 
     if (splitGeom.length > 0) {
-        const sourceLength = await planarLengthWrapper(sourceLine, "feet");
+        const sourceLength = await planarLength(sourceLine, "feet");
 
         let pieceLength;
         if (
             splitGeom[0].paths[0][0][0] == sourceLine.paths[0][0][0] &&
             splitGeom[0].paths[0][0][1] == sourceLine.paths[0][0][1]
         ) {
-            pieceLength = await planarLengthWrapper(splitGeom[0], "feet");
+            pieceLength = await planarLength(splitGeom[0], "feet");
         } else {
-            pieceLength = await planarLengthWrapper(splitGeom[1], "feet");
+            pieceLength = await planarLength(splitGeom[1], "feet");
         }
         percentage = pieceLength / sourceLength;
     }
