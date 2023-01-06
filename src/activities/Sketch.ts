@@ -1,16 +1,20 @@
-import type { IActivityHandler } from "@geocortex/workflow/runtime";
-import SketchViewModel from "esri/widgets/Sketch/SketchViewModel";
-
-import MapView from "esri/views/MapView";
-import Graphic from "esri/Graphic";
-import GraphicsLayer from "esri/layers/GraphicsLayer";
-import Symbol from "esri/symbols/Symbol";
-import SimpleMarkerSymbol from "esri/symbols/SimpleMarkerSymbol";
-import SimpleFillSymbol from "esri/symbols/SimpleFillSymbol";
-import SimpleLineSymbol from "esri/symbols/SimpleLineSymbol";
+import type {
+    IActivityHandler,
+    IActivityContext,
+} from "@geocortex/workflow/runtime/IActivityHandler";
+import { MapProvider } from "@geocortex/workflow/runtime/activities/arcgis/MapProvider";
+import { activate } from "@geocortex/workflow/runtime/Hooks";
+import SketchViewModel from "@arcgis/core/widgets/Sketch/SketchViewModel";
+import Graphic from "@arcgis/core/Graphic";
+import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
+import Symbol from "@arcgis/core/symbols/Symbol";
+import SimpleMarkerSymbol from "@arcgis/core/symbols/SimpleMarkerSymbol";
+import SimpleFillSymbol from "@arcgis/core/symbols/SimpleFillSymbol";
+import SimpleLineSymbol from "@arcgis/core/symbols/SimpleLineSymbol";
+import MapView from "@arcgis/core/views/MapView";
 
 /** An interface that defines the inputs of the activity. */
-interface SketchPointInputs {
+export interface SketchInputs {
     /**
      * @displayName Point Symbol
      */
@@ -28,11 +32,7 @@ interface SketchPointInputs {
         | "polygon"
         | "rectangle"
         | "circle";
-    /**
-     * @displayName Map View
-     * @required
-     */
-    mapView: MapView;
+
     /**
      * @displayName Graphics Layer Id
      * @required
@@ -41,12 +41,12 @@ interface SketchPointInputs {
 }
 
 /** An interface that defines the outputs of the activity. */
-interface SketchPointOutputs {
+export interface SketchOutputs {
     /**
      * @description The result of the activity.
      */
     graphic: Graphic | undefined;
-    layer: GraphicsLayer;
+    layer: GraphicsLayer | undefined;
 }
 
 /**
@@ -55,10 +55,21 @@ interface SketchPointOutputs {
  * @clientOnly
  * @unsupportedApps GMV, GVH, WAB
  */
-export default class SketchActivity implements IActivityHandler {
-    /** Perform the execution logic of the activity. */
-    async execute(inputs: SketchPointInputs): Promise<SketchPointOutputs> {
-        const { symbol, mapView, layerId, sketchType } = inputs;
+@activate(MapProvider)
+export default class Sketch implements IActivityHandler {
+    async execute(
+        inputs: SketchInputs,
+        context: IActivityContext,
+        type: typeof MapProvider
+    ): Promise<SketchOutputs> {
+        const { symbol, layerId, sketchType } = inputs;
+        const mapProvider = type.create();
+        await mapProvider.load();
+        if (!mapProvider.map) {
+            throw new Error("map is required");
+        }
+
+        const mapView = mapProvider.view as MapView;
 
         let layer: GraphicsLayer = mapView.map.allLayers.find(
             (x) => x.id == layerId && x.type == "graphics"
@@ -95,10 +106,12 @@ export default class SketchActivity implements IActivityHandler {
         }
 
         view.create(sketchType);
-        const output: Graphic = await new Promise((resolve) => {
+        const output: Graphic | undefined = await new Promise((resolve) => {
             view.on("create", function (event) {
                 if (event.state === "complete") {
                     resolve(event.graphic);
+                } else if (event.state === "cancel") {
+                    resolve(undefined);
                 }
             });
         });

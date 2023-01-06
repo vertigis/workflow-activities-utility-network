@@ -5,8 +5,17 @@ import Polyline from "@arcgis/core/geometry/Polyline";
 import WebMap from "@arcgis/core/WebMap";
 import Graphic from "@arcgis/core/Graphic";
 import CodedValueDomain from "@arcgis/core/layers/support/CodedValueDomain";
-import * as GeometryEngine from "@arcgis/core/geometry/geometryEngineAsync";
-import * as Projection from "@arcgis/core/geometry/projection";
+import { project } from "./Projection";
+import {
+    cut,
+    geodesicBuffer,
+    intersect,
+    rotate,
+    LinearUnits,
+    nearestCoordinate,
+    NearestPointResult,
+    planarLength,
+} from "./GeometryEngine";
 import UtilityNetwork from "@arcgis/core/networks/UtilityNetwork";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import TraceLocation from "@arcgis/core/rest/networks/support/TraceLocation";
@@ -144,11 +153,6 @@ export function createNetworkGraphic(
                             }),
                         ];
                     }
-
-                    if (networkGraphic.traceLocations.length == 1) {
-                        networkGraphic.selectedTraceLocation =
-                            networkGraphic.traceLocations[0];
-                    }
                     return networkGraphic;
                 }
             }
@@ -220,34 +224,17 @@ export async function splitPolyline(
     sourceLine: Polyline,
     flagGeom: Point
 ): Promise<Polyline[]> {
-    const project =
-        (Projection as any).default != undefined
-            ? (Projection as any).default.project
-            : Projection.project;
-    const intersect =
-        (GeometryEngine as any).default != undefined
-            ? (GeometryEngine as any).default.intersect
-            : GeometryEngine.intersect;
-    const geodesicBuffer =
-        (GeometryEngine as any).default != undefined
-            ? (GeometryEngine as any).default.geodesicBuffer
-            : GeometryEngine.geodesicBuffer;
-    const rotate =
-        (GeometryEngine as any).default != undefined
-            ? (GeometryEngine as any).default.rotate
-            : GeometryEngine.rotate;
-    const cut =
-        (GeometryEngine as any).default != undefined
-            ? (GeometryEngine as any).default.cut
-            : GeometryEngine.cut;
-
     let splitLines: Polyline[] = [];
     const line = sourceLine.clone();
 
     const projectedLine = project(line, flagGeom.spatialReference) as Polyline;
     const snappedPoint = await getPolylineIntersection(projectedLine, flagGeom);
 
-    const buffer = (await geodesicBuffer(snappedPoint, 20, "feet")) as Polygon;
+    const buffer = (await geodesicBuffer(
+        snappedPoint,
+        20,
+        "feet" as LinearUnits
+    )) as Polygon;
 
     const polyIntersection = await intersect(projectedLine, buffer);
     if (polyIntersection) {
@@ -265,11 +252,10 @@ export async function getPolylineIntersection(
     flagGeom: Point
 ): Promise<Point> {
     let intersectionPoint;
-    const nearestCoordinate =
-        (GeometryEngine as any).default != undefined
-            ? (GeometryEngine as any).default.nearestCoordinate
-            : GeometryEngine.nearestCoordinate;
-    const nearestCoord = await nearestCoordinate(sourceLine, flagGeom);
+    const nearestCoord: NearestPointResult = await nearestCoordinate(
+        sourceLine,
+        flagGeom
+    );
     if (nearestCoord.coordinate) {
         intersectionPoint = nearestCoord.coordinate;
     }
@@ -281,10 +267,6 @@ export async function getPercentageAlong(
     sourceGeom: Geometry,
     flagGeom: Point
 ): Promise<number> {
-    const planarLength =
-        (GeometryEngine as any).default != undefined
-            ? (GeometryEngine as any).default.planarLength
-            : GeometryEngine.planarLength;
     let percentage = 0.0;
 
     if (!(sourceGeom.type == "polyline")) {

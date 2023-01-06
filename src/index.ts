@@ -20,4 +20,4 @@ export { default as FindDiagramFeatures } from "./activities/diagrams/FindDiagra
 
 export { default as GetUtilityNetworkHelper } from "./activities/GetUtilityNetworkHelper";
 
-export { default as SketchActivity } from "./activities/Sketch";
+export { default as Sketch } from "./activities/Sketch";
