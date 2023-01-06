@@ -1,7 +1,7 @@
 import type { IActivityHandler } from "@geocortex/workflow/runtime/IActivityHandler";
 import Network from "@arcgis/core/networks/Network";
 import UtilityNetwork from "@arcgis/core/networks/UtilityNetwork";
-import * as trace from "@arcgis/core/rest/networks/trace";
+import * as Trace from "@arcgis/core/rest/networks/trace";
 import TraceParameters from "@arcgis/core/rest/networks/support/TraceParameters";
 import TraceLocation from "@arcgis/core/rest/networks/support/TraceLocation";
 import TraceResult from "@arcgis/core/rest/networks/support/TraceResult";
@@ -112,10 +112,11 @@ export class RunUtilityNetworkTrace implements IActivityHandler {
             throw new Error("traceConfiguration is required");
         }
 
-        const traceWrapper =
-            (trace as any).default != undefined
-                ? (trace as any).default
-                : trace;
+        // We need to handle the descrepancy between Experience Builder and VertiGIS Studio Web module exports.
+        const trace =
+            (Trace as any).default != undefined
+                ? ((Trace as any).default as typeof Trace)
+                : Trace;
 
         // Find named trace config
         let namedTraceConfigurationGlobalId: string | undefined;
@@ -154,7 +155,7 @@ export class RunUtilityNetworkTrace implements IActivityHandler {
             traceLocations,
             traceType,
         });
-        const traceResult = await traceWrapper.trace(
+        const traceResult = await trace.trace(
             utilityNetwork.networkServiceUrl,
             traceParams
         );
