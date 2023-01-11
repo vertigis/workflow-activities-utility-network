@@ -1,6 +1,7 @@
 import type { IActivityHandler } from "@geocortex/workflow/runtime/IActivityHandler";
 import UtilityNetwork from "@arcgis/core/networks/UtilityNetwork";
 import TraceConfiguration from "@arcgis/core/networks/support/TraceConfiguration";
+import UNTraceConfiguration from "@arcgis/core/networks/support/UNTraceConfiguration";
 
 /** An interface that defines the inputs of the activity. */
 export interface GetTraceConfigurationInputs {
@@ -24,7 +25,7 @@ export interface GetTraceConfigurationOutputs {
     /**
      * @description The trace configurations associated with the Utility Network results.
      */
-    traceConfiguration: any | undefined;
+    traceConfiguration: TraceConfiguration | UNTraceConfiguration | undefined;
     traceType: string | undefined;
     resultTypes: any[] | undefined;
 }
@@ -45,7 +46,10 @@ export class GetTraceConfiguration implements IActivityHandler {
         if (!traceId) {
             throw new Error("traceId is required");
         }
-        let traceConfiguration: TraceConfiguration | undefined;
+        let traceConfiguration:
+            | TraceConfiguration
+            | UNTraceConfiguration
+            | undefined;
         let resultTypes: any[] | undefined;
         let traceType: string | undefined;
 
@@ -55,9 +59,7 @@ export class GetTraceConfiguration implements IActivityHandler {
             );
 
         if (namedTraceConfiguration) {
-            traceConfiguration = new TraceConfiguration(
-                namedTraceConfiguration.traceConfiguration
-            );
+            traceConfiguration = namedTraceConfiguration.traceConfiguration;
             resultTypes = namedTraceConfiguration.resultTypes;
             traceType = namedTraceConfiguration.traceType;
         }
