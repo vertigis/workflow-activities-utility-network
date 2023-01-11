@@ -628,6 +628,12 @@ export async function getWebMapLayerByAsset(
                         const assetGlobalId: string = asset.globalId;
                         const query = new Query();
                         query.where = `${fieldName}='${assetGlobalId}'`;
+                        if (
+                            featureLayer.definitionExpression != undefined &&
+                            featureLayer.definitionExpression.length > 0
+                        ) {
+                            query.where += `AND ${featureLayer.definitionExpression}`;
+                        }
                         query.returnGeometry = false;
                         const features = await featureLayer.queryFeatures(
                             query
