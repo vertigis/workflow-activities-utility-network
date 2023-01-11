@@ -599,6 +599,8 @@ export async function getWebMapLayerByAsset(
         );
         if (assetSource != undefined) {
             const layers = map.layers;
+            const tables = map.tables;
+            layers.addMany(tables);
             for (const layer of layers) {
                 let featureLayers: FeatureLayer[] = [];
                 if (
