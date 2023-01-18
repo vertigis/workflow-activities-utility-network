@@ -35,7 +35,6 @@ export interface NetworkGraphic {
     assetGroupCode: number;
     domainId: number;
     sourceCode: number;
-    selectedTraceLocation: TraceLocation | undefined;
     label?: string;
 }
 
