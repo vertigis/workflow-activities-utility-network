@@ -20,6 +20,4 @@ export { default as FindDiagramFeatures } from "./activities/diagrams/FindDiagra
 
 export { default as GetUtilityNetworkHelper } from "./activities/GetUtilityNetworkHelper";
 
-export { default as Sketch } from "./activities/Sketch";
-
-export { default as ValidateNetworkTopologyActivity } from "./activities/ValidateNetworkTopology";
+export { default as ValidateNetworkTopology } from "./activities/ValidateNetworkTopology";
