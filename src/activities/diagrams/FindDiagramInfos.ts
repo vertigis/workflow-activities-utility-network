@@ -71,7 +71,7 @@ export default class FindDiagramInfosActivity implements IActivityHandler {
             diagramNames: names,
             ...other,
         };
-        const options: any = {
+        const options: __esri.RequestOptions = {
             method: "post",
             query: query,
             responseType: "json",

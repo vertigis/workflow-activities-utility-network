@@ -12,9 +12,17 @@ export function project(
     outSpatialReference: SpatialReference,
     geographicTransformation?: GeographicTransformation
 ): Geometry | Geometry[] {
-    const project =
-        (projection as any).default != undefined
-            ? (projection as any).default.project
-            : (projection as any).project;
-    return project(geometry, outSpatialReference, geographicTransformation);
+    if (projection.project) {
+        return projection.project(
+            geometry,
+            outSpatialReference,
+            geographicTransformation
+        );
+    } else {
+        return (projection as any).default.project(
+            geometry,
+            outSpatialReference,
+            geographicTransformation
+        );
+    }
 }

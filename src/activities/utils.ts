@@ -5,17 +5,15 @@ import Polyline from "@arcgis/core/geometry/Polyline";
 import WebMap from "@arcgis/core/WebMap";
 import Graphic from "@arcgis/core/Graphic";
 import CodedValueDomain from "@arcgis/core/layers/support/CodedValueDomain";
-import { project } from "./Projection";
+import { project } from "./projection";
 import {
     cut,
     geodesicBuffer,
     intersect,
     rotate,
-    LinearUnits,
-    nearestCoordinate,
-    NearestPointResult,
     planarLength,
-} from "./GeometryEngine";
+    nearestCoordinate,
+} from "./geometryEngineAsync";
 import UtilityNetwork from "@arcgis/core/networks/UtilityNetwork";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import TraceLocation from "@arcgis/core/rest/networks/support/TraceLocation";
@@ -232,7 +230,7 @@ export async function splitPolyline(
     const buffer = (await geodesicBuffer(
         snappedPoint,
         20,
-        "feet" as LinearUnits
+        "feet" as __esri.LinearUnits
     )) as Polygon;
 
     const polyIntersection = await intersect(projectedLine, buffer);
@@ -251,7 +249,7 @@ export async function getPolylineIntersection(
     flagGeom: Point
 ): Promise<Point> {
     let intersectionPoint;
-    const nearestCoord: NearestPointResult = await nearestCoordinate(
+    const nearestCoord: __esri.NearestPointResult = await nearestCoordinate(
         sourceLine,
         flagGeom
     );
@@ -599,8 +597,7 @@ export async function getWebMapLayerByAsset(
         if (assetSource != undefined) {
             const layers = map.layers;
             const tables = map.tables;
-            layers.addMany(tables);
-            for (const layer of layers) {
+            for (const layer of [...layers, ...tables]) {
                 let featureLayers: FeatureLayer[] = [];
                 if (
                     layer.type === "feature" &&
