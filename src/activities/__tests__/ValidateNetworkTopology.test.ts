@@ -40,7 +40,9 @@ describe("FindDiagraminfos", () => {
         const activity = new ValidateNetworkTopology();
         await expect(
             activity.execute({
-                utilityNetwork: {} as any,
+                utilityNetwork: {
+                    networkServiceUrl: "https://someSever",
+                } as any,
                 validateArea: undefined as any,
             })
         ).rejects.toThrow("validateArea is required");
