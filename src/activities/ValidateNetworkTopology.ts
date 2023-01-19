@@ -97,6 +97,11 @@ export default class ValidateNetworkTopology implements IActivityHandler {
         if (!validateArea) {
             throw new Error("validateArea is required");
         }
+
+        if (!utilityNetwork) {
+            throw new Error("utilityNetwork is required");
+        }
+
         // Remove trailing slashes
         const normalizedUrl = utilityNetwork.networkServiceUrl.replace(
             /\/*$/,

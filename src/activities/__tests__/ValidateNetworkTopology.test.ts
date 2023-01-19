@@ -26,7 +26,7 @@ const response = {
     ],
     success: true,
 };
-describe("FindDiagraminfos", () => {
+describe("ValidateNetworkTopology", () => {
     it("throws if utilityNetwork input is missing", async () => {
         const activity = new ValidateNetworkTopology();
         await expect(
