@@ -4,15 +4,15 @@ import Polyline from "@arcgis/core/geometry/Polyline";
 import WebMap from "@arcgis/core/WebMap";
 import Graphic from "@arcgis/core/Graphic";
 import CodedValueDomain from "@arcgis/core/layers/support/CodedValueDomain";
+import { project } from "./projection";
 import {
+    cut,
     geodesicBuffer,
     intersect,
     rotate,
-    cut,
     planarLength,
     nearestCoordinate,
-} from "@arcgis/core/geometry/geometryEngineAsync";
-import * as Projection from "@arcgis/core/geometry/projection";
+} from "./geometryEngineAsync";
 import UtilityNetwork from "@arcgis/core/networks/UtilityNetwork";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import TraceLocation from "@arcgis/core/rest/networks/support/TraceLocation";
@@ -32,7 +32,6 @@ export interface NetworkGraphic {
     assetGroupCode: number;
     domainId: number;
     sourceCode: number;
-    selectedTraceLocation: TraceLocation | undefined;
     label?: string;
 }
 
@@ -223,12 +222,16 @@ export async function splitPolyline(
 ): Promise<Polyline[]> {
     let splitLines: Polyline[] = [];
     const line = sourceLine.clone();
-    const projectedLine = Projection.project(
-        line,
-        flagGeom.spatialReference
-    ) as Polyline;
+
+    const projectedLine = project(line, flagGeom.spatialReference) as Polyline;
     const snappedPoint = await getPolylineIntersection(projectedLine, flagGeom);
-    const buffer = (await geodesicBuffer(snappedPoint, 20, "feet")) as Polygon;
+
+    const buffer = (await geodesicBuffer(
+        snappedPoint,
+        20,
+        "feet" as __esri.LinearUnits
+    )) as Polygon;
+
     const polyIntersection = await intersect(projectedLine, buffer);
     if (polyIntersection) {
         const rotated = await rotate(polyIntersection, 90);
@@ -245,7 +248,10 @@ export async function getPolylineIntersection(
     flagGeom: Point
 ): Promise<Point> {
     let intersectionPoint;
-    const nearestCoord = await nearestCoordinate(sourceLine, flagGeom);
+    const nearestCoord: __esri.NearestPointResult = await nearestCoordinate(
+        sourceLine,
+        flagGeom
+    );
     if (nearestCoord.coordinate) {
         intersectionPoint = nearestCoord.coordinate;
     }
@@ -589,7 +595,8 @@ export async function getWebMapLayerByAsset(
         );
         if (assetSource != undefined) {
             const layers = map.layers;
-            for (const layer of layers) {
+            const tables = map.tables;
+            for (const layer of [...layers, ...tables]) {
                 let featureLayers: FeatureLayer[] = [];
                 if (
                     layer.type === "feature" &&
@@ -616,6 +623,9 @@ export async function getWebMapLayerByAsset(
                         const assetGlobalId: string = asset.globalId;
                         const query = new Query();
                         query.where = `${fieldName}='${assetGlobalId}'`;
+                        if (featureLayer.definitionExpression) {
+                            query.where = `(${query.where}) AND (${featureLayer.definitionExpression})`;
+                        }
                         query.returnGeometry = false;
                         const features = await featureLayer.queryFeatures(
                             query

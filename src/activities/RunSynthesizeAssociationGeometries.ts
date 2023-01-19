@@ -79,7 +79,6 @@ export class RunSynthesizeAssociationGeometries implements IActivityHandler {
             outSR,
             returnAttachmentAssociations,
             returnConnectivityAssociations,
-            returnContainerAssociations,
             utilityNetwork,
         } = inputs;
         if (!utilityNetwork) {
@@ -102,7 +101,6 @@ export class RunSynthesizeAssociationGeometries implements IActivityHandler {
             outSpatialReference: outSR,
             returnAttachmentAssociations,
             returnConnectivityAssociations,
-            returnContainerAssociations,
         });
 
         const result = await synthesizeAssociationGeometries(

@@ -124,7 +124,7 @@ export default class FindDiagramFeaturesActivity implements IActivityHandler {
             addConnectivityAssociations,
             ...other,
         };
-        const options: any = {
+        const options: __esri.RequestOptions = {
             method: "post",
             query: query,
             responseType: "json",

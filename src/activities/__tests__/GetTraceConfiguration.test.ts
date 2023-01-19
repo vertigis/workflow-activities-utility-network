@@ -45,7 +45,6 @@ jest.mock("@arcgis/core/networks/UtilityNetwork", () => {
 });
 
 const dummyUn = new UtilityNetwork({
-    globalId: "abc",
     sharedNamedTraceConfigurations: [dummyNamedTraceConfig],
 });
 
