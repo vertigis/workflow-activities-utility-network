@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/unbound-method */
 import Geometry from "@arcgis/core/geometry/Geometry";
 import Point from "@arcgis/core/geometry/Point";
 import Polyline from "@arcgis/core/geometry/Polyline";
@@ -624,11 +623,8 @@ export async function getWebMapLayerByAsset(
                         const assetGlobalId: string = asset.globalId;
                         const query = new Query();
                         query.where = `${fieldName}='${assetGlobalId}'`;
-                        if (
-                            featureLayer.definitionExpression != undefined &&
-                            featureLayer.definitionExpression.length > 0
-                        ) {
-                            query.where += `AND ${featureLayer.definitionExpression}`;
+                        if (featureLayer.definitionExpression) {
+                            query.where = `(${query.where}) AND (${featureLayer.definitionExpression})`;
                         }
                         query.returnGeometry = false;
                         const features = await featureLayer.queryFeatures(

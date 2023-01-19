@@ -25,12 +25,15 @@ interface ValidateNetworkTopologyInputs {
      *              The default is normal. With the repair validationType, the specified portions of the network
      *              index are reconstructed from scratch.
      */
-    validationType?: "normal" | "rebuild" | "forceRebuild";
+    validationType?: "normal" | "rebuild" | "forceRebuild" | string;
 
     /**
      * @description Optional parameter that specifies the set of features and objects to validate.
      */
-    validationSet?: any[];
+    validationSet?: {
+        sourceId: number;
+        globalIds: string[];
+    }[];
 
     /**
      * @description Optional Boolean parameter that returns edited features. Returned results are organized in a layer-by-layer fashion.
