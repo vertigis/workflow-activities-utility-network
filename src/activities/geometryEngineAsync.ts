@@ -89,9 +89,6 @@ export async function planarLength(
     if (geometryEngine.planarLength) {
         return geometryEngine.planarLength(geometry, unit);
     } else {
-        return (geometryEngine as any).default.nearesplanarLengthtCoordinate(
-            geometry,
-            unit
-        );
+        return (geometryEngine as any).default.planarLength(geometry, unit);
     }
 }
