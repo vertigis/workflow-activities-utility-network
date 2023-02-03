@@ -1,4 +1,4 @@
-[![CI/CD](https://github.com/geocortex/workflow-activities-utility-network/workflows/CI/CD/badge.svg)](https://github.com/geocortex/workflow-activities-utility-network/actions)
+[![CI/CD](https://github.com/vertigis/workflow-activities-utility-network/workflows/CI/CD/badge.svg)](https://github.com/vertigis/workflow-activities-utility-network/actions)
 [![npm](https://img.shields.io/npm/v/@vertigis/workflow-activities-utility-network)](https://www.npmjs.com/package/@vertigis/workflow-activities-utility-network)
 
 This project contains activities for interacting with the [ArcGIS Utility Network REST API](https://developers.arcgis.com/rest/services-reference/utility-network-service.htm) in a [VertiGIS Studio Workflow](https://vertigisstudio.com/products/vertigis-studio-workflow/).
@@ -34,7 +34,7 @@ To use the Utility Network activities in [VertiGIS Studio Workflow Designer](htt
 
 ## Development
 
-This project was bootstrapped with the [VertiGIS Studio Workflow SDK](https://github.com/geocortex/vertigis-workflow-sdk). Before you can use your activity pack in the [VertiGIS Studio Workflow Designer](https://apps.vertigisstudio.com/workflow/designer/), you will need to [register the activity pack](https://developers.vertigisstudio.com/docs/workflow/sdk-web-overview#register-the-activity-pack).
+This project was bootstrapped with the [VertiGIS Studio Workflow SDK](https://github.com/vertigis/vertigis-workflow-sdk). Before you can use your activity pack in the [VertiGIS Studio Workflow Designer](https://apps.vertigisstudio.com/workflow/designer/), you will need to [register the activity pack](https://developers.vertigisstudio.com/docs/workflow/sdk-web-overview#register-the-activity-pack).
 
 ## Available Scripts
 
