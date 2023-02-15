@@ -31,7 +31,8 @@ export interface RunUtilityNetworkTraceInputs {
         | "loops"
         | "isolation"
         | "shortest-path"
-        | "subnetwork-controllers";
+        | "subnetwork-controllers"
+        | string;
     /**
      * @displayName Trace Locations
      * @description The list of starting points and barriers that will define where the trace starts and stops.
@@ -153,7 +154,7 @@ export class RunUtilityNetworkTrace implements IActivityHandler {
                     ? traceConfiguration
                     : undefined,
             traceLocations,
-            traceType,
+            traceType: traceType as any,
         });
         const traceResult = await trace.trace(
             utilityNetwork.networkServiceUrl,

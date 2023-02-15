@@ -15,7 +15,7 @@ export interface CreateTraceLocationInputs {
      * @description The type of the trace location; starting-point defines where the trace should start and barrier defines where the trace should stop.
      * @required
      */
-    type: "starting-point" | "barrier";
+    type: "starting-point" | "barrier" | string;
 
     /**
      * @displayName Is Filter Barrier
@@ -64,7 +64,7 @@ export class CreateTraceLocation implements IActivityHandler {
             globalId,
             isFilterBarrier,
             percentAlong,
-            type,
+            type: type as any,
             terminalId,
         });
 
