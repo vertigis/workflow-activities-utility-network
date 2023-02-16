@@ -51,7 +51,7 @@ describe("CreateTraceLocation", () => {
             };
             const traceLocation = new TraceLocation();
             traceLocation.globalId = inputs.globalId;
-            traceLocation.type = inputs.type;
+            traceLocation.type = inputs.type as any;
             traceLocation.isFilterBarrier = inputs.isFilterBarrier!;
             traceLocation.percentAlong = inputs.percentAlong!;
             traceLocation.terminalId = inputs.terminalId!;

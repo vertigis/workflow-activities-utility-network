@@ -37,7 +37,7 @@ export interface SelectNetworkGraphicsInputs {
      * @description The type of location.
      * @required
      */
-    locationType: "starting-point" | "barrier";
+    locationType: "starting-point" | "barrier" | string;
 
     /**
      * @displayName Utility Network
@@ -124,7 +124,7 @@ export class SelectNetworkGraphics implements IActivityHandler {
                     queriedGraphic.attributes,
                     queriedGraphic.layer as FeatureLayer,
                     percAlong,
-                    locationType,
+                    locationType as any,
                     utilityNetwork,
                     isFilterBarrier,
                     terminalIds,
