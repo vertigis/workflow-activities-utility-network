@@ -1,8 +1,10 @@
 import Graphic from "@arcgis/core/Graphic";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import UtilityNetwork from "@arcgis/core/networks/UtilityNetwork";
+import NetworkElement from "@arcgis/core/rest/networks/support/NetworkElement";
 import WebMap from "@arcgis/core/WebMap";
 import type { IActivityHandler } from "@geocortex/workflow/runtime";
+import type { LayerSetCollection } from "./utils";
 import {
     getAssetDomain,
     getAssetGroup,
@@ -27,23 +29,23 @@ interface GetUtilityNetworkHelperOutputs {
         getAssetDomain: (
             assetSourceCode: number,
             utilityNetwork: UtilityNetwork
-        ) => any | undefined;
+        ) => Record<string, any> | undefined;
         getAssetGroup: (
             assetGroupCode: number,
             assetSource: Record<string, any>
-        ) => any | undefined;
+        ) => Record<string, any> | undefined;
         getAssetSource: (
             assetSourceCode: number,
             domainNetwork: Record<string, any>
-        ) => any | undefined;
+        ) => Record<string, any> | undefined;
         getAssetSourceByLayerId: (
             layerId: number,
             utilityNetwork: UtilityNetwork
-        ) => any | undefined;
+        ) => Record<string, any> | undefined;
         getAssetType: (
             assetTypeCode: number,
             assetGroup: Record<string, any>
-        ) => any | undefined;
+        ) => Record<string, any> | undefined;
         getLayerIdByDomainAndSourceId: (
             domainNetworkId: number,
             assetSourceId: number,
@@ -63,16 +65,16 @@ interface GetUtilityNetworkHelperOutputs {
             graphic: Graphic
         ) => Promise<UtilityNetwork | undefined>;
         getWebMapLayerByAsset: (
-            asset: Record<string, any>,
+            asset: NetworkElement,
             layerId: number,
             map: WebMap,
             utilityNetwork: UtilityNetwork
         ) => Promise<FeatureLayer | undefined>;
         getWebMapLayersByAssets: (
-            assets: any[],
+            assets: NetworkElement[],
             map: WebMap,
             utilityNetwork: UtilityNetwork
-        ) => Promise<any>;
+        ) => Promise<LayerSetCollection>;
         isInTier: (
             assetGroupCode: number,
             assetTypeCode: number,
