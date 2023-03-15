@@ -109,7 +109,7 @@ export function createNetworkGraphic(
         const labelDetailField = getKey(attributes, "assetid");
         if (labelDetailField) {
             labelDetail = attributes[labelDetailField];
-            if (labelDetail == undefined || labelDetail == null) {
+            if (labelDetail) {
                 labelDetail = attributes[objectIdField.name].toString();
             }
         }
@@ -282,7 +282,7 @@ export async function getPercentageAlong(
 ): Promise<number> {
     let percentage = 0.0;
 
-    if (!(sourceGeom.type == "polyline")) {
+    if (!(sourceGeom.type === "polyline")) {
         return percentage;
     } else {
         percentage = 0.5;
@@ -295,8 +295,8 @@ export async function getPercentageAlong(
 
         let pieceLength;
         if (
-            splitGeom[0].paths[0][0][0] == sourceLine.paths[0][0][0] &&
-            splitGeom[0].paths[0][0][1] == sourceLine.paths[0][0][1]
+            splitGeom[0].paths[0][0][0] === sourceLine.paths[0][0][0] &&
+            splitGeom[0].paths[0][0][1] === sourceLine.paths[0][0][1]
         ) {
             pieceLength = await planarLength(splitGeom[0], "feet");
         } else {
@@ -317,7 +317,7 @@ export function getAssetSourceByLayerId(
         if (domainNetwork) {
             for (const assetSource of domainNetwork.edgeSources) {
                 if (assetSource) {
-                    if (assetSource.layerId == layerId) {
+                    if (assetSource.layerId === layerId) {
                         return assetSource;
                     }
                 }
@@ -325,7 +325,7 @@ export function getAssetSourceByLayerId(
             for (const assetSource of domainNetwork.junctionSources) {
                 if (assetSource) {
                     if (assetSource) {
-                        if (assetSource.layerId == layerId) {
+                        if (assetSource.layerId === layerId) {
                             return assetSource;
                         }
                     }
@@ -357,12 +357,12 @@ export function getAssetSource(
     domainNetwork: Record<string, any>
 ): Record<string, any> | undefined {
     for (const assetSource of domainNetwork.edgeSources) {
-        if (assetSource && assetSource.sourceId == assetSourceCode) {
+        if (assetSource && assetSource.sourceId === assetSourceCode) {
             return assetSource;
         }
     }
     for (const assetSource of domainNetwork.junctionSources) {
-        if (assetSource && assetSource.sourceId == assetSourceCode) {
+        if (assetSource && assetSource.sourceId === assetSourceCode) {
             return assetSource;
         }
     }
@@ -374,7 +374,7 @@ export function getAssetGroup(
     assetSource: Record<string, any>
 ): Record<string, any> | undefined {
     for (const assetGroup of assetSource.assetGroups) {
-        if (assetGroup && assetGroup.assetGroupCode == assetGroupCode) {
+        if (assetGroup && assetGroup.assetGroupCode === assetGroupCode) {
             return assetGroup;
         }
     }
@@ -386,7 +386,7 @@ export function getAssetType(
     assetGroup: Record<string, any>
 ): Record<string, any> | undefined {
     for (const assetType of assetGroup.assetTypes) {
-        if (assetType && assetType.assetTypeCode == assetTypeCode) {
+        if (assetType && assetType.assetTypeCode === assetTypeCode) {
             return assetType;
         }
     }
@@ -401,7 +401,7 @@ export function getLayerIdByDomainAndSourceId(
     const domainNetwork = (
         utilityNetwork as any
     ).dataElement.domainNetworks.find(
-        (x) => x.domainNetworkId == domainNetworkId
+        (x) => x.domainNetworkId === domainNetworkId
     );
     const edgeSources = domainNetwork.edgeSources.find(
         (x) => x.sourceId === assetSourceId
@@ -431,7 +431,7 @@ export function getCodedDomain(
         const subTypeValue = graphic.attributes[subtypeField];
         if (subTypeValue) {
             const subType = layer.sourceJSON.subtypes.find(
-                (sub) => sub.code == subTypeValue
+                (sub) => sub.code === subTypeValue
             );
             if (subType) {
                 domain = subType.domains[field];
@@ -598,15 +598,15 @@ export async function getWebMapLayerByAsset(
                 let featureLayers: FeatureLayer[] = [];
                 if (
                     layer.type === "feature" &&
-                    (layer as FeatureLayer).layerId == layerId
+                    (layer as FeatureLayer).layerId === layerId
                 ) {
                     featureLayers.push(layer as FeatureLayer);
                 } else if (layer.type === "group") {
                     const subFeatureLayers = (layer as GroupLayer).layers
                         .filter(
                             (x) =>
-                                x.type == "feature" &&
-                                (x as FeatureLayer).layerId == layerId
+                                x.type === "feature" &&
+                                (x as FeatureLayer).layerId === layerId
                         )
                         .toArray() as FeatureLayer[];
                     featureLayers = subFeatureLayers;
@@ -648,19 +648,20 @@ export async function groupAssetTypesByWebMapLayer(
     const layers = map.allLayers.filter(
         (x) =>
             x.type === "feature" &&
-            (x as __esri.FeatureLayer).layerId == layerId
+            (x as __esri.FeatureLayer).layerId === layerId
     ) as __esri.Collection<FeatureLayer>;
 
     const tables = map.allTables.filter(
         (x) =>
             x.type === "feature" &&
-            (x as __esri.FeatureLayer).layerId == layerId
+            (x as __esri.FeatureLayer).layerId === layerId
     ) as __esri.Collection<FeatureLayer>;
 
     const globalIds = assets.map((x) => x.globalId);
     const globalIdsFormated = "'" + globalIds.join("','") + "'";
 
     const layerSets: LayerSetCollection = {};
+    let featureCount = assets.length;
     for (const layer of [...layers, ...tables]) {
         layer;
         const globalIdField = layer.fields.find((x) => x.type === "global-id");
@@ -674,13 +675,14 @@ export async function groupAssetTypesByWebMapLayer(
                 query.where = `(${query.where}) AND (${defExp})`;
             }
             const objectIds = await layer.queryObjectIds(query);
+            featureCount -= objectIds.length;
             if (objectIds.length > 0) {
                 layerSets[layer.id] = {
                     id: layer.id,
                     objectIds: objectIds,
                     layer: layer,
                 };
-                if (objectIds.length == assets.length) {
+                if (featureCount === 0) {
                     break;
                 }
             }
@@ -837,11 +839,11 @@ export function getUtilityNetworkAttributeFieldByType(
     const networkAttributes = (utilityNetwork as any).dataElement
         .networkAttributes;
     const networkAttribute = networkAttributes.find(
-        (att) => att.usageType == type
+        (att) => att.usageType === type
     );
     if (networkAttribute) {
         const assignment = networkAttribute.assignments.find(
-            (x) => x.layerId == layerId
+            (x) => x.layerId === layerId
         );
         if (assignment) {
             result = assignment.evaluator.fieldName;
