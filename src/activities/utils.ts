@@ -675,15 +675,18 @@ export async function groupAssetTypesByWebMapLayer(
                 query.where = `(${query.where}) AND (${defExp})`;
             }
             const objectIds = await layer.queryObjectIds(query);
-            featureCount -= objectIds.length;
-            if (objectIds.length > 0) {
-                layerSets[layer.id] = {
-                    id: layer.id,
-                    objectIds: objectIds,
-                    layer: layer,
-                };
-                if (featureCount === 0) {
-                    break;
+            //An AGS query with a returnIdsOnly flag returns a null objectIds collection when there are no matches
+            if (objectIds != null) {
+                featureCount -= objectIds.length;
+                if (objectIds.length > 0) {
+                    layerSets[layer.id] = {
+                        id: layer.id,
+                        objectIds: objectIds,
+                        layer: layer,
+                    };
+                    if (featureCount === 0) {
+                        break;
+                    }
                 }
             }
         }
