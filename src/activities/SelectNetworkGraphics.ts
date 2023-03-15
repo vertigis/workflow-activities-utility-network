@@ -8,7 +8,6 @@ import Point from "@arcgis/core/geometry/Point";
 import {
     NetworkGraphic,
     getPercentageAlong,
-    getValue,
     createNetworkGraphic,
     getTerminalIds,
     getPolylineIntersection,
@@ -92,49 +91,48 @@ export class SelectNetworkGraphics implements IActivityHandler {
             throw new Error("utilityNetwork is required");
         }
 
-        const networkGraphics: NetworkGraphic[] = [];        
+        const networkGraphics: NetworkGraphic[] = [];
         let hitPoint = point;
 
 
         const queriedGraphics = await this.queryFeatures(hitPoint, type, utilityNetwork);
-   
+
         for (const queriedGraphic of queriedGraphics) {
             const percAlong = await getPercentageAlong(
                 queriedGraphic.geometry,
                 hitPoint
             );
             let terminalIds: number[] | undefined = undefined;
-            if (utilityNetwork != undefined) {
-                if (queriedGraphic.geometry) {
-                    if (queriedGraphic.geometry.type === 'point') {
+            if (queriedGraphic.geometry) {
+                if (queriedGraphic.geometry.type === 'point') {
 
-                        terminalIds = getTerminalIds(queriedGraphic, utilityNetwork);
-                        hitPoint = queriedGraphic.geometry as Point;
-                    } else if (queriedGraphic.geometry.type === 'polyline') {
-                        const snappedPoint = await getPolylineIntersection(queriedGraphic.geometry as Polyline, hitPoint);
-                        if (snappedPoint) {
-                            hitPoint = snappedPoint;
-                        }
+                    terminalIds = getTerminalIds(queriedGraphic, utilityNetwork);
+                    hitPoint = queriedGraphic.geometry as Point;
+                } else if (queriedGraphic.geometry.type === 'polyline') {
+                    const snappedPoint = await getPolylineIntersection(queriedGraphic.geometry as Polyline, hitPoint);
+                    if (snappedPoint) {
+                        hitPoint = snappedPoint;
                     }
                 }
+            }
 
-                const networkGraphic = createNetworkGraphic(
-                    hitPoint,
-                    queriedGraphic.geometry,
-                    queriedGraphic.attributes,
-                    queriedGraphic.layer as FeatureLayer,
-                    percAlong,
-                    locationType as any,
-                    utilityNetwork,
-                    isFilterBarrier,
-                    terminalIds,
+            const networkGraphic = createNetworkGraphic(
+                hitPoint,
+                queriedGraphic.geometry,
+                queriedGraphic.attributes,
+                queriedGraphic.layer as FeatureLayer,
+                percAlong,
+                locationType as any,
+                utilityNetwork,
+                isFilterBarrier,
+                terminalIds,
 
-                );
-                if (networkGraphic != undefined) {
-                    networkGraphics.push(networkGraphic);
-                }
+            );
+            if (networkGraphic) {
+                networkGraphics.push(networkGraphic);
             }
         }
+
         return {
             networkGraphics: networkGraphics,
         };
@@ -174,8 +172,8 @@ export class SelectNetworkGraphics implements IActivityHandler {
                 outSpatialReference: { wkid: hitPoint.spatialReference.wkid },
             });
 
-            const validFeature = this.getValidFeature(result.features,  (x as any).graphic.layer, utilityNetwork);
-            if(validFeature != undefined){
+            const validFeature = this.getValidFeature(result.features, (x as any).graphic.layer, utilityNetwork);
+            if (validFeature) {
                 queriedGraphics.push(validFeature);
             }
 
@@ -186,12 +184,12 @@ export class SelectNetworkGraphics implements IActivityHandler {
     private getValidFeature(features: Graphic[], layer: FeatureLayer, utilityNetwork: UtilityNetwork): Graphic | undefined {
         const assetTypeField = getUtilityNetworkAttributeFieldByType("esriUNAUTAssetType", layer.layerId, utilityNetwork)
         const assetGroupField = getUtilityNetworkAttributeFieldByType("esriUNAUTAssetGroup", layer.layerId, utilityNetwork)
+        const globalIdField = layer.fields.find((x) => x.type === "global-id");
 
         if (
             features.length > 0 &&
-            getValue(features[0].attributes, "globalid") !=
-            undefined && assetGroupField != undefined &&
-            assetTypeField != undefined
+            globalIdField && assetGroupField &&
+            assetTypeField
         ) {
             features[0].layer = layer;
 
