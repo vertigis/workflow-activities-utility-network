@@ -677,7 +677,7 @@ export async function groupAssetTypesByWebMapLayer(
             const objectIds = await layer.queryObjectIds(query);
 
             //An AGS query with a returnIdsOnly flag returns a null objectIds collection when there are no results
-            if (objectIds != null) {
+            if (objectIds && objectIds !== null) {
                 featureCount -= objectIds.length;
                 if (objectIds.length > 0) {
                     layerSets[layer.id] = {
