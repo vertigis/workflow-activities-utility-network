@@ -675,15 +675,17 @@ export async function groupAssetTypesByWebMapLayer(
                 query.where = `(${query.where}) AND (${defExp})`;
             }
             const objectIds = await layer.queryObjectIds(query);
-            featureCount -= objectIds.length;
-            if (objectIds.length > 0) {
-                layerSets[layer.id] = {
-                    id: layer.id,
-                    objectIds: objectIds,
-                    layer: layer,
-                };
-                if (featureCount === 0) {
-                    break;
+            if (Array.isArray(objectIds)) {
+                featureCount -= objectIds.length;
+                if (objectIds.length > 0) {
+                    layerSets[layer.id] = {
+                        id: layer.id,
+                        objectIds: objectIds,
+                        layer: layer,
+                    };
+                    if (featureCount === 0) {
+                        break;
+                    }
                 }
             }
         }
