@@ -158,13 +158,13 @@ export class SelectNetworkGraphics implements IActivityHandler {
         const screenPoint = view.toScreen(hitPoint);
         const hitResult = await view.hitTest(screenPoint);
         const hitGraphics = hitResult.results.filter(
-            (g) => (g as any).graphic != undefined && (g as any).graphic.layer.type == "feature"
-        );
+            (g) => (g as any).layer != undefined && ((g as any).layer.type === "feature"
+                || ((g as any).layer.type === "subtype-group")));
 
         for (let i = 0; i < hitGraphics.length; i++) {
             const x = hitGraphics[i];
             const result = await (
-                (x as any).graphic.layer as FeatureLayer
+                (x as any).layer as FeatureLayer
             ).queryFeatures({
                 objectIds: [(x as any).graphic.getObjectId()],
                 returnGeometry: true,
@@ -172,7 +172,7 @@ export class SelectNetworkGraphics implements IActivityHandler {
                 outSpatialReference: { wkid: hitPoint.spatialReference.wkid },
             });
 
-            const validFeature = this.getValidFeature(result.features, (x as any).graphic.layer, utilityNetwork);
+            const validFeature = this.getValidFeature(result.features, (x as any).layer, utilityNetwork);
             if (validFeature) {
                 queriedGraphics.push(validFeature);
             }

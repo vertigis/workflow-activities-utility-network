@@ -4,6 +4,7 @@ import UtilityNetwork from "@arcgis/core/networks/UtilityNetwork";
 import NetworkElement from "@arcgis/core/rest/networks/support/NetworkElement";
 import WebMap from "@arcgis/core/WebMap";
 import type { IActivityHandler } from "@geocortex/workflow/runtime";
+import SubtypeGroupLayer from "@arcgis/core/layers/SubtypeGroupLayer";
 import type { LayerSetCollection } from "./utils";
 import {
     getAssetDomain,
@@ -69,7 +70,7 @@ interface GetUtilityNetworkHelperOutputs {
             layerId: number,
             map: WebMap,
             utilityNetwork: UtilityNetwork
-        ) => Promise<FeatureLayer | undefined>;
+        ) => Promise<FeatureLayer | SubtypeGroupLayer | undefined>;
         getWebMapLayersByAssets: (
             assets: NetworkElement[],
             map: WebMap,

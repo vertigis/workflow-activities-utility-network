@@ -17,7 +17,6 @@ import UtilityNetwork from "@arcgis/core/networks/UtilityNetwork";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import TraceLocation from "@arcgis/core/rest/networks/support/TraceLocation";
 import Polygon from "@arcgis/core/geometry/Polygon";
-import GroupLayer from "@arcgis/core/layers/GroupLayer";
 import Query from "@arcgis/core/rest/support/Query";
 import NetworkElement from "@arcgis/core/rest/networks/support/NetworkElement";
 import SubtypeSublayer from "esri/layers/support/SubtypeSublayer";
