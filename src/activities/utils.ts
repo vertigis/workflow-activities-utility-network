@@ -663,7 +663,6 @@ export async function groupAssetTypesByWebMapLayer(
 
     let featureCount = assets.length;
     for (const layer of [...layers, ...subTypeLayers, ...tables]) {
-        layer;
         const globalIdField = layer.fields.find((x) => x.type === "global-id");
         const objectIdField = layer.fields.find((x) => x.type === "oid");
         if (globalIdField && objectIdField) {
