@@ -111,7 +111,7 @@ export function createNetworkGraphic(
         const labelDetailField = getKey(attributes, "assetid");
         if (labelDetailField) {
             labelDetail = attributes[labelDetailField];
-            if (labelDetail) {
+            if (!labelDetail) {
                 labelDetail = attributes[objectIdField.name].toString();
             }
         }
