@@ -29,7 +29,7 @@ export type LayerSet = {
     objectIds: number[];
 };
 export type LayerSetCollection = {
-    [key: string]: LayerSet[];
+    [key: string]: LayerSet;
 };
 export type DomainNetworkCollection = {
     [key: string]: DomainCollection;
@@ -662,27 +662,39 @@ export async function groupAssetTypesByWebMapLayer(
     const globalIdsFormated = "'" + globalIds.join("','") + "'";
 
     let featureCount = assets.length;
+    let i = 1;
     for (const layer of [...layers, ...subTypeLayers, ...tables]) {
         const globalIdField = layer.fields.find((x) => x.type === "global-id");
         const objectIdField = layer.fields.find((x) => x.type === "oid");
         if (globalIdField && objectIdField) {
-            const query = new Query();
-            query.where = `${globalIdField.name} IN (${globalIdsFormated})`;
+            let whereClause = `${globalIdField.name} IN (${globalIdsFormated})`;
+
             if (layer.definitionExpression) {
                 const defExp = layer.definitionExpression;
-                query.where = `(${query.where}) AND (${defExp})`;
-                const objectIds = await layer.queryObjectIds(query);
+                whereClause = `(${whereClause}) AND (${defExp})`;
+                const objectIds = await queryFeatureLayer(
+                    layer,
+                    whereClause,
+                    layerSets
+                );
+
                 if (Array.isArray(objectIds)) {
                     featureCount -= objectIds.length;
                     if (objectIds.length > 0) {
                         if (!layerSets[layer.id]) {
-                            layerSets[layer.id] = [];
+                            layerSets[layer.id] = {
+                                id: layer.id,
+                                objectIds: objectIds,
+                                layer: layer,
+                            };
+                        } else {
+                            i++;
+                            layerSets[layer.id + i.toString()] = {
+                                id: layer.id,
+                                objectIds: objectIds,
+                                layer: layer,
+                            };
                         }
-                        layerSets[layer.id].push({
-                            id: layer.id,
-                            objectIds: objectIds,
-                            layer: layer,
-                        });
                         if (featureCount === 0) {
                             break;
                         }
@@ -690,20 +702,30 @@ export async function groupAssetTypesByWebMapLayer(
                 }
             } else if (layer.type === "subtype-group") {
                 for (const sub of layer.sublayers) {
-                    const subQuery = new Query();
-                    const subWhere = `(${query.where}) AND ${layer.subtypeField} = ${sub.subtypeCode}`;
-                    subQuery.where = subWhere;
-                    const subIds = await layer.queryObjectIds(subQuery);
+                    whereClause = `(${whereClause}) AND ${layer.subtypeField} = ${sub.subtypeCode}`;
+                    const subIds = await queryFeatureLayer(
+                        layer,
+                        whereClause,
+                        layerSets
+                    );
+
                     if (Array.isArray(subIds)) {
                         featureCount -= subIds.length;
                         if (!layerSets[layer.id]) {
-                            layerSets[layer.id] = [];
+                            layerSets[layer.id] = {
+                                id: layer.id,
+                                objectIds: subIds,
+                                layer: sub,
+                            };
+                        } else {
+                            i++;
+                            //make the layer set id unique to avoid duplicates
+                            layerSets[layer.id + i.toString()] = {
+                                id: layer.id,
+                                objectIds: subIds,
+                                layer: layer,
+                            };
                         }
-                        layerSets[layer.id].push({
-                            id: layer.id,
-                            objectIds: subIds,
-                            layer: sub,
-                        });
                         if (featureCount === 0) {
                             break;
                         }
@@ -716,6 +738,35 @@ export async function groupAssetTypesByWebMapLayer(
         }
     }
     return layerSets;
+}
+
+export async function queryFeatureLayer(
+    layer: FeatureLayer | SubtypeGroupLayer,
+    whereClause: string,
+    layerSets: LayerSetCollection
+): Promise<number[] | null> {
+    const query = new Query();
+    let i = 0;
+    const objectIds = await layer.queryObjectIds(query);
+    if (Array.isArray(objectIds)) {
+        if (objectIds.length > 0) {
+            if (!layerSets[layer.id]) {
+                layerSets[layer.id] = {
+                    id: layer.id,
+                    objectIds: objectIds,
+                    layer: layer,
+                };
+            } else {
+                i++;
+                layerSets[layer.id + i.toString()] = {
+                    id: layer.id,
+                    objectIds: objectIds,
+                    layer: layer,
+                };
+            }
+        }
+    }
+    return objectIds;
 }
 
 export async function getUtilityNetworkFromGraphic(
