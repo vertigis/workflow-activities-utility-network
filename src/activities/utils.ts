@@ -667,16 +667,12 @@ export async function groupAssetTypesByWebMapLayer(
         const globalIdField = layer.fields.find((x) => x.type === "global-id");
         const objectIdField = layer.fields.find((x) => x.type === "oid");
         if (globalIdField && objectIdField) {
-            let whereClause = `${globalIdField.name} IN (${globalIdsFormated})`;
+            const whereClause = `${globalIdField.name} IN (${globalIdsFormated})`;
 
             if (layer.definitionExpression) {
                 const defExp = layer.definitionExpression;
-                whereClause = `(${whereClause}) AND (${defExp})`;
-                const objectIds = await queryFeatureLayer(
-                    layer,
-                    whereClause,
-                    layerSets
-                );
+                const where = `(${whereClause}) AND (${defExp})`;
+                const objectIds = await getObjecIds(layer, where);
 
                 if (Array.isArray(objectIds)) {
                     featureCount -= objectIds.length;
@@ -702,12 +698,8 @@ export async function groupAssetTypesByWebMapLayer(
                 }
             } else if (layer.type === "subtype-group") {
                 for (const sub of layer.sublayers) {
-                    whereClause = `(${whereClause}) AND ${layer.subtypeField} = ${sub.subtypeCode}`;
-                    const subIds = await queryFeatureLayer(
-                        layer,
-                        whereClause,
-                        layerSets
-                    );
+                    const subWhere = `(${whereClause}) AND ${layer.subtypeField} = ${sub.subtypeCode}`;
+                    const subIds = await getObjecIds(layer, subWhere);
 
                     if (Array.isArray(subIds)) {
                         featureCount -= subIds.length;
@@ -723,7 +715,7 @@ export async function groupAssetTypesByWebMapLayer(
                             layerSets[layer.id + i.toString()] = {
                                 id: layer.id,
                                 objectIds: subIds,
-                                layer: layer,
+                                layer: sub,
                             };
                         }
                         if (featureCount === 0) {
@@ -740,32 +732,13 @@ export async function groupAssetTypesByWebMapLayer(
     return layerSets;
 }
 
-export async function queryFeatureLayer(
+export async function getObjecIds(
     layer: FeatureLayer | SubtypeGroupLayer,
-    whereClause: string,
-    layerSets: LayerSetCollection
+    whereClause: string
 ): Promise<number[] | null> {
     const query = new Query();
-    let i = 0;
+    query.where = whereClause;
     const objectIds = await layer.queryObjectIds(query);
-    if (Array.isArray(objectIds)) {
-        if (objectIds.length > 0) {
-            if (!layerSets[layer.id]) {
-                layerSets[layer.id] = {
-                    id: layer.id,
-                    objectIds: objectIds,
-                    layer: layer,
-                };
-            } else {
-                i++;
-                layerSets[layer.id + i.toString()] = {
-                    id: layer.id,
-                    objectIds: objectIds,
-                    layer: layer,
-                };
-            }
-        }
-    }
     return objectIds;
 }
 
