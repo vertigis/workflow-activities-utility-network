@@ -711,7 +711,8 @@ export async function groupAssetTypesByWebMapLayer(
                             };
                         } else {
                             i++;
-                            //make the layer set id unique to avoid duplicates
+                            //make the layer set id unique to avoid duplicates. A better solution would be arrays of LayerSets
+                            //but this would introduce a breaking change to the GetUtilityNetworkHelper activity.
                             layerSets[layer.id + i.toString()] = {
                                 id: layer.id,
                                 objectIds: subIds,
