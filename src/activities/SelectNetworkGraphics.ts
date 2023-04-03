@@ -21,6 +21,7 @@ import { activate } from "@geocortex/workflow/runtime/Hooks";
 import UtilityNetwork from "@arcgis/core/networks/UtilityNetwork";
 import Network from "@arcgis/core/networks/Network";
 import { Polyline } from "@arcgis/core/geometry";
+import SubtypeGroupLayer from "esri/layers/SubtypeGroupLayer";
 
 /** An interface that defines the inputs of the activity. */
 export interface SelectNetworkGraphicsInputs {
@@ -157,22 +158,31 @@ export class SelectNetworkGraphics implements IActivityHandler {
 
         const screenPoint = view.toScreen(hitPoint);
         const hitResult = await view.hitTest(screenPoint);
-        const hitGraphics = hitResult.results.filter(
-            (g) => (g as any).layer != undefined && ((g as any).layer.type === "feature"
-                || ((g as any).layer.type === "subtype-group")));
+        const hitGraphics = hitResult.results.map(
+            (g:any) => {
+                if (g.type === "graphic" && g.layer && (g.layer.type === "feature"
+                    || g.layer.type === "subtype-group")) {
+                    return g;
+                }
+            }).filter(Boolean);
 
         for (let i = 0; i < hitGraphics.length; i++) {
             const x = hitGraphics[i];
-            const result = await (
-                (x as any).layer as FeatureLayer
-            ).queryFeatures({
-                objectIds: [(x as any).graphic.getObjectId()],
+            let qLyr;
+            if (x.layer.type === "subtype-group") {
+                qLyr = x.layer as SubtypeGroupLayer;
+            } else {
+                qLyr = x.layer as FeatureLayer;
+            }
+
+            const result = await qLyr.queryFeatures({
+                objectIds: [x.graphic.getObjectId()],
                 returnGeometry: true,
                 outFields: ["*"],
                 outSpatialReference: { wkid: hitPoint.spatialReference.wkid },
             });
 
-            const validFeature = this.getValidFeature(result.features, (x as any).layer, utilityNetwork);
+            const validFeature = this.getValidFeature(result.features, x.layer, utilityNetwork);
             if (validFeature) {
                 queriedGraphics.push(validFeature);
             }

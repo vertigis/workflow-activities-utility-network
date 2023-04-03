@@ -25,7 +25,8 @@ import Layer from "@arcgis/core/layers/Layer";
 
 export type LayerSet = {
     id: string;
-    layer: FeatureLayer | SubtypeGroupLayer | SubtypeSublayer;
+    layer: FeatureLayer | SubtypeGroupLayer;
+    subtypelayer?: SubtypeSublayer;
     objectIds: number[];
 };
 export type LayerSetCollection = {
@@ -662,7 +663,6 @@ export async function groupAssetTypesByWebMapLayer(
     const globalIdsFormated = "'" + globalIds.join("','") + "'";
 
     let featureCount = assets.length;
-    let i = 1;
     for (const layer of [...layers, ...subTypeLayers, ...tables]) {
         const globalIdField = layer.fields.find((x) => x.type === "global-id");
         const objectIdField = layer.fields.find((x) => x.type === "oid");
@@ -684,8 +684,7 @@ export async function groupAssetTypesByWebMapLayer(
                                 layer: layer,
                             };
                         } else {
-                            i++;
-                            layerSets[layer.id + i.toString()] = {
+                            layerSets[Date.now().toString()] = {
                                 id: layer.id,
                                 objectIds: objectIds,
                                 layer: layer,
@@ -707,16 +706,17 @@ export async function groupAssetTypesByWebMapLayer(
                             layerSets[layer.id] = {
                                 id: layer.id,
                                 objectIds: subIds,
-                                layer: sub,
+                                layer: layer,
+                                subtypelayer: sub,
                             };
                         } else {
-                            i++;
                             //make the layer set id unique to avoid duplicates. A better solution would be arrays of LayerSets
                             //but this would introduce a breaking change to the GetUtilityNetworkHelper activity.
-                            layerSets[layer.id + i.toString()] = {
+                            layerSets[Date.now().toString()] = {
                                 id: layer.id,
                                 objectIds: subIds,
-                                layer: sub,
+                                layer: layer,
+                                subtypelayer: sub,
                             };
                         }
                         if (featureCount === 0) {
@@ -733,7 +733,7 @@ export async function groupAssetTypesByWebMapLayer(
     return layerSets;
 }
 
-export async function getObjecIds(
+async function getObjecIds(
     layer: FeatureLayer | SubtypeGroupLayer,
     whereClause: string
 ): Promise<number[] | null> {
