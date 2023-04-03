@@ -510,7 +510,7 @@ export async function getWebMapLayersByAssets(
                 ]) {
                     const typeSet =
                         domainNetworkSet[domainKey][sourceKey][groupKey][
-                        typeKey
+                            typeKey
                         ];
                     const layerId = typeSet.layerId;
 
