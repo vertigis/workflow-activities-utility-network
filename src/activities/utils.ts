@@ -510,7 +510,7 @@ export async function getWebMapLayersByAssets(
                 ]) {
                     const typeSet =
                         domainNetworkSet[domainKey][sourceKey][groupKey][
-                            typeKey
+                        typeKey
                         ];
                     const layerId = typeSet.layerId;
 
@@ -668,34 +668,7 @@ export async function groupAssetTypesByWebMapLayer(
         const objectIdField = layer.fields.find((x) => x.type === "oid");
         if (globalIdField && objectIdField) {
             const whereClause = `${globalIdField.name} IN (${globalIdsFormated})`;
-
-            if (layer.definitionExpression) {
-                const defExp = layer.definitionExpression;
-                const where = `(${whereClause}) AND (${defExp})`;
-                const objectIds = await getObjecIds(layer, where);
-
-                if (Array.isArray(objectIds)) {
-                    featureCount -= objectIds.length;
-                    if (objectIds.length > 0) {
-                        if (!layerSets[layer.id]) {
-                            layerSets[layer.id] = {
-                                id: layer.id,
-                                objectIds: objectIds,
-                                layer: layer,
-                            };
-                        } else {
-                            layerSets[Date.now().toString()] = {
-                                id: layer.id,
-                                objectIds: objectIds,
-                                layer: layer,
-                            };
-                        }
-                        if (featureCount === 0) {
-                            break;
-                        }
-                    }
-                }
-            } else if (layer.type === "subtype-group") {
+            if (layer.type === "subtype-group") {
                 for (const sub of layer.sublayers) {
                     const subWhere = `(${whereClause}) AND ${layer.subtypeField} = ${sub.subtypeCode}`;
                     const subIds = await getObjecIds(layer, subWhere);
@@ -726,6 +699,35 @@ export async function groupAssetTypesByWebMapLayer(
                 }
                 if (featureCount === 0) {
                     break;
+                }
+            } else {
+                let where = `(${whereClause})`;
+                if (layer.definitionExpression) {
+                    const defExp = layer.definitionExpression;
+                    where = `(${whereClause}) AND (${defExp})`;
+                }
+                const objectIds = await getObjecIds(layer, where);
+
+                if (Array.isArray(objectIds)) {
+                    featureCount -= objectIds.length;
+                    if (objectIds.length > 0) {
+                        if (!layerSets[layer.id]) {
+                            layerSets[layer.id] = {
+                                id: layer.id,
+                                objectIds: objectIds,
+                                layer: layer,
+                            };
+                        } else {
+                            layerSets[Date.now().toString()] = {
+                                id: layer.id,
+                                objectIds: objectIds,
+                                layer: layer,
+                            };
+                        }
+                        if (featureCount === 0) {
+                            break;
+                        }
+                    }
                 }
             }
         }
