@@ -591,7 +591,7 @@ export function groupAssets(
     return domainNetworkSet;
 }
 
-export async function groupAssetTypesByWebMapLayer(
+async function groupAssetTypesByWebMapLayer(
     objectIds: number[],
     layerId: number,
     map: WebMap,
@@ -628,20 +628,16 @@ export async function groupAssetTypesByWebMapLayer(
                         [objectIdField.name]
                     );
                     if (subFeatures.length > 0) {
+                        const subObjectIds = subFeatures.map(
+                            (x) => x.attributes[objectIdField.name]
+                        );
                         layerSets.push({
-                            objectIds: subFeatures.map(
-                                (x) => x.attributes[objectIdField.name]
-                            ),
+                            objectIds: subObjectIds,
                             layer: layer,
                             subtypeLayer: sub,
                             type: sub.type,
                         });
-                        objectIds = updateObjectIdArray(
-                            objectIds,
-                            subFeatures.map(
-                                (x) => x.attributes[objectIdField.name]
-                            )
-                        );
+                        updateObjectIdArray(objectIds, subObjectIds);
                         if (objectIds.length === 0) {
                             break;
                         }
@@ -657,18 +653,16 @@ export async function groupAssetTypesByWebMapLayer(
                 ]);
 
                 if (features.length > 0) {
+                    const objectIds = features.map(
+                        (x) => x.attributes[objectIdField.name]
+                    );
                     layerSets.push({
-                        objectIds: features.map(
-                            (x) => x.attributes[objectIdField.name]
-                        ),
+                        objectIds: objectIds,
                         layer: layer,
                         type: layer.type,
                     });
 
-                    objectIds = updateObjectIdArray(
-                        objectIds,
-                        features.map((x) => x.attributes[objectIdField.name])
-                    );
+                    updateObjectIdArray(objectIds, objectIds);
                     if (objectIds.length === 0) {
                         break;
                     }
