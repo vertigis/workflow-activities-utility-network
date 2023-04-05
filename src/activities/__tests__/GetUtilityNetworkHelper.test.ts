@@ -27,9 +27,6 @@ describe("GetUtilityNetworkHelper", () => {
             expect(result.utils.getUtilityNetworkFromGraphic).toBe(
                 utils.getUtilityNetworkFromGraphic
             );
-            expect(result.utils.getWebMapLayerByAsset).toBe(
-                utils.getWebMapLayerByAsset
-            );
             expect(result.utils.getWebMapLayersByAssets).toBe(
                 utils.getWebMapLayersByAssets
             );

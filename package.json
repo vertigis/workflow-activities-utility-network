@@ -28,8 +28,8 @@
         "test:watch": "jest --watch"
     },
     "dependencies": {
-        "@arcgis/core": "^4.21.2",
-        "@types/arcgis-js-api": "^4.22.0"
+        "@arcgis/core": "^4.25.0",
+        "@types/arcgis-js-api": "^4.25.0"
     },
     "devDependencies": {
         "@geocortex/workflow": "5.27.1",

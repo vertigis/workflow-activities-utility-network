@@ -21,17 +21,14 @@ import Query from "@arcgis/core/rest/support/Query";
 import NetworkElement from "@arcgis/core/rest/networks/support/NetworkElement";
 import SubtypeSublayer from "esri/layers/support/SubtypeSublayer";
 import SubtypeGroupLayer from "esri/layers/SubtypeGroupLayer";
-import Layer from "@arcgis/core/layers/Layer";
 
 export type LayerSet = {
-    id: string;
     layer: FeatureLayer | SubtypeGroupLayer;
-    subtypelayer?: SubtypeSublayer;
+    subtypeLayer?: SubtypeSublayer;
     objectIds: number[];
+    type: "feature" | "subtype-sublayer" | "string";
 };
-export type LayerSetCollection = {
-    [key: string]: LayerSet;
-};
+
 export type DomainNetworkCollection = {
     [key: string]: DomainCollection;
 };
@@ -52,7 +49,7 @@ export interface NetworkGraphic {
     graphic: Graphic;
     originGeometry: Geometry;
     globalId: string;
-    layer: FeatureLayer;
+    layer: FeatureLayer | SubtypeGroupLayer;
     layerId: number;
     traceLocations: TraceLocation[];
     utilityNetwork: UtilityNetwork;
@@ -67,7 +64,7 @@ export function createNetworkGraphic(
     point: Point,
     originGeometry: Geometry,
     attributes: Record<string, any>,
-    layer: FeatureLayer,
+    layer: FeatureLayer | SubtypeGroupLayer,
     percentAlong: number,
     type: "starting-point" | "barrier",
     utilityNetwork: UtilityNetwork,
@@ -192,22 +189,20 @@ export function getTerminalIds(
     utilityNetwork: UtilityNetwork
 ): number[] {
     const terminalIds: number[] = [];
+    const layerId = (graphic.layer as FeatureLayer | SubtypeGroupLayer).layerId;
     const assetTypeField = getUtilityNetworkAttributeFieldByType(
         "esriUNAUTAssetType",
-        (graphic.layer as FeatureLayer).layerId,
+        layerId,
         utilityNetwork
     );
     const assetGroupField = getUtilityNetworkAttributeFieldByType(
         "esriUNAUTAssetGroup",
-        (graphic.layer as FeatureLayer).layerId,
+        layerId,
         utilityNetwork
     );
     let assetType;
     if (assetTypeField && assetGroupField) {
-        const assetSource = getAssetSourceByLayerId(
-            (graphic.layer as FeatureLayer).layerId,
-            utilityNetwork
-        );
+        const assetSource = getAssetSourceByLayerId(layerId, utilityNetwork);
         if (assetSource) {
             const assetGroup = getAssetGroup(
                 graphic.attributes[assetGroupField],
@@ -425,7 +420,7 @@ export function getLayerIdByDomainAndSourceId(
 export function getCodedDomain(
     graphic: Graphic,
     field: string,
-    layer: FeatureLayer
+    layer: FeatureLayer | SubtypeGroupLayer
 ): CodedValueDomain | undefined {
     let domain;
 
@@ -454,7 +449,7 @@ export function getCodedDomain(
 }
 
 function domainOf(
-    layer: FeatureLayer,
+    layer: FeatureLayer | SubtypeGroupLayer,
     field: string
 ): CodedValueDomain | undefined {
     let domain;
@@ -498,36 +493,51 @@ export async function getWebMapLayersByAssets(
     assets: NetworkElement[],
     map: WebMap,
     utilityNetwork: UtilityNetwork
-): Promise<LayerSetCollection> {
-    const layerSets: LayerSetCollection = {};
-    const domainNetworkSet = groupAssets(assets, utilityNetwork);
+): Promise<LayerSet[]> {
+    const layerSets = [];
+    const assetLayerMap = getAssetLayers(assets, utilityNetwork);
 
-    for (const domainKey in domainNetworkSet) {
-        for (const sourceKey in domainNetworkSet[domainKey]) {
-            for (const groupKey in domainNetworkSet[domainKey][sourceKey]) {
-                for (const typeKey in domainNetworkSet[domainKey][sourceKey][
-                    groupKey
-                ]) {
-                    const typeSet =
-                        domainNetworkSet[domainKey][sourceKey][groupKey][
-                            typeKey
-                        ];
-                    const layerId = typeSet.layerId;
+    for (const [layerId, assetGroups] of assetLayerMap) {
+        await groupAssetTypesByWebMapLayer(
+            //Object Ids can be duplicated in UN results which can bloat the request.
+            [...new Set(assetGroups.map((x) => x.objectId))],
+            layerId,
+            map,
+            layerSets
+        );
+    }
 
-                    if (typeof layerId === "number") {
-                        await groupAssetTypesByWebMapLayer(
-                            typeSet.assets,
-                            layerId,
-                            map,
-                            layerSets
-                        );
-                    }
+    return layerSets;
+}
+
+export function getAssetLayers(
+    assets: NetworkElement[],
+    utilityNetwork: UtilityNetwork
+): Map<number, NetworkElement[]> {
+    const assetLayerMap = new Map<number, NetworkElement[]>();
+
+    for (const asset of assets) {
+        const domainNetwork = getAssetDomain(
+            asset.networkSourceId,
+            utilityNetwork
+        );
+        if (domainNetwork) {
+            const layerId = getLayerIdByDomainAndSourceId(
+                parseInt(domainNetwork.domainNetworkId),
+                asset.networkSourceId,
+                utilityNetwork
+            );
+            if (typeof layerId === "number") {
+                if (assetLayerMap.get(layerId)) {
+                    assetLayerMap.get(layerId)?.push(asset);
+                } else {
+                    assetLayerMap.set(layerId, [asset]);
                 }
             }
         }
     }
 
-    return layerSets;
+    return assetLayerMap;
 }
 
 export function groupAssets(
@@ -581,67 +591,12 @@ export function groupAssets(
     return domainNetworkSet;
 }
 
-export async function getWebMapLayerByAsset(
-    asset: NetworkElement,
-    layerId: number,
-    map: WebMap,
-    utilityNetwork: UtilityNetwork
-): Promise<FeatureLayer | SubtypeGroupLayer | undefined> {
-    const domainNetwork = getAssetDomain(asset.networkSourceId, utilityNetwork);
-
-    if (domainNetwork) {
-        const assetSource = getAssetSource(
-            asset.networkSourceId,
-            domainNetwork
-        );
-        if (assetSource) {
-            const layers = map.allLayers;
-            const tables = map.allTables;
-            for (const layer of [...layers, ...tables]) {
-                const featureLayers: Layer[] = [];
-                if (
-                    (layer.type === "feature" ||
-                        layer.type === "subtype-group") &&
-                    (layer as FeatureLayer).layerId === layerId
-                ) {
-                    featureLayers.push(layer);
-                }
-
-                for (const layer of featureLayers) {
-                    const featureLayer = layer as FeatureLayer;
-                    const globalIdField = featureLayer.fields.find(
-                        (x) => x.type === "global-id"
-                    );
-
-                    if (globalIdField) {
-                        const fieldName: string = globalIdField.name;
-                        const assetGlobalId: string = asset.globalId;
-                        const query = new Query();
-                        query.where = `${fieldName}='${assetGlobalId}'`;
-
-                        if (featureLayer.definitionExpression) {
-                            query.where = `(${query.where}) AND (${featureLayer.definitionExpression})`;
-                        }
-                        const count = await featureLayer.queryFeatureCount(
-                            query
-                        );
-                        if (count > 0) {
-                            return featureLayer;
-                        }
-                    }
-                }
-            }
-        }
-        return undefined;
-    }
-}
-
 export async function groupAssetTypesByWebMapLayer(
-    assets: Record<string, any>[],
+    objectIds: number[],
     layerId: number,
     map: WebMap,
-    layerSets: LayerSetCollection
-): Promise<LayerSetCollection> {
+    layerSets: LayerSet[]
+): Promise<LayerSet[]> {
     const layers = map.allLayers.filter(
         (x) =>
             x.type === "feature" &&
@@ -651,7 +606,7 @@ export async function groupAssetTypesByWebMapLayer(
     const subTypeLayers = map.allLayers.filter(
         (x) =>
             x.type === "subtype-group" &&
-            (x as __esri.FeatureLayer).layerId === layerId
+            (x as __esri.SubtypeGroupLayer).layerId === layerId
     ) as __esri.Collection<SubtypeGroupLayer>;
     const tables = map.allTables.filter(
         (x) =>
@@ -659,74 +614,63 @@ export async function groupAssetTypesByWebMapLayer(
             (x as __esri.FeatureLayer).layerId === layerId
     ) as __esri.Collection<FeatureLayer>;
 
-    const globalIds = assets.map((x) => x.globalId);
-    const globalIdsFormated = "'" + globalIds.join("','") + "'";
-
-    let featureCount = assets.length;
     for (const layer of [...layers, ...subTypeLayers, ...tables]) {
-        const globalIdField = layer.fields.find((x) => x.type === "global-id");
         const objectIdField = layer.fields.find((x) => x.type === "oid");
-        if (globalIdField && objectIdField) {
-            const whereClause = `${globalIdField.name} IN (${globalIdsFormated})`;
+
+        if (objectIdField) {
             if (layer.type === "subtype-group") {
                 for (const sub of layer.sublayers) {
-                    const subWhere = `(${whereClause}) AND ${layer.subtypeField} = ${sub.subtypeCode}`;
-                    const subIds = await getObjecIds(layer, subWhere);
-
-                    if (Array.isArray(subIds)) {
-                        featureCount -= subIds.length;
-                        if (!layerSets[layer.id]) {
-                            layerSets[layer.id] = {
-                                id: layer.id,
-                                objectIds: subIds,
-                                layer: layer,
-                                subtypelayer: sub,
-                            };
-                        } else {
-                            //make the layer set id unique to avoid duplicates. A better solution would be arrays of LayerSets
-                            //but this would introduce a breaking change to the GetUtilityNetworkHelper activity.
-                            layerSets[Date.now().toString()] = {
-                                id: layer.id,
-                                objectIds: subIds,
-                                layer: layer,
-                                subtypelayer: sub,
-                            };
-                        }
-                        if (featureCount === 0) {
+                    const subWhere = `${layer.subtypeField} = ${sub.subtypeCode}`;
+                    const subFeatures = await getObjecIds(
+                        layer,
+                        subWhere,
+                        objectIds,
+                        [objectIdField.name]
+                    );
+                    if (subFeatures.length > 0) {
+                        layerSets.push({
+                            objectIds: subFeatures.map(
+                                (x) => x.attributes[objectIdField.name]
+                            ),
+                            layer: layer,
+                            subtypeLayer: sub,
+                            type: sub.type,
+                        });
+                        objectIds = updateObjectIdArray(
+                            objectIds,
+                            subFeatures.map(
+                                (x) => x.attributes[objectIdField.name]
+                            )
+                        );
+                        if (objectIds.length === 0) {
                             break;
                         }
                     }
                 }
-                if (featureCount === 0) {
-                    break;
-                }
             } else {
-                let where = `(${whereClause})`;
+                let where = "1=1";
                 if (layer.definitionExpression) {
-                    const defExp = layer.definitionExpression;
-                    where = `(${whereClause}) AND (${defExp})`;
+                    where = layer.definitionExpression;
                 }
-                const objectIds = await getObjecIds(layer, where);
+                const features = await getObjecIds(layer, where, objectIds, [
+                    objectIdField.name,
+                ]);
 
-                if (Array.isArray(objectIds)) {
-                    featureCount -= objectIds.length;
-                    if (objectIds.length > 0) {
-                        if (!layerSets[layer.id]) {
-                            layerSets[layer.id] = {
-                                id: layer.id,
-                                objectIds: objectIds,
-                                layer: layer,
-                            };
-                        } else {
-                            layerSets[Date.now().toString()] = {
-                                id: layer.id,
-                                objectIds: objectIds,
-                                layer: layer,
-                            };
-                        }
-                        if (featureCount === 0) {
-                            break;
-                        }
+                if (features.length > 0) {
+                    layerSets.push({
+                        objectIds: features.map(
+                            (x) => x.attributes[objectIdField.name]
+                        ),
+                        layer: layer,
+                        type: layer.type,
+                    });
+
+                    objectIds = updateObjectIdArray(
+                        objectIds,
+                        features.map((x) => x.attributes[objectIdField.name])
+                    );
+                    if (objectIds.length === 0) {
+                        break;
                     }
                 }
             }
@@ -735,14 +679,32 @@ export async function groupAssetTypesByWebMapLayer(
     return layerSets;
 }
 
+function updateObjectIdArray(
+    objectIds: number[],
+    subSetIds: number[]
+): number[] {
+    for (const id of subSetIds) {
+        const index = objectIds.indexOf(id, 0);
+        if (index > -1) {
+            objectIds.splice(index, 1);
+        }
+    }
+    return objectIds;
+}
+
 async function getObjecIds(
     layer: FeatureLayer | SubtypeGroupLayer,
-    whereClause: string
-): Promise<number[] | null> {
+    whereClause: string,
+    objectIds: number[],
+    outFields: string[]
+): Promise<Graphic[]> {
     const query = new Query();
+    query.outFields = outFields;
     query.where = whereClause;
-    const objectIds = await layer.queryObjectIds(query);
-    return objectIds;
+    query.objectIds = objectIds;
+    query.returnGeometry = false;
+    const featureSet = await layer.queryFeatures(query);
+    return featureSet.features;
 }
 
 export async function getUtilityNetworkFromGraphic(
@@ -750,7 +712,7 @@ export async function getUtilityNetworkFromGraphic(
     graphic: Graphic
 ): Promise<UtilityNetwork | undefined> {
     let assetType;
-    const layer = graphic.layer as FeatureLayer;
+    const layer = graphic.layer as FeatureLayer | SubtypeGroupLayer;
     const globalIdField = layer.fields.find((x) => x.type === "global-id");
     if (!globalIdField) {
         throw Error("No global id field found in feature attributes.");
@@ -758,12 +720,12 @@ export async function getUtilityNetworkFromGraphic(
     for (const utilityNetwork of utilityNetworks) {
         const assetTypeField = getUtilityNetworkAttributeFieldByType(
             "esriUNAUTAssetType",
-            (graphic.layer as FeatureLayer).layerId,
+            layer.layerId,
             utilityNetwork
         );
         const assetGroupField = getUtilityNetworkAttributeFieldByType(
             "esriUNAUTAssetGroup",
-            (graphic.layer as FeatureLayer).layerId,
+            layer.layerId,
             utilityNetwork
         );
         if (assetTypeField && assetGroupField) {
@@ -771,7 +733,7 @@ export async function getUtilityNetworkFromGraphic(
                 .domainNetworks) {
                 if (domainNetwork) {
                     const assetSource = getAssetSource(
-                        (graphic.layer as FeatureLayer).layerId,
+                        layer.layerId,
                         domainNetwork
                     );
                     if (assetSource) {

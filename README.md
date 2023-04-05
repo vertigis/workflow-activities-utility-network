@@ -9,9 +9,15 @@ This project contains activities for interacting with the [ArcGIS Utility Networ
 
 The Utility Network activities are designed to work with VertiGIS Studio Workflow versions `5.25.2` and above.
 
-### ArcGIS JavaScript API Versions
+### ArcGIS Maps SDK for JavaScript Versions
 
-The Utility Network activities depend on the ArcGIS JavaScript API version `4.21` or above to be present in the host application.
+ 
+
+The Utility Network activities depend on the ArcGIS Maps SDK for JavaScript version `4.25` or above to be present in the host application. For example:
+
+- VertiGIS Studio Web versions `5.22` and above.
+
+- ArcGIS Experience Builder [versions](https://developers.arcgis.com/experience-builder/guide/release-versions/) `1.10` and above.
 
 ## Usage
 To use the Utility Network activities in [VertiGIS Studio Workflow Designer](https://apps.vertigisstudio.com/workflow/designer/) you need to register an activity pack and then add the activities to a workflow.
