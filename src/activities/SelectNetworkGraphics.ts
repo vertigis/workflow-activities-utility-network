@@ -24,9 +24,6 @@ import { Polyline } from "@arcgis/core/geometry";
 import SubtypeGroupLayer from "esri/layers/SubtypeGroupLayer";
 
 
-
-
-
 /** An interface that defines the inputs of the activity. */
 export interface SelectNetworkGraphicsInputs {
     /**
