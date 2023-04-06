@@ -1,11 +1,10 @@
 import Graphic from "@arcgis/core/Graphic";
-import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import UtilityNetwork from "@arcgis/core/networks/UtilityNetwork";
 import NetworkElement from "@arcgis/core/rest/networks/support/NetworkElement";
 import WebMap from "@arcgis/core/WebMap";
 import type { IActivityHandler } from "@geocortex/workflow/runtime";
-import type { LayerSetCollection } from "./utils";
 import {
+    LayerSet,
     getAssetDomain,
     getAssetGroup,
     getAssetSource,
@@ -15,7 +14,6 @@ import {
     getTerminalIds,
     getUtilityNetworkAttributeFieldByType,
     getUtilityNetworkFromGraphic,
-    getWebMapLayerByAsset,
     getWebMapLayersByAssets,
     isInTier,
 } from "./utils";
@@ -64,17 +62,11 @@ interface GetUtilityNetworkHelperOutputs {
             utilityNetworks: UtilityNetwork[],
             graphic: Graphic
         ) => Promise<UtilityNetwork | undefined>;
-        getWebMapLayerByAsset: (
-            asset: NetworkElement,
-            layerId: number,
-            map: WebMap,
-            utilityNetwork: UtilityNetwork
-        ) => Promise<FeatureLayer | undefined>;
         getWebMapLayersByAssets: (
             assets: NetworkElement[],
             map: WebMap,
             utilityNetwork: UtilityNetwork
-        ) => Promise<LayerSetCollection>;
+        ) => Promise<LayerSet[]>;
         isInTier: (
             assetGroupCode: number,
             assetTypeCode: number,
@@ -105,7 +97,6 @@ export default class GetUtilityNetworkHelper implements IActivityHandler {
                 getTerminalIds,
                 getUtilityNetworkAttributeFieldByType,
                 getUtilityNetworkFromGraphic,
-                getWebMapLayerByAsset,
                 getWebMapLayersByAssets,
                 isInTier,
             }),

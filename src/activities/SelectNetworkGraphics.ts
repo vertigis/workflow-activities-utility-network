@@ -21,6 +21,8 @@ import { activate } from "@geocortex/workflow/runtime/Hooks";
 import UtilityNetwork from "@arcgis/core/networks/UtilityNetwork";
 import Network from "@arcgis/core/networks/Network";
 import { Polyline } from "@arcgis/core/geometry";
+import SubtypeGroupLayer from "esri/layers/SubtypeGroupLayer";
+
 
 /** An interface that defines the inputs of the activity. */
 export interface SelectNetworkGraphicsInputs {
@@ -120,7 +122,7 @@ export class SelectNetworkGraphics implements IActivityHandler {
                 hitPoint,
                 queriedGraphic.geometry,
                 queriedGraphic.attributes,
-                queriedGraphic.layer as FeatureLayer,
+                queriedGraphic.layer as FeatureLayer | SubtypeGroupLayer,
                 percAlong,
                 locationType as any,
                 utilityNetwork,
@@ -154,25 +156,33 @@ export class SelectNetworkGraphics implements IActivityHandler {
             }
         }
         await view.when();
-
         const screenPoint = view.toScreen(hitPoint);
         const hitResult = await view.hitTest(screenPoint);
-        const hitGraphics = hitResult.results.filter(
-            (g) => (g as any).graphic != undefined && (g as any).graphic.layer.type == "feature"
-        );
+        const hitGraphics = hitResult.results.map(
+            (g) => {
+                if (g.type === "graphic" && g.layer && (g.layer.type === "feature"
+                    || g.layer.type === "subtype-group")) {
+                    return g;
+                }
+            }).filter((x): x is __esri.GraphicHit => !!x);
 
         for (let i = 0; i < hitGraphics.length; i++) {
             const x = hitGraphics[i];
-            const result = await (
-                (x as any).graphic.layer as FeatureLayer
-            ).queryFeatures({
-                objectIds: [(x as any).graphic.getObjectId()],
+            let qLyr: SubtypeGroupLayer | FeatureLayer;;
+            if (x.layer.type === "subtype-group") {
+                qLyr = x.layer as SubtypeGroupLayer;
+            } else {
+                qLyr = x.layer as FeatureLayer;
+            }
+
+            const result = await qLyr.queryFeatures({
+                objectIds: [x.graphic.getObjectId()],
                 returnGeometry: true,
                 outFields: ["*"],
                 outSpatialReference: { wkid: hitPoint.spatialReference.wkid },
             });
 
-            const validFeature = this.getValidFeature(result.features, (x as any).graphic.layer, utilityNetwork);
+            const validFeature = this.getValidFeature(result.features, qLyr, utilityNetwork);
             if (validFeature) {
                 queriedGraphics.push(validFeature);
             }
@@ -181,7 +191,7 @@ export class SelectNetworkGraphics implements IActivityHandler {
         return queriedGraphics;
     }
 
-    private getValidFeature(features: Graphic[], layer: FeatureLayer, utilityNetwork: UtilityNetwork): Graphic | undefined {
+    private getValidFeature(features: Graphic[], layer: FeatureLayer | SubtypeGroupLayer, utilityNetwork: UtilityNetwork): Graphic | undefined {
         const assetTypeField = getUtilityNetworkAttributeFieldByType("esriUNAUTAssetType", layer.layerId, utilityNetwork)
         const assetGroupField = getUtilityNetworkAttributeFieldByType("esriUNAUTAssetGroup", layer.layerId, utilityNetwork)
         const globalIdField = layer.fields.find((x) => x.type === "global-id");
