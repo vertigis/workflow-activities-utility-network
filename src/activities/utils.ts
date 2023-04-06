@@ -653,16 +653,16 @@ async function groupAssetTypesByWebMapLayer(
                 ]);
 
                 if (features.length > 0) {
-                    const objectIds = features.map(
+                    const featObjectIds = features.map(
                         (x) => x.attributes[objectIdField.name]
                     );
                     layerSets.push({
-                        objectIds: objectIds,
+                        objectIds: featObjectIds,
                         layer: layer,
                         type: layer.type,
                     });
 
-                    updateObjectIdArray(objectIds, objectIds);
+                    updateObjectIdArray(objectIds, featObjectIds);
                     if (objectIds.length === 0) {
                         break;
                     }
