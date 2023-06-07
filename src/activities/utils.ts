@@ -95,8 +95,9 @@ export function createNetworkGraphic(
         layer.layerId,
         utilityNetwork
     );
-
-    if (assetGroupField && assetTypeField) {
+    const layerAssetGroupField = getKey(attributes, assetGroupField);
+    const layerAssetTypeField = getKey(attributes, assetTypeField);
+    if (layerAssetGroupField && layerAssetTypeField) {
         const flagPoint = point.clone();
 
         const graphic = new Graphic({
@@ -136,9 +137,7 @@ export function createNetworkGraphic(
                 assetSource.sourceId,
                 utilityNetwork
             );
-            if (domainNetwork && assetSource) {
-                const layerAssetGroupKey = getKey(attributes, assetGroupField);
-                const layerAssetTypeKey = getKey(attributes, assetTypeField);
+            if (domainNetwork && assetSource && layerAssetGroupField && layerAssetTypeField) {
 
                 const networkGraphic = {
                     graphic: graphic,
@@ -149,10 +148,8 @@ export function createNetworkGraphic(
                     utilityNetwork: utilityNetwork,
                     domainId: domainNetwork.domainNetworkId,
                     sourceCode: assetSource.sourceId,
-                    assetTypeCode: graphic.attributes[layerAssetTypeKey] as number,
-                    assetGroupCode: graphic.attributes[
-                        layerAssetGroupKey
-                    ] as number,
+                    assetTypeCode:  graphic.attributes[layerAssetTypeField] as number,
+                    assetGroupCode:  graphic.attributes[layerAssetGroupField] as number,
                     label: label,
                 } as NetworkGraphic;
 
@@ -204,19 +201,19 @@ export function getTerminalIds(
         utilityNetwork
     );
     let assetType;
-    const layerAssetGroupKey = getKey(graphic.attributes, assetGroupField);
-    const layerAssetTypeKey = getKey(graphic.attributes, assetTypeField);
+    const layerAssetGroupField = getKey(graphic.attributes, assetGroupField);
+    const layerAssetTypeField = getKey(graphic.attributes, assetTypeField);
 
-    if (assetTypeField && assetGroupField) {
+    if (layerAssetGroupField && layerAssetTypeField) {
         const assetSource = getAssetSourceByLayerId(layerId, utilityNetwork);
         if (assetSource) {
             const assetGroup = getAssetGroup(
-                graphic.attributes[layerAssetGroupKey],
+                graphic.attributes[layerAssetGroupField],
                 assetSource
             );
             if (assetGroup) {
                 assetType = getAssetType(
-                    graphic.attributes[layerAssetTypeKey],
+                    graphic.attributes[layerAssetTypeField],
                     assetGroup
                 );
             }
@@ -728,10 +725,10 @@ export async function getUtilityNetworkFromGraphic(
             layer.layerId,
             utilityNetwork
         );
-        const layerAssetGroupKey = getKey(graphic.attributes, assetGroupField);
-        const layerAssetTypeKey = getKey(graphic.attributes, assetTypeField);
+        const layerAssetGroupField = getKey(graphic.attributes, assetGroupField);
+        const layerAssetTypeField = getKey(graphic.attributes, assetTypeField);
     
-        if (assetTypeField && assetGroupField) {
+        if (layerAssetGroupField && layerAssetTypeField) {
             for (const domainNetwork of (utilityNetwork as any).dataElement
                 .domainNetworks) {
                 if (domainNetwork) {
@@ -741,12 +738,12 @@ export async function getUtilityNetworkFromGraphic(
                     );
                     if (assetSource) {
                         const assetGroup = getAssetGroup(
-                            graphic.attributes[layerAssetGroupKey],
+                            graphic.attributes[layerAssetGroupField],
                             assetSource
                         );
                         if (assetGroup) {
                             assetType = getAssetType(
-                                graphic.attributes[layerAssetTypeKey],
+                                graphic.attributes[layerAssetTypeField],
                                 assetGroup
                             );
                             if (assetType) {
