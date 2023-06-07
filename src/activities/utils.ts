@@ -95,89 +95,104 @@ export function createNetworkGraphic(
         layer.layerId,
         utilityNetwork
     );
-    const layerAssetGroupField = getKey(attributes, assetGroupField);
-    const layerAssetTypeField = getKey(attributes, assetTypeField);
-    if (layerAssetGroupField && layerAssetTypeField) {
-        const flagPoint = point.clone();
 
-        const graphic = new Graphic({
-            geometry: flagPoint,
-            attributes: attributes,
-            layer: layer,
-        });
-        let label;
-        let labelDetail = "";
-        const labelDetailField = getKey(attributes, "assetid");
-        if (labelDetailField) {
-            labelDetail = attributes[labelDetailField];
-            if (!labelDetail) {
-                labelDetail = attributes[objectIdField.name].toString();
-            }
-        }
-        const assetTypeDomain = getCodedDomain(graphic, assetTypeField, layer);
-        if (assetTypeDomain) {
-            const assetTypeCode = graphic.attributes[assetTypeField];
-            if (assetTypeCode) {
-                const codedVal = assetTypeDomain.getName(
-                    graphic.attributes[assetTypeField]
-                );
-                if (codedVal) {
-                    label = `${layer.title} (${codedVal}) : ${labelDetail}`;
+    if (assetGroupField && assetTypeField) {
+        const layerAssetGroupField = getKey(attributes, assetGroupField);
+        const layerAssetTypeField = getKey(attributes, assetTypeField);
+        if (layerAssetGroupField && layerAssetTypeField) {
+            const flagPoint = point.clone();
+
+            const graphic = new Graphic({
+                geometry: flagPoint,
+                attributes: attributes,
+                layer: layer,
+            });
+            let label;
+            let labelDetail = "";
+            const labelDetailField = getKey(attributes, "assetid");
+            if (labelDetailField) {
+                labelDetail = attributes[labelDetailField];
+                if (!labelDetail) {
+                    labelDetail = attributes[objectIdField.name].toString();
                 }
             }
-        } else {
-            label = `${layer.title} : ${labelDetail}`;
-        }
-        const assetSource = getAssetSourceByLayerId(
-            layer.layerId,
-            utilityNetwork
-        );
-        if (assetSource) {
-            const domainNetwork = getAssetDomain(
-                assetSource.sourceId,
+            const assetTypeDomain = getCodedDomain(
+                graphic,
+                assetTypeField,
+                layer
+            );
+            if (assetTypeDomain) {
+                const assetTypeCode = graphic.attributes[assetTypeField];
+                if (assetTypeCode) {
+                    const codedVal = assetTypeDomain.getName(
+                        graphic.attributes[assetTypeField]
+                    );
+                    if (codedVal) {
+                        label = `${layer.title} (${codedVal}) : ${labelDetail}`;
+                    }
+                }
+            } else {
+                label = `${layer.title} : ${labelDetail}`;
+            }
+            const assetSource = getAssetSourceByLayerId(
+                layer.layerId,
                 utilityNetwork
             );
-            if (domainNetwork && assetSource && layerAssetGroupField && layerAssetTypeField) {
+            if (assetSource) {
+                const domainNetwork = getAssetDomain(
+                    assetSource.sourceId,
+                    utilityNetwork
+                );
+                if (
+                    domainNetwork &&
+                    assetSource &&
+                    layerAssetGroupField &&
+                    layerAssetTypeField
+                ) {
+                    const networkGraphic = {
+                        graphic: graphic,
+                        originGeometry: originGeometry,
+                        globalId: globalId,
+                        layer: layer,
+                        layerId: layer.layerId,
+                        utilityNetwork: utilityNetwork,
+                        domainId: domainNetwork.domainNetworkId,
+                        sourceCode: assetSource.sourceId,
+                        assetTypeCode: graphic.attributes[
+                            layerAssetTypeField
+                        ] as number,
+                        assetGroupCode: graphic.attributes[
+                            layerAssetGroupField
+                        ] as number,
+                        label: label,
+                    } as NetworkGraphic;
 
-                const networkGraphic = {
-                    graphic: graphic,
-                    originGeometry: originGeometry,
-                    globalId: globalId,
-                    layer: layer,
-                    layerId: layer.layerId,
-                    utilityNetwork: utilityNetwork,
-                    domainId: domainNetwork.domainNetworkId,
-                    sourceCode: assetSource.sourceId,
-                    assetTypeCode:  graphic.attributes[layerAssetTypeField] as number,
-                    assetGroupCode:  graphic.attributes[layerAssetGroupField] as number,
-                    label: label,
-                } as NetworkGraphic;
-
-                if (terminalIds) {
-                    const traceLocations: TraceLocation[] = [];
-                    for (let i = 0; i < terminalIds.length; i++) {
-                        const terminalId: number = terminalIds[i];
-                        const traceLocation = new TraceLocation({
-                            globalId,
-                            isFilterBarrier,
-                            percentAlong,
-                            terminalId,
-                            type,
-                        });
-                        traceLocations.push(traceLocation);
+                    if (terminalIds) {
+                        const traceLocations: TraceLocation[] = [];
+                        for (let i = 0; i < terminalIds.length; i++) {
+                            const terminalId: number = terminalIds[i];
+                            const traceLocation = new TraceLocation({
+                                globalId,
+                                isFilterBarrier,
+                                percentAlong,
+                                terminalId,
+                                type,
+                            });
+                            traceLocations.push(traceLocation);
+                        }
+                        networkGraphic.traceLocations = traceLocations;
+                    } else {
+                        networkGraphic.traceLocations = [
+                            new TraceLocation({
+                                globalId,
+                                isFilterBarrier,
+                                percentAlong,
+                                type,
+                            }),
+                        ];
                     }
-                    networkGraphic.traceLocations = traceLocations;
-                } else {
-                    networkGraphic.traceLocations = [
-                        new TraceLocation({
-                            globalId,
-                            isFilterBarrier,
-                            percentAlong,
-                            type,
-                        }),
-                    ];
+                    return networkGraphic;
                 }
-                return networkGraphic;
             }
         }
     }
@@ -201,12 +216,15 @@ export function getTerminalIds(
         utilityNetwork
     );
     let assetType;
-    const layerAssetGroupField = getKey(graphic.attributes, assetGroupField);
-    const layerAssetTypeField = getKey(graphic.attributes, assetTypeField);
 
-    if (layerAssetGroupField && layerAssetTypeField) {
+    if (assetTypeField && assetGroupField) {
+        const layerAssetGroupField = getKey(
+            graphic.attributes,
+            assetGroupField
+        );
+        const layerAssetTypeField = getKey(graphic.attributes, assetTypeField);
         const assetSource = getAssetSourceByLayerId(layerId, utilityNetwork);
-        if (assetSource) {
+        if (assetSource && layerAssetGroupField && layerAssetTypeField) {
             const assetGroup = getAssetGroup(
                 graphic.attributes[layerAssetGroupField],
                 assetSource
@@ -725,43 +743,53 @@ export async function getUtilityNetworkFromGraphic(
             layer.layerId,
             utilityNetwork
         );
-        const layerAssetGroupField = getKey(graphic.attributes, assetGroupField);
-        const layerAssetTypeField = getKey(graphic.attributes, assetTypeField);
-    
-        if (layerAssetGroupField && layerAssetTypeField) {
-            for (const domainNetwork of (utilityNetwork as any).dataElement
-                .domainNetworks) {
-                if (domainNetwork) {
-                    const assetSource = getAssetSource(
-                        layer.layerId,
-                        domainNetwork
-                    );
-                    if (assetSource) {
-                        const assetGroup = getAssetGroup(
-                            graphic.attributes[layerAssetGroupField],
-                            assetSource
+
+        if (assetGroupField && assetTypeField) {
+            const layerAssetTypeField = getKey(
+                graphic.attributes,
+                assetTypeField
+            );
+            const layerAssetGroupField = getKey(
+                graphic.attributes,
+                assetGroupField
+            );
+            if (layerAssetGroupField && layerAssetTypeField) {
+                for (const domainNetwork of (utilityNetwork as any).dataElement
+                    .domainNetworks) {
+                    if (domainNetwork) {
+                        const assetSource = getAssetSource(
+                            layer.layerId,
+                            domainNetwork
                         );
-                        if (assetGroup) {
-                            assetType = getAssetType(
-                                graphic.attributes[layerAssetTypeField],
-                                assetGroup
+                        if (assetSource) {
+                            const assetGroup = getAssetGroup(
+                                graphic.attributes[layerAssetGroupField],
+                                assetSource
                             );
-                            if (assetType) {
-                                const fsUrl: string = (utilityNetwork as any)
-                                    .featureServiceUrl;
-                                const tempLayer = new FeatureLayer({
-                                    url: `${fsUrl}/${layer.layerId}`,
-                                });
-                                const globalId: string =
-                                    graphic.attributes[globalIdField.name];
-                                const query = {
-                                    where: `${globalIdField.name}='${globalId}'`,
-                                };
-                                const count = await tempLayer.queryFeatureCount(
-                                    query
+                            if (assetGroup) {
+                                assetType = getAssetType(
+                                    graphic.attributes[layerAssetTypeField],
+                                    assetGroup
                                 );
-                                if (count > 0) {
-                                    return utilityNetwork;
+                                if (assetType) {
+                                    const fsUrl: string = (
+                                        utilityNetwork as any
+                                    ).featureServiceUrl;
+                                    const tempLayer = new FeatureLayer({
+                                        url: `${fsUrl}/${layer.layerId}`,
+                                    });
+                                    const globalId: string =
+                                        graphic.attributes[globalIdField.name];
+                                    const query = {
+                                        where: `${globalIdField.name}='${globalId}'`,
+                                    };
+                                    const count =
+                                        await tempLayer.queryFeatureCount(
+                                            query
+                                        );
+                                    if (count > 0) {
+                                        return utilityNetwork;
+                                    }
                                 }
                             }
                         }
