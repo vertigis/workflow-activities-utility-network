@@ -137,6 +137,9 @@ export function createNetworkGraphic(
                 utilityNetwork
             );
             if (domainNetwork && assetSource) {
+                const layerAssetGroupKey = getKey(attributes, assetGroupField);
+                const layerAssetTypeKey = getKey(attributes, assetTypeField);
+
                 const networkGraphic = {
                     graphic: graphic,
                     originGeometry: originGeometry,
@@ -146,9 +149,9 @@ export function createNetworkGraphic(
                     utilityNetwork: utilityNetwork,
                     domainId: domainNetwork.domainNetworkId,
                     sourceCode: assetSource.sourceId,
-                    assetTypeCode: graphic.attributes[assetTypeField] as number,
+                    assetTypeCode: graphic.attributes[layerAssetTypeKey] as number,
                     assetGroupCode: graphic.attributes[
-                        assetGroupField
+                        layerAssetGroupKey
                     ] as number,
                     label: label,
                 } as NetworkGraphic;
@@ -201,16 +204,19 @@ export function getTerminalIds(
         utilityNetwork
     );
     let assetType;
+    const layerAssetGroupKey = getKey(graphic.attributes, assetGroupField);
+    const layerAssetTypeKey = getKey(graphic.attributes, assetTypeField);
+
     if (assetTypeField && assetGroupField) {
         const assetSource = getAssetSourceByLayerId(layerId, utilityNetwork);
         if (assetSource) {
             const assetGroup = getAssetGroup(
-                graphic.attributes[assetGroupField],
+                graphic.attributes[layerAssetGroupKey],
                 assetSource
             );
             if (assetGroup) {
                 assetType = getAssetType(
-                    graphic.attributes[assetTypeField],
+                    graphic.attributes[layerAssetTypeKey],
                     assetGroup
                 );
             }
@@ -722,6 +728,9 @@ export async function getUtilityNetworkFromGraphic(
             layer.layerId,
             utilityNetwork
         );
+        const layerAssetGroupKey = getKey(graphic.attributes, assetGroupField);
+        const layerAssetTypeKey = getKey(graphic.attributes, assetTypeField);
+    
         if (assetTypeField && assetGroupField) {
             for (const domainNetwork of (utilityNetwork as any).dataElement
                 .domainNetworks) {
@@ -732,12 +741,12 @@ export async function getUtilityNetworkFromGraphic(
                     );
                     if (assetSource) {
                         const assetGroup = getAssetGroup(
-                            graphic.attributes[assetGroupField],
+                            graphic.attributes[layerAssetGroupKey],
                             assetSource
                         );
                         if (assetGroup) {
                             assetType = getAssetType(
-                                graphic.attributes[assetTypeField],
+                                graphic.attributes[layerAssetTypeKey],
                                 assetGroup
                             );
                             if (assetType) {
