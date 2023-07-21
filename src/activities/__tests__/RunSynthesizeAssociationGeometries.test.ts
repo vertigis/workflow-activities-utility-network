@@ -1,4 +1,4 @@
-import { RunSynthesizeAssociationGeometries } from "../RunSynthesizeAssociationGeometries";
+import RunSynthesizeAssociationGeometries from "../RunSynthesizeAssociationGeometries";
 import AssociationGeometriesResult from "@arcgis/core/rest/networks/support/AssociationGeometriesResult";
 
 jest.mock("@arcgis/core/networks/Network", () => {

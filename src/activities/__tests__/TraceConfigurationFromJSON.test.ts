@@ -1,7 +1,5 @@
-import {
-    TraceConfigurationFromJSON,
-    TraceConfigurationFromJSONInputs,
-} from "../TraceConfigurationFromJSON";
+import TraceConfigurationFromJSON from "../TraceConfigurationFromJSON";
+import { TraceConfigurationFromJSONInputs } from "../TraceConfigurationFromJSON";
 import TraceConfiguration from "@arcgis/core/networks/support/TraceConfiguration";
 jest.mock("@arcgis/core/networks/support/TraceConfiguration", () => {
     return function () {

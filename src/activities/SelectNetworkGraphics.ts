@@ -71,7 +71,7 @@ export interface SelectNetworkGraphicsOutputs {
  * @unsupportedApps GMV, GVH, WAB
  */
 @activate(MapProvider)
-export class SelectNetworkGraphics implements IActivityHandler {
+export default class SelectNetworkGraphics implements IActivityHandler {
     async execute(
         inputs: SelectNetworkGraphicsInputs,
         context: IActivityContext,

@@ -49,7 +49,7 @@ export interface CreateTraceLocationOutputs {
  * @clientOnly
  * @unsupportedApps GMV, GVH, WAB
  */
-export class CreateTraceLocation implements IActivityHandler {
+export default class CreateTraceLocation implements IActivityHandler {
     execute(inputs: CreateTraceLocationInputs): CreateTraceLocationOutputs {
         const { globalId, isFilterBarrier, percentAlong, type, terminalId } =
             inputs;

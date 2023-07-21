@@ -33,7 +33,7 @@ export interface InitializeUtilityNetworkOutputs {
  * @unsupportedApps GMV, GVH, WAB
  */
 @activate(MapProvider)
-export class InitializeUtilityNetwork implements IActivityHandler {
+export default class InitializeUtilityNetwork implements IActivityHandler {
     async execute(
         inputs: unknown,
         context: IActivityContext,

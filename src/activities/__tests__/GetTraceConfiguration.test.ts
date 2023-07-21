@@ -1,7 +1,5 @@
-import {
-    GetTraceConfiguration,
-    GetTraceConfigurationInputs,
-} from "../GetTraceConfiguration";
+import { GetTraceConfigurationInputs } from "../GetTraceConfiguration";
+import GetTraceConfiguration from "../GetTraceConfiguration";
 import UtilityNetwork from "@arcgis/core/networks/UtilityNetwork";
 import TraceConfiguration from "@arcgis/core/networks/support/TraceConfiguration";
 import NamedTraceConfiguration from "@arcgis/core/networks/support/NamedTraceConfiguration";

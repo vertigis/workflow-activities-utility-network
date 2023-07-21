@@ -1,4 +1,4 @@
-import { InitializeUtilityNetwork } from "../InitializeUtilityNetwork";
+import InitializeUtilityNetwork from "../InitializeUtilityNetwork";
 import UtilityNetwork from "@arcgis/core/networks/UtilityNetwork";
 import Collection from "@arcgis/core/core/Collection";
 import { mockActivityContext } from "../__mocks__/ActivityContext";

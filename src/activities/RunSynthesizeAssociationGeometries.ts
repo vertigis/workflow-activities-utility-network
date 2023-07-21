@@ -68,7 +68,9 @@ export interface RunSynthesizeAssociationGeometriesOutputs {
  * @clientOnly
  * @unsupportedApps GMV, GVH, WAB
  */
-export class RunSynthesizeAssociationGeometries implements IActivityHandler {
+export default class RunSynthesizeAssociationGeometries
+    implements IActivityHandler
+{
     async execute(
         inputs: RunSynthesizeAssociationGeometriesInputs
     ): Promise<RunSynthesizeAssociationGeometriesOutputs> {

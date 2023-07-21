@@ -1,7 +1,5 @@
-import {
-    RunUtilityNetworkTrace,
-    RunUtilityNetworkTraceInputs,
-} from "../RunUtilityNetworkTrace";
+import RunUtilityNetworkTrace from "../RunUtilityNetworkTrace";
+import { RunUtilityNetworkTraceInputs } from "../RunUtilityNetworkTrace";
 import TraceResult from "@arcgis/core/rest/networks/support/TraceResult";
 
 const mockTraceLocation = {
