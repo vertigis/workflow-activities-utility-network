@@ -11,13 +11,6 @@ interface CreateDiagramFromFeaturesInputs {
     serviceUrl: string;
 
     /**
-     * @displayName Diagram Name
-     * @description The name of the diagram to query
-     * @required
-     * */
-    name: string;
-
-    /**
      * @displayName Global Ids
      * @description  An array of utility network features Global IDs.
      * @required
@@ -85,13 +78,9 @@ export default class CreateDiagramFromFeatures implements IActivityHandler {
     async execute(
         inputs: CreateDiagramFromFeaturesInputs
     ): Promise<CreateDiagramFromFeaturesOutputs> {
-        const { serviceUrl, name, initialFeatures, template, ...other } =
-            inputs;
+        const { serviceUrl, initialFeatures, template, ...other } = inputs;
         if (!serviceUrl) {
             throw new Error("serviceUrl is required");
-        }
-        if (!name) {
-            throw new Error("diagramName is required");
         }
         if (!initialFeatures) {
             throw new Error("global Ids are required");
@@ -105,12 +94,20 @@ export default class CreateDiagramFromFeatures implements IActivityHandler {
         const url = `${normalizedUrl}/createDiagramFromFeatures`;
         const query = {
             f: "json",
-            initialFeatures,
             template,
+            initialFeatures,
             ...other,
         };
+        const body: FormData = new FormData();
+        for (const key in query) {
+            let val = query[key];
+            if (typeof val === "object") {
+                val = JSON.stringify(val);
+            }
+            body.append(key, val);
+        }
         const options: __esri.RequestOptions = {
-            query: query,
+            body: body,
             responseType: "json",
             method: "post",
         };
