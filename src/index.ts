@@ -1,4 +1,6 @@
 // Activities will be re-exported from this file.
+export { default as ApplyLayout } from "./activities/diagrams/ApplyLayout";
+
 export { default as CreateTraceLocation } from "./activities/CreateTraceLocation";
 
 export { default as CreateDiagramFromFeatures } from "./activities/diagrams/CreateDiagramFromFeatures";
