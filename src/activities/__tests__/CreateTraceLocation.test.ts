@@ -1,5 +1,6 @@
-import CreateTraceLocation from "../CreateTraceLocation";
-import { CreateTraceLocationInputs } from "../CreateTraceLocation";
+import CreateTraceLocation, {
+    CreateTraceLocationInputs,
+} from "../CreateTraceLocation";
 import TraceLocation from "@arcgis/core/rest/networks/support/TraceLocation";
 
 const mockTraceLocation = {

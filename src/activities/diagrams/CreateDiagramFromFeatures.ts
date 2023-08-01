@@ -121,27 +121,3 @@ export default class CreateDiagramFromFeatures implements IActivityHandler {
         };
     }
 }
-
-export interface DiagramInfo {
-    tag: string;
-    isStored: boolean;
-    canStore: boolean;
-    canExtend: boolean;
-    isSystem: boolean;
-    creator: string;
-    creationDate: number;
-    lastUpdateBy: string;
-    lastUpdateDate: number;
-    containerMargin: number;
-    junctionCount: number;
-    edgeCount: number;
-    containerCount: number;
-    aggregationCount: number;
-    isHistorical: boolean;
-    access: string;
-    diagramExtent: __esri.Extent;
-    networkExtent: __esri.Extent;
-    name: string;
-    id: string;
-    template: string;
-}
