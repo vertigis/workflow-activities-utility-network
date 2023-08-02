@@ -139,7 +139,7 @@ export default class ApplyLayout implements IActivityHandler {
 
         // Remove trailing slashes
         const normalizedUrl = serviceUrl.replace(/\/*$/, "");
-        const url = `${normalizedUrl}\\diagrams\\${diagramName}\\applyLayout`;
+        const url = `${normalizedUrl}/diagrams/${diagramName}/applyLayout`;
 
         const query = {
             f: "json",
