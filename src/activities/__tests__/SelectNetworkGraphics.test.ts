@@ -1,7 +1,5 @@
-import {
-    SelectNetworkGraphics,
-    SelectNetworkGraphicsInputs,
-} from "../SelectNetworkGraphics";
+import SelectNetworkGraphics from "../SelectNetworkGraphics";
+import { SelectNetworkGraphicsInputs } from "../SelectNetworkGraphics";
 import Point from "@arcgis/core/geometry/Point";
 import { mockWebMap } from "../__mocks__/WebMap";
 import { mockActivityContext } from "../__mocks__/ActivityContext";

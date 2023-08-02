@@ -1,5 +1,4 @@
-import {
-    CreateTraceLocation,
+import CreateTraceLocation, {
     CreateTraceLocationInputs,
 } from "../CreateTraceLocation";
 import TraceLocation from "@arcgis/core/rest/networks/support/TraceLocation";

@@ -26,7 +26,7 @@ export interface TraceConfigurationFromJSONOutputs {
  * @clientOnly
  * @unsupportedApps GMV, GVH, WAB
  */
-export class TraceConfigurationFromJSON implements IActivityHandler {
+export default class TraceConfigurationFromJSON implements IActivityHandler {
     execute(
         inputs: TraceConfigurationFromJSONInputs
     ): TraceConfigurationFromJSONOutputs {

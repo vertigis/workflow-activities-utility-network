@@ -86,7 +86,7 @@ export interface RunUtilityNetworkTraceOutputs {
  * @unsupportedApps GMV, GVH, WAB
  */
 @activate(MapProvider)
-export class RunUtilityNetworkTrace implements IActivityHandler {
+export default class RunUtilityNetworkTrace implements IActivityHandler {
     async execute(
         inputs: RunUtilityNetworkTraceInputs
     ): Promise<RunUtilityNetworkTraceOutputs> {
