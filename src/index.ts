@@ -27,6 +27,10 @@ export { default as RunUtilityNetworkTrace } from "./activities/RunUtilityNetwor
 
 export { default as SelectNetworkGraphics } from "./activities/SelectNetworkGraphics";
 
+export { default as StoreDiagram } from "./activities/diagrams/StoreDiagram";
+
 export { default as TraceConfigurationFromJSON } from "./activities/TraceConfigurationFromJSON";
+
+export { default as UpdateDiagram } from "./activities/diagrams/UpdateDiagram";
 
 export { default as ValidateNetworkTopology } from "./activities/ValidateNetworkTopology";
