@@ -61,8 +61,8 @@ interface UpdateDiagramOutputs {
 }
 
 /**
- * @displayName UpdateDiagram
- * @description The UpdateDiagram operation is performed on a Diagram resource.It is used to synchronize its content from
+ * @displayName Update Diagram
+ * @description The Update Diagram operation is performed on a Diagram resource.It is used to synchronize its content from
  * the network features used to initially generate it, and so reflect any changes that may have impacted those network features into the diagram.
  * @category Utility Network
  * @clientOnly

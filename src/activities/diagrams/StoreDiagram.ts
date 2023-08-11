@@ -85,8 +85,8 @@ interface StoreDiagramOutputs {
 }
 
 /**
- * @displayName StoreDiagram
- * @description The StoreDiagram operation is performed on a Diagram resource. The result of this operation is a Diagram JSON Information object,
+ * @displayName Store Diagram
+ * @description The Store Diagram operation is performed on a Diagram resource. The result of this operation is a Diagram JSON Information object,
  * and the moment the store operation happens. It is used to store the temporary network diagram resource in the database.
  * @category Utility Network
  * @clientOnly
