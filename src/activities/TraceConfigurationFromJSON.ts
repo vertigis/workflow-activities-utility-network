@@ -24,7 +24,7 @@ export interface TraceConfigurationFromJSONOutputs {
  * @description Create a trace configuration from JSON.
  * @helpUrl https://developers.arcgis.com/javascript/latest/api-reference/esri-networks-support-TraceConfiguration.html
  * @clientOnly
- * @unsupportedApps GMV, GVH, WAB
+ * @supportedApps EXB, GWV
  */
 export default class TraceConfigurationFromJSON implements IActivityHandler {
     execute(

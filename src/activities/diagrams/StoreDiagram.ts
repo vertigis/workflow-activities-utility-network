@@ -90,10 +90,9 @@ interface StoreDiagramOutputs {
  * and the moment the store operation happens. It is used to store the temporary network diagram resource in the database.
  * @category Utility Network
  * @clientOnly
- * @unsupportedApps GMV, GVH, WAB
+ * @supportedApps EXB, GWV
  */
 export default class StoreDiagram implements IActivityHandler {
-    /** Perform the execution logic of the activity. */
     async execute(inputs: StoreDiagramInputs): Promise<StoreDiagramOutputs> {
         const { serviceUrl, diagramId, name, access, ...other } = inputs;
         if (!serviceUrl) {

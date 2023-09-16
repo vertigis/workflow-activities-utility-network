@@ -43,14 +43,13 @@ interface FindDiagramInfosOutputs {
 }
 
 /**
- * @displayName FindDiagramInfos
+ * @displayName Find Diagram Infos
  * @category Utility Network
  * @description Returns the diagram info object for each of the diagram names specified.
  * @clientOnly
- * @unsupportedApps GMV, GVH, WAB
+ * @supportedApps EXB, GWV
  */
-export default class FindDiagramInfosActivity implements IActivityHandler {
-    /** Perform the execution logic of the activity. */
+export default class FindDiagramInfos implements IActivityHandler {
     async execute(
         inputs: FindDiagramInfosInputs
     ): Promise<FindDiagramInfosOutputs> {

@@ -49,16 +49,12 @@ interface GetDiagramDynamicLayerOutputs {
 }
 
 /**
- * @displayName GetDiagramDynamicLayer
+ * @displayName Get Diagram Dynamic Layer
  * @category Utility Network
  * @description Returns an array of JSON object layers that describes the sublayers under the provided  diagram layer.
  * @clientOnly
- * @unsupportedApps GMV, GVH, WAB
  */
-export default class GetDiagramDynamicLayerActivity
-    implements IActivityHandler
-{
-    /** Perform the execution logic of the activity. */
+export default class GetDiagramDynamicLayer implements IActivityHandler {
     async execute(
         inputs: GetDiagramDynamicLayerInputs
     ): Promise<GetDiagramDynamicLayerOutputs> {

@@ -38,15 +38,14 @@ interface GetDiagramMapInfoOutputs {
 }
 
 /**
- * @displayName GetDiagramMapInfo
+ * @displayName Get Diagram Map Info
  * @description Returns a diagram map service resource's service info.
  * @category Utility Network
  * @description This activity retrieves a set of diagrams that cover a given extent, verify a particular WHERE clause, or contain specific utility network features or diagram features.
  * @clientOnly
- * @unsupportedApps GMV, GVH, WAB
+ * @supportedApps EXB, GWV
  */
-export default class GetDiagramMapInfoActivity implements IActivityHandler {
-    /** Perform the execution logic of the activity. */
+export default class GetDiagramMapInfo implements IActivityHandler {
     async execute(
         inputs: GetDiagramMapInfoInputs
     ): Promise<GetDiagramMapInfoOutputs> {

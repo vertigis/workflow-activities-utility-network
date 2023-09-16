@@ -19,7 +19,7 @@ interface FindDiagramFeaturesInputs {
 
     /**
      * @displayName fromFeatures
-     * @description  Aan array of utility network feature Global IDs.
+     * @description  An array of utility network feature Global IDs.
      * @required
      */
     fromFeatures: string[];
@@ -78,14 +78,13 @@ interface FindDiagramFeaturesOutputs {
 }
 
 /**
- * @displayName FindDiagramFeatures
+ * @displayName Find Diagram Features
  * @description use to search for the utility network features associated with a set of diagram features that are referenced in the diagram resource.
  * @category Utility Network
  * @clientOnly
- * @unsupportedApps GMV, GVH, WAB
+ * @supportedApps EXB, GWV
  */
 export default class FindDiagramFeaturesActivity implements IActivityHandler {
-    /** Perform the execution logic of the activity. */
     async execute(
         inputs: FindDiagramFeaturesInputs
     ): Promise<FindDiagramFeaturesOutputs> {
@@ -115,7 +114,7 @@ export default class FindDiagramFeaturesActivity implements IActivityHandler {
         }
         // Remove trailing slashes
         const normalizedUrl = serviceUrl.replace(/\/*$/, "");
-        const url = `${normalizedUrl}//diagrams/${name}/findDiagramFeatures`;
+        const url = `${normalizedUrl}/diagrams/${name}/findDiagramFeatures`;
 
         const query = {
             f: "json",

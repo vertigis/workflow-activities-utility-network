@@ -115,16 +115,15 @@ interface ApplyLayoutOutputs {
 }
 
 /**
- * @displayName ApplyLayout
+ * @displayName Apply Layout
  * @description The applyLayout operation is performed on a Diagram resource. The result of this operation is a Diagram JSON Information object,
  *              and the moment (date) the applyLayout operation happens for a stored diagram. It is used to apply a specific diagram algorithm
  *              on all or parts of the resource diagram content.
  * @category Utility Network
  * @clientOnly
- * @unsupportedApps GMV, GVH, WAB
+ * @supportedApps EXB, GWV
  */
 export default class ApplyLayout implements IActivityHandler {
-    /** Perform the execution logic of the activity. */
     async execute(inputs: ApplyLayoutInputs): Promise<ApplyLayoutOutputs> {
         const { serviceUrl, diagramName, layoutName, ...other } = inputs;
         if (!serviceUrl) {

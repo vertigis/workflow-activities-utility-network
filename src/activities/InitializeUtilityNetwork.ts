@@ -13,7 +13,7 @@ import { activate } from "@geocortex/workflow/runtime/Hooks";
 /** An interface that defines the outputs of the activity. */
 export interface InitializeUtilityNetworkOutputs {
     /**
-     * @description An initialized Utility Network.  Returns the first utilty network if the Web Map contains more than one.
+     * @description An initialized Utility Network.  Returns the first utility network if the Web Map contains more than one.
      */
     result: UtilityNetwork | undefined;
 
@@ -30,7 +30,7 @@ export interface InitializeUtilityNetworkOutputs {
  * as well as the complete array of utility networks.
  * @helpUrl https://developers.arcgis.com/javascript/latest/api-reference/esri-networks-UtilityNetwork.html
  * @clientOnly
- * @unsupportedApps GMV, GVH, WAB
+ * @supportedApps EXB, GWV
  */
 @activate(MapProvider)
 export default class InitializeUtilityNetwork implements IActivityHandler {

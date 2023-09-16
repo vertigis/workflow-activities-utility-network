@@ -82,7 +82,7 @@ interface ValidateNetworkTopologyOutputs {
 /**
  * @category Utility Network
  * @clientOnly
- * @unsupportedApps GMV, GVH, WAB
+ * @supportedApps EXB, GWV
  * @description Validating the network topology for a utility network maintains consistency between feature editing space and network topology space. Validating a network topology may include all or a subset of the dirty areas present in the network.
  */
 export default class ValidateNetworkTopology implements IActivityHandler {

@@ -71,10 +71,8 @@ interface CreateDiagramFromFeaturesOutputs {
  * @description Used to create a new temporary network diagram.
  * @category Utility Network
  * @clientOnly
- * @unsupportedApps GMV, GVH, WAB
  */
 export default class CreateDiagramFromFeatures implements IActivityHandler {
-    /** Perform the execution logic of the activity. */
     async execute(
         inputs: CreateDiagramFromFeaturesInputs
     ): Promise<CreateDiagramFromFeaturesOutputs> {

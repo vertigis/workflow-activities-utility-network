@@ -66,10 +66,9 @@ interface UpdateDiagramOutputs {
  * the network features used to initially generate it, and so reflect any changes that may have impacted those network features into the diagram.
  * @category Utility Network
  * @clientOnly
- * @unsupportedApps GMV, GVH, WAB
+ * @supportedApps EXB, GWV
  */
 export default class UpdateDiagram implements IActivityHandler {
-    /** Perform the execution logic of the activity. */
     async execute(inputs: UpdateDiagramInputs): Promise<UpdateDiagramOutputs> {
         const { serviceUrl, diagramId, ...other } = inputs;
         if (!serviceUrl) {

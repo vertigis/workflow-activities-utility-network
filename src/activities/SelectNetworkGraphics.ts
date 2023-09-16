@@ -23,12 +23,11 @@ import Network from "@arcgis/core/networks/Network";
 import { Polyline } from "@arcgis/core/geometry";
 import SubtypeGroupLayer from "esri/layers/SubtypeGroupLayer";
 
-
 /** An interface that defines the inputs of the activity. */
 export interface SelectNetworkGraphicsInputs {
     /**
      * @displayName Point
-     * @description The point on the map to search. 
+     * @description The point on the map to search.
      * @required
      */
     point: Point;
@@ -52,7 +51,6 @@ export interface SelectNetworkGraphicsInputs {
      * @description This indicates whether this barrier starting location should be skipped (filtered) when a trace attempts to find upstream controllers.
      */
     isFilterBarrier?: boolean;
-
 }
 
 /** An interface that defines the outputs of the activity. */
@@ -68,7 +66,7 @@ export interface SelectNetworkGraphicsOutputs {
  * @description Select the Utility Network Graphics to be used as a starting point or barrier from a map.
  * @helpUrl https://developers.arcgis.com/javascript/latest/api-reference/esri-networks-support-TraceConfiguration.html
  * @clientOnly
- * @unsupportedApps GMV, GVH, WAB
+ * @supportedApps EXB, GWV
  */
 @activate(MapProvider)
 export default class SelectNetworkGraphics implements IActivityHandler {
@@ -77,12 +75,7 @@ export default class SelectNetworkGraphics implements IActivityHandler {
         context: IActivityContext,
         type: typeof MapProvider
     ): Promise<SelectNetworkGraphicsOutputs> {
-        const {
-            point,
-            locationType,
-            isFilterBarrier,
-            utilityNetwork,
-        } = inputs;
+        const { point, locationType, isFilterBarrier, utilityNetwork } = inputs;
         if (!point) {
             throw new Error("point is required");
         }
@@ -96,8 +89,11 @@ export default class SelectNetworkGraphics implements IActivityHandler {
         const networkGraphics: NetworkGraphic[] = [];
         let hitPoint = point;
 
-
-        const queriedGraphics = await this.queryFeatures(hitPoint, type, utilityNetwork);
+        const queriedGraphics = await this.queryFeatures(
+            hitPoint,
+            type,
+            utilityNetwork
+        );
 
         for (const queriedGraphic of queriedGraphics) {
             const percAlong = await getPercentageAlong(
@@ -106,12 +102,17 @@ export default class SelectNetworkGraphics implements IActivityHandler {
             );
             let terminalIds: number[] | undefined = undefined;
             if (queriedGraphic.geometry) {
-                if (queriedGraphic.geometry.type === 'point') {
-
-                    terminalIds = getTerminalIds(queriedGraphic, utilityNetwork);
+                if (queriedGraphic.geometry.type === "point") {
+                    terminalIds = getTerminalIds(
+                        queriedGraphic,
+                        utilityNetwork
+                    );
                     hitPoint = queriedGraphic.geometry as Point;
-                } else if (queriedGraphic.geometry.type === 'polyline') {
-                    const snappedPoint = await getPolylineIntersection(queriedGraphic.geometry as Polyline, hitPoint);
+                } else if (queriedGraphic.geometry.type === "polyline") {
+                    const snappedPoint = await getPolylineIntersection(
+                        queriedGraphic.geometry as Polyline,
+                        hitPoint
+                    );
                     if (snappedPoint) {
                         hitPoint = snappedPoint;
                     }
@@ -127,8 +128,7 @@ export default class SelectNetworkGraphics implements IActivityHandler {
                 locationType as any,
                 utilityNetwork,
                 isFilterBarrier,
-                terminalIds,
-
+                terminalIds
             );
             if (networkGraphic) {
                 networkGraphics.push(networkGraphic);
@@ -140,7 +140,11 @@ export default class SelectNetworkGraphics implements IActivityHandler {
         };
     }
 
-    private async queryFeatures(hitPoint: Point, type: typeof MapProvider, utilityNetwork: UtilityNetwork): Promise<Graphic[]> {
+    private async queryFeatures(
+        hitPoint: Point,
+        type: typeof MapProvider,
+        utilityNetwork: UtilityNetwork
+    ): Promise<Graphic[]> {
         const queriedGraphics: Graphic[] = [];
         const mapProvider = type.create();
         await mapProvider.load();
@@ -148,7 +152,7 @@ export default class SelectNetworkGraphics implements IActivityHandler {
         const webMap = mapProvider.map as WebMap;
         const view = mapProvider.view as MapView;
         for (let i = 0; i < webMap.allLayers.length; i++) {
-            const l = webMap.allLayers.getItemAt(i)
+            const l = webMap.allLayers.getItemAt(i);
             if (l != undefined) {
                 if (!l.initialized) {
                     await l.load();
@@ -158,17 +162,22 @@ export default class SelectNetworkGraphics implements IActivityHandler {
         await view.when();
         const screenPoint = view.toScreen(hitPoint);
         const hitResult = await view.hitTest(screenPoint);
-        const hitGraphics = hitResult.results.map(
-            (g) => {
-                if (g.type === "graphic" && g.layer && (g.layer.type === "feature"
-                    || g.layer.type === "subtype-group")) {
+        const hitGraphics = hitResult.results
+            .map((g) => {
+                if (
+                    g.type === "graphic" &&
+                    g.layer &&
+                    (g.layer.type === "feature" ||
+                        g.layer.type === "subtype-group")
+                ) {
                     return g;
                 }
-            }).filter((x): x is __esri.GraphicHit => !!x);
+            })
+            .filter((x): x is __esri.GraphicHit => !!x);
 
         for (let i = 0; i < hitGraphics.length; i++) {
             const x = hitGraphics[i];
-            let qLyr: SubtypeGroupLayer | FeatureLayer;;
+            let qLyr: SubtypeGroupLayer | FeatureLayer;
             if (x.layer.type === "subtype-group") {
                 qLyr = x.layer as SubtypeGroupLayer;
             } else {
@@ -182,29 +191,44 @@ export default class SelectNetworkGraphics implements IActivityHandler {
                 outSpatialReference: { wkid: hitPoint.spatialReference.wkid },
             });
 
-            const validFeature = this.getValidFeature(result.features, qLyr, utilityNetwork);
+            const validFeature = this.getValidFeature(
+                result.features,
+                qLyr,
+                utilityNetwork
+            );
             if (validFeature) {
                 queriedGraphics.push(validFeature);
             }
-
         }
         return queriedGraphics;
     }
 
-    private getValidFeature(features: Graphic[], layer: FeatureLayer | SubtypeGroupLayer, utilityNetwork: UtilityNetwork): Graphic | undefined {
-        const assetTypeField = getUtilityNetworkAttributeFieldByType("esriUNAUTAssetType", layer.layerId, utilityNetwork)
-        const assetGroupField = getUtilityNetworkAttributeFieldByType("esriUNAUTAssetGroup", layer.layerId, utilityNetwork)
+    private getValidFeature(
+        features: Graphic[],
+        layer: FeatureLayer | SubtypeGroupLayer,
+        utilityNetwork: UtilityNetwork
+    ): Graphic | undefined {
+        const assetTypeField = getUtilityNetworkAttributeFieldByType(
+            "esriUNAUTAssetType",
+            layer.layerId,
+            utilityNetwork
+        );
+        const assetGroupField = getUtilityNetworkAttributeFieldByType(
+            "esriUNAUTAssetGroup",
+            layer.layerId,
+            utilityNetwork
+        );
         const globalIdField = layer.fields.find((x) => x.type === "global-id");
 
         if (
             features.length > 0 &&
-            globalIdField && assetGroupField &&
+            globalIdField &&
+            assetGroupField &&
             assetTypeField
         ) {
             features[0].layer = layer;
 
             return features[0];
-
         }
         return undefined;
     }
