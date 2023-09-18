@@ -1,5 +1,5 @@
 /**
- * We need to handle the descrepancy between Experience Builder and VertiGIS Studio Web module exports.
+ * We need to handle the discrepancy between Experience Builder and VertiGIS Studio Web module exports.
  **/
 import Geometry from "@arcgis/core/geometry/Geometry";
 import * as geometryEngine from "@arcgis/core/geometry/geometryEngineAsync";

@@ -61,14 +61,13 @@ interface FindDiagramNamesOutputs {
 }
 
 /**
- * @displayName FindDiagramNames
+ * @displayName Find Diagram Names
  * @category Utility Network
  * @description This activity retrieves a set of diagrams that cover a given extent, verify a particular WHERE clause, or contain specific utility network features or diagram features.
  * @clientOnly
- * @unsupportedApps GMV, GVH, WAB
+ * @supportedApps EXB, GWV
  */
-export default class FindDiagramNamesActivity implements IActivityHandler {
-    /** Perform the execution logic of the activity. */
+export default class FindDiagramNames implements IActivityHandler {
     async execute(
         inputs: FindDiagramNamesInputs
     ): Promise<FindDiagramNamesOutputs> {

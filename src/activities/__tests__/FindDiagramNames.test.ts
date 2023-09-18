@@ -1,4 +1,4 @@
-import FindDiagramNamesActivity from "../diagrams/FindDiagramNames";
+import FindDiagramNames from "../diagrams/FindDiagramNames";
 beforeEach(() => {
     jest.clearAllMocks();
 });
@@ -13,7 +13,7 @@ jest.mock("@arcgis/core/request", () => {
 
 describe("FindDiagraminfos", () => {
     it("throws if service url input is missing", async () => {
-        const activity = new FindDiagramNamesActivity();
+        const activity = new FindDiagramNames();
         await expect(
             activity.execute({
                 serviceUrl: undefined as any,
@@ -21,7 +21,7 @@ describe("FindDiagraminfos", () => {
         ).rejects.toThrow("serviceUrl is required");
     });
     it("calls the service with the path and data", async () => {
-        const activity = new FindDiagramNamesActivity();
+        const activity = new FindDiagramNames();
         const result = await activity.execute({
             serviceUrl: "https://server/url",
         });

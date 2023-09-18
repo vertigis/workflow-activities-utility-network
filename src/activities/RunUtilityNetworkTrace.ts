@@ -83,7 +83,7 @@ export interface RunUtilityNetworkTraceOutputs {
  * @description Perform a Utility Network trace operation.
  * @helpUrl https://developers.arcgis.com/javascript/latest/api-reference/esri-rest-networks-trace.html
  * @clientOnly
- * @unsupportedApps GMV, GVH, WAB
+ * @supportedApps EXB, GWV
  */
 @activate(MapProvider)
 export default class RunUtilityNetworkTrace implements IActivityHandler {
@@ -113,7 +113,7 @@ export default class RunUtilityNetworkTrace implements IActivityHandler {
             throw new Error("traceConfiguration is required");
         }
 
-        // We need to handle the descrepancy between Experience Builder and VertiGIS Studio Web module exports.
+        // We need to handle the discrepancy between Experience Builder and VertiGIS Studio Web module exports.
         const trace =
             (Trace as any).default != undefined
                 ? ((Trace as any).default as typeof Trace)
@@ -132,7 +132,7 @@ export default class RunUtilityNetworkTrace implements IActivityHandler {
 
         if (traceConfiguration && typeof traceConfiguration !== "string") {
             (traceConfiguration as any).toJSON = () => {
-                // A Utlity Network Trace requires a UNTraceConfiguration (if it is defined),
+                // A Utility Network Trace requires a UNTraceConfiguration (if it is defined),
                 // however, the arcgis/core package doesn't expose this module. We use
                 // TraceConfiguration instead but TraceConfiguration.toJSON discards
                 // UNTraceConfiguration properties so we need to create a deep clone and override

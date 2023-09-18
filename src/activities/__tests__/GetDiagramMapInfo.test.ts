@@ -1,4 +1,4 @@
-import GetDiagramMapInfoActivity from "../diagrams/GetDiagramMapInfo";
+import GetDiagramMapInfo from "../diagrams/GetDiagramMapInfo";
 jest.mock("@arcgis/core/request", () => {
     return function (url, options) {
         return new Promise((resolve) => {
@@ -22,7 +22,7 @@ const response = {
 };
 describe("FindDiagraminfos", () => {
     it("throws if service url input is missing", async () => {
-        const activity = new GetDiagramMapInfoActivity();
+        const activity = new GetDiagramMapInfo();
         await expect(
             activity.execute({
                 serviceUrl: undefined as any,
@@ -31,7 +31,7 @@ describe("FindDiagraminfos", () => {
         ).rejects.toThrow("serviceUrl is required");
     });
     it("throws if diagramName input is missing", async () => {
-        const activity = new GetDiagramMapInfoActivity();
+        const activity = new GetDiagramMapInfo();
         await expect(
             activity.execute({
                 serviceUrl: "https://server/url",
@@ -40,7 +40,7 @@ describe("FindDiagraminfos", () => {
         ).rejects.toThrow("diagramName is required");
     });
     it("calls the service with the path and data", async () => {
-        const activity = new GetDiagramMapInfoActivity();
+        const activity = new GetDiagramMapInfo();
 
         const result = await activity.execute({
             serviceUrl: "https://server/url",

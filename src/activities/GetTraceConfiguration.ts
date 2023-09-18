@@ -35,7 +35,7 @@ export interface GetTraceConfigurationOutputs {
  * @description Get the Trace Configurations associated with a Utility Network.
  * @helpUrl https://developers.arcgis.com/javascript/latest/api-reference/esri-networks-support-TraceConfiguration.html
  * @clientOnly
- * @unsupportedApps GMV, GVH, WAB
+ * @supportedApps EXB, GWV
  */
 export default class GetTraceConfiguration implements IActivityHandler {
     execute(inputs: GetTraceConfigurationInputs): GetTraceConfigurationOutputs {
