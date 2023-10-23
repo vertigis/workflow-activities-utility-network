@@ -41,6 +41,24 @@ export async function geodesicBuffer(
     }
 }
 
+export async function buffer(
+    geometry: Geometry,
+    distance: number,
+    unit?: __esri.LinearUnits,
+    unionResults?: boolean
+): Promise<Polygon | Polygon[]> {
+    if (geometryEngine.buffer) {
+        return geometryEngine.buffer(geometry, distance, unit, unionResults);
+    } else {
+        return (geometryEngine as any).default.buffer(
+            geometry,
+            distance,
+            unit,
+            unionResults
+        );
+    }
+}
+
 export async function rotate(
     geometry: Geometry,
     angle: number,
