@@ -7,6 +7,7 @@ import CodedValueDomain from "@arcgis/core/layers/support/CodedValueDomain";
 import { project } from "./projection";
 import {
     cut,
+    buffer as esriBuffer,
     geodesicBuffer,
     intersect,
     rotate,
@@ -258,15 +259,25 @@ export async function splitPolyline(
 ): Promise<Polyline[]> {
     let splitLines: Polyline[] = [];
     const line = sourceLine.clone();
-
     const projectedLine = project(line, flagGeom.spatialReference) as Polyline;
     const snappedPoint = await getPolylineIntersection(projectedLine, flagGeom);
-
-    const buffer = (await geodesicBuffer(
-        snappedPoint,
-        20,
-        "feet" as __esri.LinearUnits
-    )) as Polygon;
+    let buffer;
+    if (
+        snappedPoint.spatialReference.isWebMercator ||
+        snappedPoint.spatialReference.isWGS84
+    ) {
+        buffer = (await geodesicBuffer(
+            snappedPoint,
+            20,
+            "feet" as __esri.LinearUnits
+        )) as Polygon;
+    } else {
+        buffer = (await esriBuffer(
+            snappedPoint,
+            20,
+            "feet" as __esri.LinearUnits
+        )) as Polygon;
+    }
 
     const polyIntersection = await intersect(projectedLine, buffer);
     if (polyIntersection) {
