@@ -261,7 +261,7 @@ export async function splitPolyline(
     const line = sourceLine.clone();
     const projectedLine = project(line, flagGeom.spatialReference) as Polyline;
     const snappedPoint = await getPolylineIntersection(projectedLine, flagGeom);
-    let buffer;
+    let buffer: Polygon;
     if (
         snappedPoint.spatialReference.isWebMercator ||
         snappedPoint.spatialReference.isWGS84
