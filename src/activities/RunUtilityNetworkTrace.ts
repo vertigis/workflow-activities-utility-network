@@ -51,6 +51,7 @@ export interface RunUtilityNetworkTraceInputs {
      */
     resultTypes?: {
         type: string;
+        includeDomainDescriptions: boolean;
         includeGeometry: boolean;
         includePropagatedValues: boolean;
         networkAttributeNames: string[];
