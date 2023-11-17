@@ -32,7 +32,14 @@ export interface QueryAssociationsInputs {
     /**
      * @description The association types to be queried. The default is all association types.
      */
-    types?: "connectivity" | "attachment" | "containment" | "junction-edge-from-connectivity" | "junction-midspan-connectivity" | "junction-edge-to-connectivity" | string[];
+    types?:
+        | "connectivity"
+        | "attachment"
+        | "containment"
+        | "junction-edge-from-connectivity"
+        | "junction-midspan-connectivity"
+        | "junction-edge-to-connectivity"
+        | string[];
 
     /**
      * @displayName Geodatabase Version
@@ -56,7 +63,7 @@ export interface QueryAssociationsOutputs {
     /**
      * @description The associations result.
      */
-    result: QueryAssociationsResult
+    result: QueryAssociationsResult;
 }
 
 /**
@@ -67,12 +74,10 @@ export interface QueryAssociationsOutputs {
  * @supportedApps EXB, GWV
  */
 export default class QueryAssociations implements IActivityHandler {
-    async execute(inputs: QueryAssociationsInputs): Promise<QueryAssociationsOutputs> {
-        const {
-            types,
-            utilityNetwork,
-            ...other
-        } = inputs;
+    async execute(
+        inputs: QueryAssociationsInputs
+    ): Promise<QueryAssociationsOutputs> {
+        const { types, utilityNetwork, ...other } = inputs;
 
         if (!utilityNetwork) {
             throw new Error("utilityNetwork is required");
@@ -80,9 +85,12 @@ export default class QueryAssociations implements IActivityHandler {
 
         const params = new QueryAssociationsParameters({
             types: typeof types === "string" ? [types] : types,
-            ...other
+            ...other,
         });
-        const result = await queryAssociations(utilityNetwork.networkServiceUrl, params);
+        const result = await queryAssociations(
+            utilityNetwork.networkServiceUrl,
+            params
+        );
 
         return {
             result,
