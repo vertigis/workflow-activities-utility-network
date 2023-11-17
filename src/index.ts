@@ -10,6 +10,7 @@ export { default as GetDiagramMapInfo } from "./activities/diagrams/GetDiagramMa
 export { default as GetTraceConfiguration } from "./activities/GetTraceConfiguration";
 export { default as GetUtilityNetworkHelper } from "./activities/GetUtilityNetworkHelper";
 export { default as InitializeUtilityNetwork } from "./activities/InitializeUtilityNetwork";
+export { default as QueryAssociations } from "./activities/QueryAssociations";
 export { default as RunSynthesizeAssociationGeometries } from "./activities/RunSynthesizeAssociationGeometries";
 export { default as RunUtilityNetworkTrace } from "./activities/RunUtilityNetworkTrace";
 export { default as SelectNetworkGraphics } from "./activities/SelectNetworkGraphics";
