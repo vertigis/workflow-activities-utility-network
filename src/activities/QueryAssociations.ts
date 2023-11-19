@@ -77,16 +77,23 @@ export default class QueryAssociations implements IActivityHandler {
     async execute(
         inputs: QueryAssociationsInputs
     ): Promise<QueryAssociationsOutputs> {
-        const { types, utilityNetwork, ...other } = inputs;
+        const { elements, types, utilityNetwork, ...other } = inputs;
 
         if (!utilityNetwork) {
             throw new Error("utilityNetwork is required");
         }
+        if (!elements) {
+            throw new Error("elements is required");
+        }
 
+        const typesArray = typeof types === "string" ? [types] : types;
         const params = new QueryAssociationsParameters({
-            types: typeof types === "string" ? [types] : types,
+            elements,
+            // Esri's types are wrong, associationTypes is used rather than types
+            associationTypes: typesArray,
+            types: typesArray,
             ...other,
-        });
+        } as __esri.QueryAssociationsParametersProperties);
         const result = await queryAssociations(
             utilityNetwork.networkServiceUrl,
             params
