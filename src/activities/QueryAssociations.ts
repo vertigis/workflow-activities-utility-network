@@ -86,7 +86,7 @@ export default class QueryAssociations implements IActivityHandler {
             throw new Error("elements is required");
         }
 
-        const typesArray = typeof types === "string" ? [types] : types;
+        const typesArray = typeof types === "string" ? [types] : types || [];
         const params = new QueryAssociationsParameters({
             elements,
             // Esri's types are wrong, associationTypes is used rather than types
