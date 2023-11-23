@@ -17,12 +17,12 @@ jobs:
     test:
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
 
-            - name: Use Node.js 18
-              uses: actions/setup-node@v3
+            - name: Use Node.js 20
+              uses: actions/setup-node@v4
               with:
-                  node-version: 18.x
+                  node-version: 20.x
 
             - run: npm install
 
@@ -38,7 +38,7 @@ jobs:
             - test
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/beta'
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
               with:
                   # Pulls all commits (needed for semantic release to correctly version)
                   # See https://github.com/semantic-release/semantic-release/issues/1526
@@ -49,10 +49,10 @@ jobs:
             - name: Fetch git tags
               run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
 
-            - name: Use Node.js 18
-              uses: actions/setup-node@v3
+            - name: Use Node.js 20
+              uses: actions/setup-node@v4
               with:
-                  node-version: 18.x
+                  node-version: 20.x
 
             - run: npm install
 
