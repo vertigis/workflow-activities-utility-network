@@ -47,15 +47,11 @@ jobs:
         steps:
             - uses: actions/checkout@v4
               with:
-                  # Pulls all commits (needed for semantic release to correctly version)
-                  # See https://github.com/semantic-release/semantic-release/issues/1526
+                  # Pulls all commits and tags (needed for semantic release to correctly version)
                   fetch-depth: "0"
                   persist-credentials: false
-                  sparse-checkout: ''
-
-            # Pulls all tags (needed for semantic release to correctly version)
-            - name: Fetch git tags
-              run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+                  sparse-checkout: |
+                    README.md
 
             - name: Use Node.js 20
               uses: actions/setup-node@v4
@@ -70,10 +66,11 @@ jobs:
 
             - name: Display structure of downloaded files
               run: ls -R
+              working-directory: ./release
 
             - name: Release 🚀
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
                   NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-              run: npx semantic-release@^22 --dry-run
+              run: npx semantic-release@^22 --dry-run --no-ci
               working-directory: ./release
