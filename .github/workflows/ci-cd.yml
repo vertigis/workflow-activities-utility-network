@@ -43,12 +43,12 @@ jobs:
         runs-on: ubuntu-latest
         needs:
             - test
-        #if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/beta'
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/beta'
         steps:
             - uses: actions/checkout@v4
               with:
                   # Pulls all commits and tags (needed for semantic release to correctly version)
-                  fetch-depth: "0"
+                  fetch-depth: 0
                   persist-credentials: false
                   sparse-checkout: |
                     README.md
@@ -64,13 +64,9 @@ jobs:
                   name: release
                   path: release
 
-            - name: Display structure of downloaded files
-              run: ls -R
-              working-directory: ./release
-
             - name: Release 🚀
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
                   NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-              run: npx semantic-release@^22 --dry-run --no-ci
+              run: npx semantic-release@^22
               working-directory: ./release
