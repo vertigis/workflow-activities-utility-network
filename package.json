@@ -4,11 +4,11 @@
     "description": "ArcGIS Utility Network activities for VertiGIS Studio Workflow",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/geocortex/workflow-activities-utility-network.git"
+        "url": "git+https://github.com/vertigis/workflow-activities-utility-network.git"
     },
     "license": "MIT",
     "author": "VertiGIS",
-    "homepage": "https://github.com/geocortex/workflow-activities-utility-network#readme",
+    "homepage": "https://github.com/vertigis/workflow-activities-utility-network#readme",
     "keywords": [
         "VertiGIS",
         "Geocortex",
