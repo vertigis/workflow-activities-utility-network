@@ -58,6 +58,8 @@ jobs:
               with:
                   node-version: 20.x
 
+            - run: npm install
+
             - name: Download release artifact
               uses: actions/download-artifact@v3
               with:
