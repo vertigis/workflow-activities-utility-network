@@ -1,12 +1,14 @@
 import Extent from "@arcgis/core/geometry/Extent";
 import Network from "@arcgis/core/networks/Network";
-import type { IActivityHandler } from "@geocortex/workflow/runtime";
+import type { IActivityHandler } from "@vertigis/workflow";
 import esriRequest from "@arcgis/core/request";
 import Graphic from "@arcgis/core/Graphic";
 import UtilityNetwork from "@arcgis/core/networks/UtilityNetwork";
 
 /** An interface that defines the inputs of the activity. */
 interface ValidateNetworkTopologyInputs {
+    /* eslint-disable @typescript-eslint/no-redundant-type-constituents */
+
     /**
      * @displayName Utility Network
      * @description The Utility Network object for the target service.
@@ -51,6 +53,8 @@ interface ValidateNetworkTopologyInputs {
      * @description Optional parameter specifying the token (GUID) used to lock the version.
      */
     sessionID?: string;
+
+    /* eslint-enable @typescript-eslint/no-redundant-type-constituents */
 }
 
 /** An interface that defines the outputs of the activity. */
@@ -73,7 +77,7 @@ interface ValidateNetworkTopologyOutputs {
                     updates: Graphic[];
                     deletes: Graphic[];
                 };
-            }
+            },
         ];
         success: boolean;
     };

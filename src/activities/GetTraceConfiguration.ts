@@ -1,4 +1,4 @@
-import type { IActivityHandler } from "@geocortex/workflow/runtime/IActivityHandler";
+import type { IActivityHandler } from "@vertigis/workflow/IActivityHandler";
 import UtilityNetwork from "@arcgis/core/networks/UtilityNetwork";
 import TraceConfiguration from "@arcgis/core/networks/support/TraceConfiguration";
 import UNTraceConfiguration from "@arcgis/core/networks/support/UNTraceConfiguration";

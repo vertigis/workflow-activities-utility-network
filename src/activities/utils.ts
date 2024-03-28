@@ -126,7 +126,7 @@ export function createNetworkGraphic(
                 const assetTypeCode = graphic.attributes[assetTypeField];
                 if (assetTypeCode) {
                     const codedVal = assetTypeDomain.getName(
-                        graphic.attributes[assetTypeField]
+                        graphic.attributes[assetTypeField] as string | number
                     );
                     if (codedVal) {
                         label = `${layer.title} (${codedVal}) : ${labelDetail}`;
@@ -141,6 +141,7 @@ export function createNetworkGraphic(
             );
             if (assetSource) {
                 const domainNetwork = getAssetDomain(
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                     assetSource.sourceId,
                     utilityNetwork
                 );
@@ -220,18 +221,22 @@ export function getTerminalIds(
 
     if (assetTypeField && assetGroupField) {
         const layerAssetGroupField = getKey(
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
             graphic.attributes,
             assetGroupField
         );
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         const layerAssetTypeField = getKey(graphic.attributes, assetTypeField);
         const assetSource = getAssetSourceByLayerId(layerId, utilityNetwork);
         if (assetSource && layerAssetGroupField && layerAssetTypeField) {
             const assetGroup = getAssetGroup(
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                 graphic.attributes[layerAssetGroupField],
                 assetSource
             );
             if (assetGroup) {
                 assetType = getAssetType(
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                     graphic.attributes[layerAssetTypeField],
                     assetGroup
                 );
@@ -239,11 +244,13 @@ export function getTerminalIds(
 
             if (assetType) {
                 const terminalConfiguration = getTerminalConfiguration(
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                     assetType.terminalConfigurationId,
                     utilityNetwork
                 );
                 if (terminalConfiguration) {
                     for (const terminal of terminalConfiguration.terminals) {
+                        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                         terminalIds.push(terminal.terminalId);
                     }
                 }
@@ -342,8 +349,7 @@ export function getAssetSourceByLayerId(
     layerId: number,
     utilityNetwork: UtilityNetwork
 ): Record<string, any> | undefined {
-    for (const domainNetwork of (utilityNetwork as any).dataElement
-        .domainNetworks) {
+    for (const domainNetwork of utilityNetwork.dataElement.domainNetworks) {
         if (domainNetwork) {
             for (const assetSource of domainNetwork.edgeSources) {
                 if (assetSource) {
@@ -373,6 +379,7 @@ export function getAssetDomain(
     for (const domainNetwork of (utilityNetwork as any).dataElement
         .domainNetworks) {
         if (domainNetwork) {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
             const assetSource = getAssetSource(assetSourceCode, domainNetwork);
             if (assetSource) {
                 return domainNetwork;
@@ -555,6 +562,7 @@ export function getAssetLayers(
         );
         if (domainNetwork) {
             const layerId = getLayerIdByDomainAndSourceId(
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                 parseInt(domainNetwork.domainNetworkId),
                 asset.networkSourceId,
                 utilityNetwork
@@ -606,6 +614,7 @@ export function groupAssets(
                 typeSet.assets.push(asset);
             } else {
                 const layerId = getLayerIdByDomainAndSourceId(
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                     parseInt(domainNetwork.domainNetworkId),
                     asset.networkSourceId,
                     utilityNetwork
@@ -669,6 +678,7 @@ async function groupAssetTypesByWebMapLayer(
                             subtypeLayer: sub,
                             type: sub.type,
                         });
+                        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                         updateObjectIdArray(objectIds, subObjectIds);
                         if (objectIds.length === 0) {
                             break;
@@ -694,6 +704,7 @@ async function groupAssetTypesByWebMapLayer(
                         type: layer.type,
                     });
 
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                     updateObjectIdArray(objectIds, featObjectIds);
                     if (objectIds.length === 0) {
                         break;
@@ -757,10 +768,12 @@ export async function getUtilityNetworkFromGraphic(
 
         if (assetGroupField && assetTypeField) {
             const layerAssetTypeField = getKey(
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                 graphic.attributes,
                 assetTypeField
             );
             const layerAssetGroupField = getKey(
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                 graphic.attributes,
                 assetGroupField
             );
@@ -770,15 +783,18 @@ export async function getUtilityNetworkFromGraphic(
                     if (domainNetwork) {
                         const assetSource = getAssetSource(
                             layer.layerId,
+                            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                             domainNetwork
                         );
                         if (assetSource) {
                             const assetGroup = getAssetGroup(
+                                // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                                 graphic.attributes[layerAssetGroupField],
                                 assetSource
                             );
                             if (assetGroup) {
                                 assetType = getAssetType(
+                                    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                                     graphic.attributes[layerAssetTypeField],
                                     assetGroup
                                 );

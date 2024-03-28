@@ -5,11 +5,15 @@ import { mockWebMap } from "../__mocks__/WebMap";
 import { mockActivityContext } from "../__mocks__/ActivityContext";
 import { mockMapView } from "../__mocks__/MapView";
 
-jest.mock("@geocortex/workflow/runtime/activities/arcgis/MapProvider", () => {
+jest.mock("@vertigis/workflow/activities/arcgis/MapProvider", () => {
     return function () {
         // no op
     };
 });
+
+jest.mock("@vertigis/workflow/Hooks", () => ({
+    activate: jest.fn(),
+}));
 
 const mockProvider = {
     create: () => {
@@ -59,6 +63,7 @@ describe("SelectNetworkGraphics", () => {
                         utilityNetwork: {} as any,
                     },
                     context,
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                     mockProvider as any
                 );
             }).rejects.toThrow("point is required");
@@ -73,6 +78,7 @@ describe("SelectNetworkGraphics", () => {
                         utilityNetwork: {} as any,
                     },
                     context,
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                     mockProvider as any
                 );
             }).rejects.toThrow("locationType is required");
@@ -88,6 +94,7 @@ describe("SelectNetworkGraphics", () => {
             const result = await activity.execute(
                 inputs,
                 context,
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                 mockProvider as any
             );
             expect(result).toBeDefined();
