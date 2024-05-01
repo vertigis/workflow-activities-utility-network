@@ -65,12 +65,24 @@ export interface RunUtilityNetworkTraceInputs {
      * @description The geodatabase version on which the operation will be performed.
      */
     gdbVersion?: string;
-
+    /**
+     * The spatial reference that should be used to project the aggregated geometries returned by the trace (if applicable).
+     */
+    outSpatialReference?: __esri.SpatialReference;
     /**
      * @displayName Moment
      * @description The date/timestamp (in UTC) to execute the trace at a given time.
      */
     moment?: number;
+    /**
+     * @description Additional options to be used for the request.
+     */
+    requestOptions?: {
+        /** The HTTP request method. The default is auto. */
+        method?: "auto" | "post" | string;
+        /** The amount of time in milliseconds to wait for a response from the server. Set to 0 to wait for the response indefinitely. The default is 60000. */
+        timeout?: number;
+    };
 
     /* eslint-enable @typescript-eslint/no-redundant-type-constituents */
 }
@@ -98,11 +110,13 @@ export default class RunUtilityNetworkTrace implements IActivityHandler {
         const {
             gdbVersion,
             moment,
-            utilityNetwork,
+            outSpatialReference,
+            requestOptions,
+            resultTypes = [],
             traceType,
             traceLocations,
             traceConfiguration,
-            resultTypes = [],
+            utilityNetwork,
         } = inputs;
 
         if (!utilityNetwork) {
@@ -153,6 +167,7 @@ export default class RunUtilityNetworkTrace implements IActivityHandler {
             gdbVersion,
             moment,
             namedTraceConfigurationGlobalId,
+            outSpatialReference,
             resultTypes: resultTypes as any,
             traceConfiguration:
                 typeof traceConfiguration !== "string"
@@ -163,7 +178,8 @@ export default class RunUtilityNetworkTrace implements IActivityHandler {
         });
         const traceResult = await trace.trace(
             utilityNetwork.networkServiceUrl,
-            traceParams
+            traceParams,
+            requestOptions
         );
 
         return {

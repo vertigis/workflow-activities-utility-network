@@ -1,6 +1,7 @@
 import RunUtilityNetworkTrace from "../RunUtilityNetworkTrace";
 import { RunUtilityNetworkTraceInputs } from "../RunUtilityNetworkTrace";
 import TraceResult from "@arcgis/core/rest/networks/support/TraceResult";
+import trace from "@arcgis/core/rest/networks/trace";
 
 const mockTraceLocation = {
     globalId: "abc",
@@ -62,6 +63,8 @@ jest.mock("@arcgis/core/rest/networks/trace", () => ({
         return {};
     },
 }));
+const traceSpy = jest.spyOn(trace, "trace");
+
 jest.mock("@arcgis/core/rest/networks/support/TraceResult", () => {
     return function () {
         return {};
@@ -136,6 +139,30 @@ describe("RunUtilityNetworkTrace", () => {
             expect(result).toStrictEqual({
                 traceResult: new TraceResult(),
             });
+        });
+        it("uses extra request options", async () => {
+            const inputs: RunUtilityNetworkTraceInputs = {
+                utilityNetwork: {
+                    networkServiceUrl: "https://foo",
+                } as any,
+                traceType: "isolation",
+                traceLocations: [],
+                traceConfiguration: {} as any,
+                requestOptions: { timeout: 1000 },
+                resultTypes: [],
+            };
+            const activity = new RunUtilityNetworkTrace();
+            const result = await activity.execute(inputs);
+            expect(result).toBeDefined();
+            expect(traceSpy).toHaveBeenCalledWith(
+                inputs.utilityNetwork.networkServiceUrl,
+                expect.objectContaining({
+                    traceConfiguration: expect.anything(),
+                    traceLocations: inputs.traceLocations,
+                    traceType: inputs.traceType,
+                }),
+                inputs.requestOptions
+            );
         });
     });
 });
