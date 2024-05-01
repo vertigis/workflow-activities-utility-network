@@ -1,14 +1,14 @@
 import type {
     IActivityHandler,
     IActivityContext,
-} from "@geocortex/workflow/runtime/IActivityHandler";
+} from "@vertigis/workflow/IActivityHandler";
 import UtilityNetwork from "@arcgis/core/networks/UtilityNetwork";
 import WebMap from "@arcgis/core/WebMap";
 import IdentityManager from "@arcgis/core/identity/IdentityManager";
 import Credential from "@arcgis/core/identity/Credential";
 import Network from "@arcgis/core/networks/Network";
-import { MapProvider } from "@geocortex/workflow/runtime/activities/arcgis/MapProvider";
-import { activate } from "@geocortex/workflow/runtime/Hooks";
+import { MapProvider } from "@vertigis/workflow/activities/arcgis/MapProvider";
+import { activate } from "@vertigis/workflow/Hooks";
 
 /** An interface that defines the outputs of the activity. */
 export interface InitializeUtilityNetworkOutputs {
@@ -46,13 +46,14 @@ export default class InitializeUtilityNetwork implements IActivityHandler {
         }
         const map = mapProvider.map as WebMap;
         let utilityNetworks: __esri.Collection<UtilityNetwork>;
-        const portalItem = map.portalItem as any;
         if (map.utilityNetworks) {
             utilityNetworks = map.utilityNetworks;
         } else {
-            const portalOauthInfo = this.getOauthInfo(
-                portalItem.portal.credential
-            );
+            const portalItem = map.portalItem;
+            const credential: Credential = (portalItem.portal as any)
+                .credential;
+            const portalOauthInfo = this.getOauthInfo(credential);
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
             IdentityManager.registerToken(portalOauthInfo);
             const webmap = new WebMap({
                 portalItem: {
@@ -66,10 +67,11 @@ export default class InitializeUtilityNetwork implements IActivityHandler {
                 utilityNetworks = webmap.utilityNetworks;
                 for (let i = 0; i < utilityNetworks.length; i++) {
                     const agsOauthInfo = this.getOauthInfo(
-                        portalItem.portal.credential,
+                        credential,
                         (utilityNetworks.getItemAt(i) as unknown as Network)
                             .networkServiceUrl
                     );
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                     IdentityManager.registerToken(agsOauthInfo);
                 }
             } else {

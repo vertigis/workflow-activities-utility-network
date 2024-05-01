@@ -1,17 +1,19 @@
-import type { IActivityHandler } from "@geocortex/workflow/runtime/IActivityHandler";
+import type { IActivityHandler } from "@vertigis/workflow/IActivityHandler";
 import Network from "@arcgis/core/networks/Network";
 import UtilityNetwork from "@arcgis/core/networks/UtilityNetwork";
 import * as Trace from "@arcgis/core/rest/networks/trace";
 import TraceParameters from "@arcgis/core/rest/networks/support/TraceParameters";
 import TraceLocation from "@arcgis/core/rest/networks/support/TraceLocation";
 import TraceResult from "@arcgis/core/rest/networks/support/TraceResult";
-import { MapProvider } from "@geocortex/workflow/runtime/activities/arcgis/MapProvider";
-import { activate } from "@geocortex/workflow/runtime/Hooks";
+import { MapProvider } from "@vertigis/workflow/activities/arcgis/MapProvider";
+import { activate } from "@vertigis/workflow/Hooks";
 
 type TraceConfiguration = TraceParameters["traceConfiguration"];
 
 /** An interface that defines the inputs of the activity. */
 export interface RunUtilityNetworkTraceInputs {
+    /* eslint-disable @typescript-eslint/no-redundant-type-constituents */
+
     /**
      * @displayName Utility Network
      * @description The Utility Network object for the target service.
@@ -69,6 +71,8 @@ export interface RunUtilityNetworkTraceInputs {
      * @description The date/timestamp (in UTC) to execute the trace at a given time.
      */
     moment?: number;
+
+    /* eslint-enable @typescript-eslint/no-redundant-type-constituents */
 }
 
 /** An interface that defines the outputs of the activity. */
@@ -149,7 +153,7 @@ export default class RunUtilityNetworkTrace implements IActivityHandler {
             gdbVersion,
             moment,
             namedTraceConfigurationGlobalId,
-            resultTypes: resultTypes,
+            resultTypes: resultTypes as any,
             traceConfiguration:
                 typeof traceConfiguration !== "string"
                     ? traceConfiguration

@@ -10,11 +10,15 @@ jest.mock("@arcgis/core/identity/IdentityManager", () => ({
     registerToken: jest.fn(),
 }));
 
-jest.mock("@geocortex/workflow/runtime/activities/arcgis/MapProvider", () => {
+jest.mock("@vertigis/workflow/activities/arcgis/MapProvider", () => {
     return function () {
         // no op
     };
 });
+
+jest.mock("@vertigis/workflow/Hooks", () => ({
+    activate: jest.fn(),
+}));
 
 const mockProvider = {
     create: () => {
@@ -89,6 +93,7 @@ describe("InitializeUtilityNetwork", () => {
             const result = await activity.execute(
                 {},
                 context,
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                 mockProvider as any
             );
             expect(result).toStrictEqual({

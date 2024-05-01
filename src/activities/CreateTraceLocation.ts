@@ -1,8 +1,10 @@
-import type { IActivityHandler } from "@geocortex/workflow/runtime/IActivityHandler";
+import type { IActivityHandler } from "@vertigis/workflow/IActivityHandler";
 import TraceLocation from "@arcgis/core/rest/networks/support/TraceLocation";
 
 /** An interface that defines the inputs of the activity. */
 export interface CreateTraceLocationInputs {
+    /* eslint-disable @typescript-eslint/no-redundant-type-constituents */
+
     /**
      * @displayName Global Id
      * @description The globalId (UUID) of the feature to start or stop the trace.
@@ -32,6 +34,8 @@ export interface CreateTraceLocationInputs {
      * @description The terminal Id to place the starting location at. Applicable for junction/device sources only.
      */
     terminalId?: number;
+
+    /* eslint-enable @typescript-eslint/no-redundant-type-constituents */
 }
 
 /** An interface that defines the outputs of the activity. */

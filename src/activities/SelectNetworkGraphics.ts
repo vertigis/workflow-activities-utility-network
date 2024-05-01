@@ -2,7 +2,7 @@
 import type {
     IActivityHandler,
     IActivityContext,
-} from "@geocortex/workflow/runtime/IActivityHandler";
+} from "@vertigis/workflow/IActivityHandler";
 import MapView from "@arcgis/core/views/MapView";
 import Point from "@arcgis/core/geometry/Point";
 import {
@@ -16,8 +16,8 @@ import {
 import WebMap from "@arcgis/core/WebMap";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import Graphic from "@arcgis/core/Graphic";
-import { MapProvider } from "@geocortex/workflow/runtime/activities/arcgis/MapProvider";
-import { activate } from "@geocortex/workflow/runtime/Hooks";
+import { MapProvider } from "@vertigis/workflow/activities/arcgis/MapProvider";
+import { activate } from "@vertigis/workflow/Hooks";
 import UtilityNetwork from "@arcgis/core/networks/UtilityNetwork";
 import Network from "@arcgis/core/networks/Network";
 import { Polyline } from "@arcgis/core/geometry";
@@ -25,6 +25,8 @@ import SubtypeGroupLayer from "esri/layers/SubtypeGroupLayer";
 
 /** An interface that defines the inputs of the activity. */
 export interface SelectNetworkGraphicsInputs {
+    /* eslint-disable @typescript-eslint/no-redundant-type-constituents */
+
     /**
      * @displayName Point
      * @description The point on the map to search.
@@ -51,6 +53,8 @@ export interface SelectNetworkGraphicsInputs {
      * @description This indicates whether this barrier starting location should be skipped (filtered) when a trace attempts to find upstream controllers.
      */
     isFilterBarrier?: boolean;
+
+    /* eslint-enable @typescript-eslint/no-redundant-type-constituents */
 }
 
 /** An interface that defines the outputs of the activity. */
@@ -122,9 +126,11 @@ export default class SelectNetworkGraphics implements IActivityHandler {
             const networkGraphic = createNetworkGraphic(
                 hitPoint,
                 queriedGraphic.geometry,
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                 queriedGraphic.attributes,
                 queriedGraphic.layer as FeatureLayer | SubtypeGroupLayer,
                 percAlong,
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                 locationType as any,
                 utilityNetwork,
                 isFilterBarrier,

@@ -1,4 +1,4 @@
-import type { IActivityHandler } from "@geocortex/workflow/runtime/IActivityHandler";
+import type { IActivityHandler } from "@vertigis/workflow/IActivityHandler";
 import Network from "@arcgis/core/networks/Network";
 import UtilityNetwork from "@arcgis/core/networks/UtilityNetwork";
 import { queryAssociations } from "@arcgis/core/rest/networks/queryAssociations";

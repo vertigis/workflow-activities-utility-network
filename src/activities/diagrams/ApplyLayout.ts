@@ -1,8 +1,10 @@
-import type { IActivityHandler } from "@geocortex/workflow/runtime/IActivityHandler";
+import type { IActivityHandler } from "@vertigis/workflow/IActivityHandler";
 import esriRequest from "@arcgis/core/request";
 
 /** An interface that defines the inputs of the activity. */
 interface ApplyLayoutInputs {
+    /* eslint-disable @typescript-eslint/no-redundant-type-constituents */
+
     /**
      * @displayName Service URL
      * @description The URL to the ArcGIS REST service. For example, http://server/arcgis/rest/services/<serviceName>/NetworkDiagramServer.
@@ -82,6 +84,8 @@ interface ApplyLayoutInputs {
      * @description The geodatabase version on which the operation will be performed.
      */
     gdbVersion?: string;
+
+    /* eslint-enable @typescript-eslint/no-redundant-type-constituents */
 }
 
 /** An interface that defines the outputs of the activity. */

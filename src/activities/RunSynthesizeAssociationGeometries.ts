@@ -1,4 +1,4 @@
-import type { IActivityHandler } from "@geocortex/workflow/runtime/IActivityHandler";
+import type { IActivityHandler } from "@vertigis/workflow/IActivityHandler";
 import Network from "@arcgis/core/networks/Network";
 import SynthesizeAssociationGeometriesParameters from "@arcgis/core/rest/networks/support/SynthesizeAssociationGeometriesParameters";
 import Extent from "@arcgis/core/geometry/Extent";

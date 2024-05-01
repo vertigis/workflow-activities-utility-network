@@ -1,4 +1,4 @@
-import { IActivityContext } from "@geocortex/workflow/runtime/IActivityHandler";
+import type { IActivityContext } from "@vertigis/workflow/IActivityHandler";
 
 export function mockActivityContext(): IActivityContext {
     const ctx: Partial<IActivityContext> = {

@@ -2,7 +2,7 @@ import Graphic from "@arcgis/core/Graphic";
 import UtilityNetwork from "@arcgis/core/networks/UtilityNetwork";
 import NetworkElement from "@arcgis/core/rest/networks/support/NetworkElement";
 import WebMap from "@arcgis/core/WebMap";
-import type { IActivityHandler } from "@geocortex/workflow/runtime";
+import type { IActivityHandler } from "@vertigis/workflow";
 import {
     LayerSet,
     getAssetDomain,
